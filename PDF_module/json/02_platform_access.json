@@ -1,0 +1,129 @@
+{
+    "platform_access": {
+        "urls": {
+            "web_vip": {
+                "url": "http://waio-portal-vip:10011",
+                "description": "WEB VIP 접속 주소",
+                "primary": true
+            },
+            "vip_ip": {
+                "url": "http://10.103.11.112:10011",
+                "description": "VIP IP 접속 주소"
+            },
+            "ai_servers": [
+                {
+                    "name": "AI Platform #1",
+                    "url": "http://10.103.11.113:10011",
+                    "role": "Primary AI Server"
+                },
+                {
+                    "name": "AI Platform #2",
+                    "url": "http://10.103.11.114:10011",
+                    "role": "Secondary AI Server"
+                }
+            ]
+        },
+        "user_management": {
+            "roles": {
+                "administrator": {
+                    "name": "관리자",
+                    "permissions": [
+                        "사용자 관리(삭제/비밀번호 초기화 등)",
+                        "AI 운영 제어",
+                        "시스템 설정"
+                    ],
+                    "default_credentials": {
+                        "note": "지사 관리자에게 문의",
+                        "example": "KWATER/KWATER"
+                    }
+                },
+                "operator": {
+                    "name": "운용자",
+                    "permissions": [
+                        "운영상 필요한 모든 기능(사용자 관리 제외)",
+                        "운영 모니터링",
+                        "기본 제어"
+                    ],
+                    "id_type": "사번"
+                }
+            },
+            "account_policies": {
+                "password": {
+                    "length": {
+                        "min": 9,
+                        "max": 20
+                    },
+                    "requirements": [
+                        "영문",
+                        "숫자",
+                        "특수문자"
+                    ],
+                    "validation_message": "비밀번호는 9자리 이상 20자 이내, 영문, 숫자, 특수문자를 포함해야 합니다."
+                },
+                "session": {
+                    "timeout": {
+                        "range": {
+                            "min": 10,
+                            "max": 60
+                        },
+                        "unit": "분",
+                        "description": "미사용 시 자동 로그아웃"
+                    }
+                }
+            },
+            "registration_process": {
+                "steps": [
+                    {
+                        "step": 1,
+                        "action": "ID 중복 체크",
+                        "path": "좌측 사이드바 → 사용자 관리"
+                    },
+                    {
+                        "step": 2,
+                        "action": "권한 선택",
+                        "options": ["관리자", "운용자"]
+                    },
+                    {
+                        "step": 3,
+                        "action": "비밀번호 설정",
+                        "requirements": "9자리 이상 20자 이내, 영문/숫자/특수문자 포함"
+                    },
+                    {
+                        "step": 4,
+                        "action": "Timeout 설정",
+                        "range": "10분~60분"
+                    }
+                ]
+            },
+            "account_management": {
+                "features": [
+                    {
+                        "name": "정보 수정",
+                        "access": "사용자"
+                    },
+                    {
+                        "name": "비밀번호 초기화",
+                        "access": "관리자",
+                        "note": "지사 관리자에게 요청"
+                    },
+                    {
+                        "name": "계정 삭제",
+                        "access": "관리자"
+                    }
+                ]
+            }
+        },
+        "security_features": {
+            "session_management": {
+                "auto_logout": true,
+                "timeout_configurable": true,
+                "concurrent_login": false
+            },
+            "access_control": {
+                "role_based": true,
+                "ip_restriction": true,
+                "audit_logging": true
+            }
+        }
+    }
+}

@@ -1,0 +1,139 @@
+{
+    "process_intake": {
+        "basic_info": {
+            "name": "착수 공정",
+            "process_code": "intake",
+            "order": 1,
+            "keywords": ["착수", "원수", "유입", "밸브"],
+            "purpose": [
+                "원수의 수위 변동 요인 안정화",
+                "후속 공정의 안정적 운영",
+                "정수 수요량과 정수지 수위를 참고하여 원수 유입량 조절"
+            ]
+        },
+        "key_components": [
+            {
+                "name": "원수 유입 밸브",
+                "description": "원수 유입량을 조절하는 역할 수행",
+                "control_type": "AI 예측값으로 제어",
+                "key_metrics": ["개도율", "유량"]
+            },
+            {
+                "name": "정수지",
+                "description": "처리된 물을 저장하는 시설",
+                "key_metrics": ["수위", "수위밴드"]
+            }
+        ],
+        "ai_model": {
+            "components": [
+                {
+                    "name": "정수지 수위밴드 생성",
+                    "steps": [
+                        "데이터 전처리",
+                        "클러스터링",
+                        "목표 수위 생성",
+                        "수위밴드 생성"
+                    ]
+                },
+                {
+                    "name": "밸브 개도율 예측",
+                    "input_features": [
+                        "정수지 수위",
+                        "유출 유량",
+                        "원수 유입 유량",
+                        "시간 피처(분/월)"
+                    ]
+                }
+            ],
+            "model_details": {
+                "selected_model": "XGB (Extreme Gradient Boosting)",
+                "compared_models": ["LSTM-GRU"],
+                "metrics": {
+                    "R2": "0.972",
+                    "MAE": "0.406",
+                    "MSE": "0.854"
+                },
+                "features": {
+                    "correlation": {
+                        "밸브개도율관련": {
+                            "유입유량": "0.89",
+                            "송수유량": "0.14",
+                            "정수지수위": "-0.12"
+                        }
+                    }
+                }
+            }
+        },
+        "data_processing": {
+            "input_data": {
+                "time_range": "2022년 1월부터 12월까지의 최근 1년간 데이터",
+                "data_volume": "약 52만 행의 데이터",
+                "data_types": [
+                    "정수 유출 유량",
+                    "정수지 수위",
+                    "원수 유입 유량",
+                    "실시간 데이터"
+                ]
+            },
+            "preprocessing": {
+                "outlier_treatment": {
+                    "method": "IQR 기반 이상치 제거",
+                    "description": "데이터 항목별 운영 범위 설정 후 범위 초과 데이터 처리"
+                },
+                "missing_value": {
+                    "methods": [
+                        "이후값으로 보간",
+                        "이전값으로 보간"
+                    ]
+                },
+                "smoothing": {
+                    "method": "이동평균",
+                    "purpose": "데이터 평활화"
+                }
+            },
+            "data_analysis": {
+                "methods": [
+                    "상관관계 분석",
+                    "Pair-Plot 분석"
+                ]
+            }
+        },
+        "operation_modes": {
+            "AI": {
+                "description": "예측값이 SCADA상에 적용됨",
+                "application": "자동"
+            },
+            "AI추천": {
+                "description": "사용자가 제어 팝업창을 보고 판단하여 예측값의 적용 여부를 선택할 수 있음",
+                "application": "수동 승인"
+            },
+            "분석": {
+                "description": "예측값이 실제 SCADA상에 적용되지 않음",
+                "application": "모니터링"
+            }
+        },
+        "ui_features": {
+            "data_display": {
+                "update_cycle": "데이터 업데이트 주기 표시",
+                "prediction_cycle": "예측 주기 표시",
+                "control_cycle": "제어 주기 표시"
+            },
+            "batch_process": {
+                "steps": "1~8번의 각각의 내용 표시",
+                "visibility": "단계별 진행상황 확인 가능"
+            },
+            "settings": {
+                "target_level": {
+                    "description": "정수지 목표 수위 설정 방법",
+                    "steps": [
+                        "로그인 버튼 클릭 후 로그인 진행",
+                        "로그인 완료 후 수정 버튼 활성화",
+                        "정수지의 상한/하한 설정",
+                        "완료 버튼 클릭"
+                    ],
+                    "access_control": "로그인 필요"
+                }
+            }
+        }
+    }
+}

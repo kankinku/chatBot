@@ -1,0 +1,166 @@
+{
+    "process_chemical": {
+        "basic_info": {
+            "name": "약품 공정",
+            "process_code": "chemical",
+            "order": 2,
+            "keywords": ["약품", "응집제", "주입", "수질"],
+            "purpose": [
+                "원수 수질 변화에 따른 적정 응집제 주입률 예측",
+                "과다/과소 주입 방지(최대/최소 보정)"
+            ]
+        },
+        "input_parameters": {
+            "water_quality": [
+                {
+                    "name": "원수 탁도",
+                    "importance": "0.77",
+                    "correlation": "high"
+                },
+                {
+                    "name": "원수 온도",
+                    "importance": "중간",
+                    "correlation": "medium"
+                },
+                {
+                    "name": "원수 pH",
+                    "importance": "중간",
+                    "correlation": "medium"
+                },
+                {
+                    "name": "전기전도도(EC)",
+                    "importance": "낮음",
+                    "correlation": "low"
+                },
+                {
+                    "name": "알칼리도",
+                    "importance": "낮음",
+                    "correlation": "low"
+                }
+            ]
+        },
+        "ai_model": {
+            "model_selection": {
+                "selected": "N-Beats",
+                "compared_models": ["LSTM", "GRU", "GBR"],
+                "metrics": {
+                    "N-Beats": {
+                        "MAE": "0.68",
+                        "MSE": "2.37",
+                        "RMSE": "1.54",
+                        "R2": "0.97"
+                    },
+                    "LSTM": {
+                        "MAE": "0.78",
+                        "MSE": "2.13",
+                        "RMSE": "1.42",
+                        "R2": "0.83"
+                    },
+                    "GRU": {
+                        "MAE": "0.82",
+                        "MSE": "2.22",
+                        "RMSE": "1.49",
+                        "R2": "0.80"
+                    },
+                    "GBR": {
+                        "MAE": "0.86",
+                        "MSE": "2.24",
+                        "RMSE": "1.50",
+                        "R2": "0.81"
+                    }
+                }
+            },
+            "analysis": {
+                "pearson_importance_order": [
+                    {
+                        "parameter": "탁도",
+                        "correlation": "0.77"
+                    },
+                    "온도",
+                    "pH",
+                    "알칼리도",
+                    "EC"
+                ],
+                "clustering": {
+                    "attempt": "K=2 시도(저탁/고탁)",
+                    "result": "유의미성 부족 → 단일 모델 적용"
+                }
+            }
+        },
+        "data_processing": {
+            "preprocessing": [
+                {
+                    "type": "중복/결측 처리",
+                    "method": "데이터 제거 및 보간"
+                },
+                {
+                    "type": "이상치 제거",
+                    "method": "Min/Max 기준"
+                },
+                {
+                    "type": "정규화",
+                    "method": "MinMax Scaling"
+                },
+                {
+                    "type": "평활화",
+                    "method": "이동평균"
+                }
+            ]
+        },
+        "operation_interface": {
+            "settings": {
+                "injection_rate": {
+                    "description": "주입률 상/하한 설정",
+                    "access": "로그인 후 수정 가능"
+                },
+                "operation_mode": {
+                    "description": "운전모드 전환",
+                    "modes": ["AI", "AI 추천", "분석"]
+                }
+            },
+            "monitoring": {
+                "prediction": {
+                    "description": "예측값 확인",
+                    "parameters": ["Coagulant#1", "Coagulant#2", "Coagulant#3"]
+                }
+            }
+        },
+        "ui_features": {
+            "data_display": {
+                "update_cycle": "데이터 업데이트 주기 표시",
+                "prediction_cycle": "예측 주기 표시",
+                "control_cycle": "제어 주기 표시"
+            },
+            "batch_process": {
+                "steps": "1~8번의 각각의 내용 표시",
+                "visibility": "단계별 진행상황 확인 가능"
+            },
+            "settings": {
+                "injection_rate": {
+                    "description": "주입률 상/하한 설정 방법",
+                    "steps": [
+                        "로그인 버튼 클릭 후 로그인 진행",
+                        "로그인 완료 후 수정 버튼 활성화",
+                        "주입률 상한/하한 설정",
+                        "완료 버튼 클릭"
+                    ],
+                    "access_control": "로그인 필요"
+                }
+            }
+        },
+        "operation_modes": {
+            "AI": {
+                "description": "예측값이 SCADA상에 적용됨",
+                "application": "자동"
+            },
+            "AI추천": {
+                "description": "사용자가 제어 팝업창을 보고 판단하여 예측값의 적용 여부를 선택할 수 있음",
+                "application": "수동 승인"
+            },
+            "분석": {
+                "description": "예측값이 실제 SCADA상에 적용되지 않음",
+                "application": "모니터링"
+            }
+        }
+    }
+}

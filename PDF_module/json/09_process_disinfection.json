@@ -1,0 +1,165 @@
+{
+    "process_disinfection": {
+        "basic_info": {
+            "name": "소독 공정",
+            "process_code": "disinfection",
+            "order": 6,
+            "keywords": ["소독", "전차염", "중차염", "후차염", "잔류염소"],
+            "goals": [
+                "체류시간 내 잔류염소 유지",
+                "주입률 최적화"
+            ]
+        },
+        "input_parameters": [
+            {
+                "name": "기온",
+                "importance": "medium"
+            },
+            {
+                "name": "수온",
+                "importance": "high"
+            },
+            {
+                "name": "탁도",
+                "importance": "high"
+            },
+            {
+                "name": "pH",
+                "importance": "medium"
+            },
+            {
+                "name": "염소요구량",
+                "importance": "high"
+            },
+            {
+                "name": "침전지 잔류염소",
+                "importance": "high"
+            },
+            {
+                "name": "현재/목표 잔류염소",
+                "importance": "high"
+            },
+            {
+                "name": "현재 주입률",
+                "importance": "high"
+            }
+        ],
+        "ai_model": {
+            "model_selection": {
+                "selected": "LSTM",
+                "metrics": {
+                    "MAE": "0.0215",
+                    "MSE": "0.0016",
+                    "R2": "0.95"
+                },
+                "test_period": "2022-08 ~ 2022-11"
+            }
+        },
+        "data_processing": {
+            "preprocessing": [
+                {
+                    "type": "IQR 이상치 제거",
+                    "purpose": "데이터 정제"
+                },
+                {
+                    "type": "평활",
+                    "purpose": "노이즈 제거"
+                },
+                {
+                    "type": "MinMaxScaler",
+                    "purpose": "데이터 정규화"
+                }
+            ]
+        },
+        "operation_results": {
+            "targets_examples": [
+                {
+                    "stage": "전차염",
+                    "목표잔류염소": "0.35",
+                    "결과": "목표 내 운영"
+                },
+                {
+                    "stage": "후차염",
+                    "목표잔류염소": "0.7",
+                    "결과": "목표 내 운영"
+                }
+            ]
+        },
+        "ui_features": {
+            "data_display": {
+                "update_cycle": "데이터 업데이트 주기 표시",
+                "prediction_cycle": "예측 주기 표시",
+                "control_cycle": "제어 주기 표시"
+            },
+            "stages": {
+                "전차염": {
+                    "description": "초기 소독 단계",
+                    "key_metrics": ["주입률", "잔류염소"]
+                },
+                "중차염": {
+                    "description": "중간 소독 단계",
+                    "key_metrics": ["주입률", "잔류염소"]
+                },
+                "후차염": {
+                    "description": "최종 소독 단계",
+                    "key_metrics": ["주입률", "잔류염소"]
+                }
+            }
+        },
+        "operation_modes": {
+            "AI": {
+                "description": "예측값이 SCADA상에 적용됨",
+                "application": "자동"
+            },
+            "AI추천": {
+                "description": "사용자가 제어 팝업창을 보고 판단하여 예측값의 적용 여부를 선택할 수 있음",
+                "application": "수동 승인"
+            },
+            "분석": {
+                "description": "예측값이 실제 SCADA상에 적용되지 않음",
+                "application": "모니터링"
+            }
+        },
+        "alarms": {
+            "conditions": [
+                {
+                    "type": "잔류염소 이상",
+                    "threshold": {
+                        "low": "설정 하한값 미만",
+                        "high": "설정 상한값 초과"
+                    },
+                    "duration": "30분 이상",
+                    "action": "알람 발생"
+                },
+                {
+                    "type": "주입률 이탈",
+                    "condition": "이전 대비 주입률 급격한 변화",
+                    "action": "알람 발생"
+                }
+            ]
+        },
+        "monitoring_parameters": {
+            "real_time": [
+                {
+                    "name": "잔류염소",
+                    "unit": "mg/L",
+                    "display": "실시간 그래프",
+                    "stages": ["전차염", "중차염", "후차염"]
+                },
+                {
+                    "name": "주입률",
+                    "unit": "mg/L",
+                    "display": "실시간 값",
+                    "stages": ["전차염", "중차염", "후차염"]
+                }
+            ],
+            "calculated": [
+                {
+                    "name": "예측 주입률",
+                    "calculation": "AI 모델 기반",
+                    "update": "실시간"
+                }
+            ]
+        }
+    }
+}

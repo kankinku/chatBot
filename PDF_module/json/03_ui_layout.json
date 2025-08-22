@@ -1,0 +1,172 @@
+{
+    "ui_layout": {
+        "regions": {
+            "top_bar": {
+                "name": "상단 영역",
+                "components": [
+                    {
+                        "type": "datetime",
+                        "description": "현재 날짜와 시간 표시"
+                    },
+                    {
+                        "type": "login_button",
+                        "description": "로그인/로그아웃 기능",
+                        "states": ["로그인", "로그아웃"]
+                    }
+                ],
+                "keywords": ["상단", "시간", "로그인"]
+            },
+            "left_sidebar": {
+                "name": "좌측 사이드바 영역",
+                "menu_items": [
+                    {
+                        "name": "대시보드",
+                        "description": "스마트 정수장 AI 플랫폼 메인화면",
+                        "keywords": ["메인", "대시보드"]
+                    },
+                    {
+                        "name": "자율 운영",
+                        "sub_items": [
+                            "착수 공정",
+                            "약품 공정",
+                            "혼화응집 공정",
+                            "침전 공정",
+                            "여과 공정",
+                            "소독 공정"
+                        ],
+                        "keywords": ["공정", "운영", "제어"]
+                    },
+                    {
+                        "name": "EMS",
+                        "sub_items": [
+                            "대시보드",
+                            "AI 분석",
+                            "에너지 사용 현황",
+                            "에너지 절감 관리",
+                            "설정"
+                        ],
+                        "keywords": ["에너지", "전력", "관리"]
+                    },
+                    {
+                        "name": "PMS",
+                        "sub_items": [
+                            "대시보드",
+                            "통계/이력",
+                            "정밀 진단"
+                        ],
+                        "keywords": ["펌프", "모터", "진단"]
+                    },
+                    {
+                        "name": "운영 관리",
+                        "sub_items": [
+                            "알람 이력",
+                            "알람 관리",
+                            "사용자 관리",
+                            "로그인 이력",
+                            "제어 이력",
+                            "AI 운영 현황"
+                        ],
+                        "access_control": {
+                            "사용자 관리": "관리자만 접근 가능"
+                        },
+                        "keywords": ["관리", "이력", "알람"]
+                    }
+                ]
+            },
+            "center_content": {
+                "name": "중앙 콘텐츠 영역",
+                "features": [
+                    {
+                        "type": "process_icons",
+                        "interaction": {
+                            "hover": "공정별 주요 인자 표시",
+                            "click": "해당 공정 화면으로 이동"
+                        }
+                    },
+                    {
+                        "type": "process_status",
+                        "display": "공정의 전체적인 운영 정보"
+                    }
+                ],
+                "processes": [
+                    {
+                        "name": "착수",
+                        "icon": "intake_icon",
+                        "key_metrics": ["수위", "유량"]
+                    },
+                    {
+                        "name": "약품",
+                        "icon": "chemical_icon",
+                        "key_metrics": ["주입률", "수질"]
+                    },
+                    {
+                        "name": "혼화응집",
+                        "icon": "coagulation_icon",
+                        "key_metrics": ["교반 속도", "체류 시간"]
+                    },
+                    {
+                        "name": "침전",
+                        "icon": "sedimentation_icon",
+                        "key_metrics": ["탁도", "슬러지 수위"]
+                    },
+                    {
+                        "name": "여과",
+                        "icon": "filtration_icon",
+                        "key_metrics": ["여과 속도", "수위"]
+                    },
+                    {
+                        "name": "소독",
+                        "icon": "disinfection_icon",
+                        "key_metrics": ["잔류 염소", "주입률"]
+                    }
+                ]
+            },
+            "right_menu": {
+                "name": "우측 메뉴 영역",
+                "components": [
+                    {
+                        "name": "운영 모드",
+                        "description": "자율 운영의 운영 상태 표시 및 모드 변경",
+                        "modes": ["AI", "AI 추천", "분석"],
+                        "keywords": ["모드", "제어", "운영"]
+                    },
+                    {
+                        "name": "운영 이력",
+                        "description": "AI 운영 정보 팝업 표시",
+                        "keywords": ["이력", "기록", "로그"]
+                    },
+                    {
+                        "name": "EMS 정보",
+                        "description": "에너지 관리 시스템 정보",
+                        "keywords": ["에너지", "전력"]
+                    },
+                    {
+                        "name": "PMS 정보",
+                        "description": "펌프 모터 시스템 정보",
+                        "keywords": ["펌프", "모터"]
+                    }
+                ]
+            }
+        },
+        "common_features": {
+            "navigation": {
+                "type": "hierarchical",
+                "breadcrumb": true,
+                "quick_access": true
+            },
+            "responsiveness": {
+                "supported": true,
+                "breakpoints": [
+                    "desktop",
+                    "tablet",
+                    "mobile"
+                ]
+            },
+            "accessibility": {
+                "keyboard_navigation": true,
+                "screen_reader_support": true,
+                "high_contrast": true
+            }
+        }
+    }
+}
