@@ -24,6 +24,7 @@ from core.question_analyzer import QuestionAnalyzer
 from core.answer_generator import AnswerGenerator, ModelType, GenerationConfig
 from core.evaluator import PDFQAEvaluator
 from api.endpoints import run_server
+from utils.file_manager import PDFFileManager, setup_pdf_storage
 
 # 로깅 설정
 logging.basicConfig(
@@ -66,6 +67,7 @@ class PDFQASystem:
         self.question_analyzer: Optional[QuestionAnalyzer] = None
         self.answer_generator: Optional[AnswerGenerator] = None
         self.evaluator: Optional[PDFQAEvaluator] = None
+        self.file_manager: Optional[PDFFileManager] = None
         
         logger.info(f"PDF QA 시스템 초기화: {model_type}/{model_name}")
     
@@ -90,6 +92,16 @@ class PDFQASystem:
                 embedding_dimension=768,  # 기본 임베딩 차원
                 persist_directory="./data/vector_store"
             )
+            
+            # 기존 벡터 데이터 로드 시도
+            vector_store_path = "./data/vector_store"
+            if os.path.exists(vector_store_path):
+                try:
+                    self.vector_store.load(vector_store_path)
+                    logger.info("✓ 기존 벡터 저장소 데이터 로드 완료")
+                except Exception as e:
+                    logger.warning(f"벡터 저장소 로드 실패 (새 저장소 생성): {e}")
+            
             logger.info("✓ 벡터 저장소 초기화 완료")
             
             # 3. 질문 분석기 초기화
@@ -123,6 +135,10 @@ class PDFQASystem:
                 embedding_model=self.embedding_model
             )
             logger.info("✓ 평가기 초기화 완료")
+            
+            # 6. 파일 매니저 초기화
+            self.file_manager = setup_pdf_storage()
+            logger.info("✓ 파일 매니저 초기화 완료")
             
             logger.info("모든 컴포넌트 초기화 완료!")
             return True
@@ -263,6 +279,9 @@ class PDFQASystem:
         print("  - 질문 입력: 자유롭게 질문하세요")
         print("  - '/clear': 대화 기록 초기화")
         print("  - '/status': 시스템 상태 조회")
+        print("  - '/pdfs': 저장된 PDF 목록 조회")
+        print("  - '/add <파일경로>': PDF 파일 추가")
+        print("  - '/categories': 사용 가능한 카테고리 조회")
         print("  - '/exit': 프로그램 종료")
         print("="*60)
         
@@ -282,6 +301,16 @@ class PDFQASystem:
                     continue
                 elif user_input == '/status':
                     self.show_system_status()
+                    continue
+                elif user_input == '/pdfs':
+                    self.show_pdf_list()
+                    continue
+                elif user_input == '/categories':
+                    self.show_categories()
+                    continue
+                elif user_input.startswith('/add '):
+                    pdf_path = user_input[5:].strip()
+                    self.add_pdf_interactive(pdf_path)
                     continue
                 
                 # 질문 처리
@@ -314,6 +343,91 @@ class PDFQASystem:
             print(f"- 메모리 사용량: {memory_mb:.1f}MB")
         except:
             pass
+    
+    def show_pdf_list(self):
+        """저장된 PDF 목록 표시"""
+        pdfs = self.file_manager.list_pdfs()
+        
+        if not pdfs:
+            print("\n저장된 PDF 파일이 없습니다.")
+            print("PDF 파일을 추가하려면 '/add <파일경로>' 명령어를 사용하세요.")
+            return
+        
+        print(f"\n저장된 PDF 파일 ({len(pdfs)}개):")
+        print("-" * 60)
+        
+        for i, pdf in enumerate(pdfs, 1):
+            print(f"{i:2d}. {pdf['filename']}")
+            print(f"    카테고리: {pdf['category']}")
+            print(f"    크기: {pdf['size_mb']}MB")
+            print(f"    수정일: {pdf['modified_at'][:19].replace('T', ' ')}")
+            print()
+    
+    def show_categories(self):
+        """사용 가능한 카테고리 표시"""
+        categories = self.file_manager.get_categories()
+        storage_info = self.file_manager.get_storage_info()
+        
+        print(f"\n사용 가능한 카테고리:")
+        for category in categories:
+            category_pdfs = self.file_manager.list_pdfs(category)
+            print(f"  - {category}: {len(category_pdfs)}개 파일")
+        
+        print(f"\n저장소 정보:")
+        print(f"  - 전체 파일 수: {storage_info['total_files']}개")
+        print(f"  - 전체 크기: {storage_info['total_size_mb']}MB")
+        print(f"  - 저장 위치: {storage_info['pdf_directory']}")
+    
+    def add_pdf_interactive(self, pdf_path: str):
+        """대화형 PDF 추가"""
+        try:
+            if not os.path.exists(pdf_path):
+                print(f"파일을 찾을 수 없습니다: {pdf_path}")
+                return
+            
+            # 카테고리 선택
+            categories = self.file_manager.get_categories()
+            print("\n사용 가능한 카테고리:")
+            for i, category in enumerate(categories, 1):
+                print(f"  {i}. {category}")
+            print(f"  {len(categories) + 1}. 새 카테고리 생성")
+            
+            try:
+                choice = input("카테고리를 선택하세요 (번호 입력, 엔터=misc): ").strip()
+                
+                if not choice:
+                    category = "misc"
+                elif choice.isdigit():
+                    choice_num = int(choice)
+                    if 1 <= choice_num <= len(categories):
+                        category = categories[choice_num - 1]
+                    elif choice_num == len(categories) + 1:
+                        category = input("새 카테고리 이름: ").strip() or "misc"
+                        self.file_manager.create_category(category)
+                    else:
+                        category = "misc"
+                else:
+                    category = choice
+                
+            except:
+                category = "misc"
+            
+            # PDF 저장
+            result = self.file_manager.save_pdf(pdf_path, category)
+            print(f"\n✓ PDF 파일이 저장되었습니다:")
+            print(f"  파일명: {result['filename']}")
+            print(f"  카테고리: {result['category']}")
+            print(f"  저장 경로: {result['saved_path']}")
+            
+            # PDF 처리 여부 선택
+            process_choice = input("\n이 PDF를 지금 처리하시겠습니까? (y/N): ").strip().lower()
+            if process_choice == 'y':
+                print("PDF 처리 중...")
+                process_result = self.process_pdf(result['saved_path'])
+                print(f"✓ PDF 처리 완료: {process_result['total_chunks']}개 청크 생성")
+            
+        except Exception as e:
+            print(f"PDF 추가 중 오류 발생: {e}")
     
     def cleanup(self):
         """시스템 정리"""
@@ -369,8 +483,12 @@ def main():
                 logger.error("process 모드에서는 --pdf와 --question이 필요합니다.")
                 sys.exit(1)
             
+            # PDF를 관리 폴더로 복사
+            save_result = system.file_manager.save_pdf(args.pdf, "misc")
+            print(f"PDF 저장 완료: {save_result['saved_path']}")
+            
             # PDF 처리
-            pdf_result = system.process_pdf(args.pdf)
+            pdf_result = system.process_pdf(save_result['saved_path'])
             print(f"PDF 처리 완료: {pdf_result}")
             
             # 질문 처리
@@ -379,8 +497,13 @@ def main():
             
         else:  # interactive 모드
             if args.pdf:
-                # PDF 먼저 처리
-                pdf_result = system.process_pdf(args.pdf)
+                # PDF를 관리 폴더로 복사 후 처리
+                print(f"PDF 파일을 관리 폴더로 복사 중: {args.pdf}")
+                save_result = system.file_manager.save_pdf(args.pdf, "misc")
+                print(f"저장 완료: {save_result['saved_path']}")
+                
+                # PDF 처리
+                pdf_result = system.process_pdf(save_result['saved_path'])
                 print(f"PDF 처리 완료: {pdf_result['filename']} ({pdf_result['total_chunks']}개 청크)")
             
             # 대화형 모드 시작

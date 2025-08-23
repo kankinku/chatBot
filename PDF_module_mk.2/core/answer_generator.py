@@ -124,7 +124,17 @@ class OllamaInterface(LocalLLMInterface):
             
             # 모델이 설치되어 있는지 확인
             models = self.client.list()
-            model_names = [model['name'] for model in models.get('models', [])]
+            logger.info(f"Ollama 응답: {models}")
+            
+            model_names = []
+            if 'models' in models:
+                for model in models['models']:
+                    if 'name' in model:
+                        model_names.append(model['name'])
+                    elif 'model' in model:
+                        model_names.append(model['model'])
+            
+            logger.info(f"사용 가능한 모델들: {model_names}")
             
             if self.model_name not in model_names:
                 logger.warning(f"모델 {self.model_name}이 설치되지 않았습니다.")
@@ -369,7 +379,15 @@ class AnswerGenerator:
             generation_config: 생성 설정
         """
         self.model_type = model_type
-        self.generation_config = generation_config or GenerationConfig()
+        # 한국어 생성에 최적화된 기본 설정
+        if generation_config is None:
+            self.generation_config = GenerationConfig(
+                temperature=0.3,  # 더 결정적인 생성으로 일관된 한국어
+                top_p=0.8,       # 상위 확률 토큰만 고려
+                top_k=30         # 상위 30개 토큰만 고려
+            )
+        else:
+            self.generation_config = generation_config
         
         # 모델 인터페이스 초기화
         if model_type == ModelType.OLLAMA:
@@ -404,10 +422,14 @@ class AnswerGenerator:
 
 사용자 질문: {question}
 
-위 문서 내용을 바탕으로 질문에 대해 정확하고 도움이 되는 답변을 제공해주세요. 
-답변은 한국어로 작성하고, 문서에 없는 내용은 추측하지 말고 "문서에서 해당 정보를 찾을 수 없습니다"라고 말해주세요.
+지시사항:
+1. 반드시 한국어로만 답변하세요.
+2. 2-4문장으로 간결하고 핵심적인 답변을 제공하세요.
+3. 문서에 없는 내용은 추측하지 말고 "문서에서 해당 정보를 찾을 수 없습니다"라고 말하세요.
+4. 반드시 완전한 문장으로 끝내세요 (예: ~습니다. ~입니다. ~됩니다.)
+5. 영어나 다른 언어를 사용하지 마세요.
 
-답변:""",
+완전한 한국어 답변:""",
 
             "with_context": """다음은 이전 대화 내용입니다:
 {conversation_history}
@@ -417,10 +439,14 @@ class AnswerGenerator:
 
 사용자 질문: {question}
 
-이전 대화의 맥락을 고려하여 위 문서 내용을 바탕으로 질문에 답변해주세요. 
-답변은 한국어로 작성하고, 이전 대화와 자연스럽게 연결되도록 해주세요.
+지시사항:
+1. 반드시 한국어로만 답변하세요.
+2. 2-4문장으로 간결하게 답변하세요.
+3. 반드시 완전한 문장으로 끝내세요 (예: ~습니다. ~입니다. ~됩니다.)
+4. 이전 대화와 자연스럽게 연결되도록 답변하세요.
+5. 영어나 다른 언어를 절대 사용하지 마세요.
 
-답변:""",
+완전한 한국어 답변:""",
 
             "comparative": """다음은 문서의 관련 내용들입니다:
 
@@ -428,10 +454,14 @@ class AnswerGenerator:
 
 사용자 질문: {question}
 
-위 내용을 바탕으로 비교 분석하여 답변해주세요. 
-차이점과 유사점을 명확히 구분하여 설명하고, 구체적인 근거를 제시해주세요.
+지시사항:
+1. 반드시 한국어로만 답변하세요.
+2. 위 내용을 바탕으로 비교 분석하여 답변하세요.
+3. 차이점과 유사점을 명확히 구분하여 설명하고, 구체적인 근거를 제시하세요.
+4. 정중하고 자연스러운 한국어로 작성하세요.
+5. 영어나 다른 언어를 절대 사용하지 마세요.
 
-답변:""",
+한국어 답변:""",
 
             "procedural": """다음은 문서의 관련 내용입니다:
 
@@ -439,10 +469,14 @@ class AnswerGenerator:
 
 사용자 질문: {question}
 
-위 내용을 바탕으로 단계별로 설명해주세요. 
-각 단계를 명확히 구분하고, 순서대로 정리하여 답변해주세요.
+지시사항:
+1. 반드시 한국어로만 답변하세요.
+2. 위 내용을 바탕으로 단계별로 설명하세요.
+3. 각 단계를 명확히 구분하고, 순서대로 정리하여 답변하세요.
+4. 정중하고 자연스러운 한국어로 작성하세요.
+5. 영어나 다른 언어를 절대 사용하지 마세요.
 
-답변:""",
+한국어 답변:""",
 
             "clarification": """다음은 문서의 관련 내용입니다:
 
@@ -450,10 +484,14 @@ class AnswerGenerator:
 
 이전 답변이나 설명에 대한 추가 질문: {question}
 
-위 내용을 바탕으로 더 구체적이고 자세한 설명을 제공해주세요. 
-기술적인 용어가 있다면 쉽게 풀어서 설명해주세요.
+지시사항:
+1. 반드시 한국어로만 답변하세요.
+2. 위 내용을 바탕으로 더 구체적이고 자세한 설명을 제공하세요.
+3. 기술적인 용어가 있다면 쉽게 풀어서 설명하세요.
+4. 정중하고 자연스러운 한국어로 작성하세요.
+5. 영어나 다른 언어를 절대 사용하지 마세요.
 
-답변:"""
+한국어 답변:"""
         }
     
     def generate_answer(self, 
@@ -611,7 +649,7 @@ class AnswerGenerator:
     
     def _post_process_answer(self, generated_text: str) -> str:
         """
-        생성된 답변 후처리
+        생성된 답변 후처리 (한국어 강제)
         
         Args:
             generated_text: 생성된 원본 텍스트
@@ -619,27 +657,104 @@ class AnswerGenerator:
         Returns:
             후처리된 답변
         """
+        import re
+        
         # 불필요한 공백 제거
         answer = generated_text.strip()
         
-        # 반복되는 문장 제거
+        # 영어 문장이나 영어 단어가 주를 이루는 부분 제거
+        lines = answer.split('\n')
+        korean_lines = []
+        
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+                
+            # 한글이 50% 이상인 라인만 유지
+            korean_chars = len(re.findall(r'[가-힣]', line))
+            total_chars = len(re.findall(r'[a-zA-Z가-힣]', line))
+            
+            if total_chars == 0:
+                korean_lines.append(line)  # 숫자나 기호만 있는 경우
+            elif korean_chars / total_chars >= 0.3:  # 한글이 30% 이상
+                korean_lines.append(line)
+        
+        answer = '\n'.join(korean_lines)
+        
+        # 영어로 시작하는 문장 제거
         sentences = answer.split('.')
-        unique_sentences = []
-        seen = set()
+        korean_sentences = []
         
         for sentence in sentences:
             sentence = sentence.strip()
-            if sentence and sentence not in seen:
-                unique_sentences.append(sentence)
-                seen.add(sentence)
+            if not sentence:
+                continue
+                
+            # 영어로 시작하는 문장 제거
+            if re.match(r'^[a-zA-Z]', sentence):
+                continue
+                
+            # 반복 문장 제거
+            if sentence not in korean_sentences:
+                korean_sentences.append(sentence)
         
-        answer = '. '.join(unique_sentences)
+        answer = '. '.join(korean_sentences)
         
-        # 불완전한 문장 제거
-        if answer and not answer.endswith(('.', '!', '?', '다', '습니다', '요')):
-            last_period = answer.rfind('.')
-            if last_period > len(answer) * 0.7:  # 전체 길이의 70% 이상까지 온 경우
-                answer = answer[:last_period + 1]
+        # 한국어 문장 종결어미로 끝나지 않으면 정리
+        korean_endings = ['다.', '습니다.', '요.', '음.', '네.', '죠.', '다!', '습니다!', '요!', '다?', '습니다?', '요?']
+        proper_endings = ['.', '!', '?']
+        
+        # 적절한 종결어미로 끝나는지 확인
+        ends_properly = any(answer.endswith(ending) for ending in korean_endings + proper_endings)
+        
+        if answer and not ends_properly:
+            # 마지막 완전한 한국어 종결을 찾기
+            last_positions = []
+            
+            # 다양한 종결어미 위치 찾기
+            for ending in ['다.', '습니다.', '요.', '다!', '습니다!', '요!', '다?', '습니다?', '요?']:
+                pos = answer.rfind(ending)
+                if pos >= 0:
+                    last_positions.append(pos + len(ending))
+            
+            # 일반적인 문장 부호도 확인
+            for punct in ['.', '!', '?']:
+                pos = answer.rfind(punct)
+                if pos >= 0:
+                    # 문장 부호 앞에 한글이 있는지 확인
+                    if pos > 0 and answer[pos-1] in '다요음네':
+                        last_positions.append(pos + 1)
+            
+            if last_positions:
+                # 가장 뒤에 있는 완전한 종결점 사용
+                last_end = max(last_positions)
+                if last_end > len(answer) * 0.3:  # 전체 길이의 30% 이상인 경우만
+                    answer = answer[:last_end]
+            else:
+                # 완전한 종결을 찾지 못한 경우, 자연스럽게 마무리
+                answer = answer.rstrip('.,!?') + '.'
+        
+        # 최종 정리: 자연스러운 종결 보장
+        if answer.strip():
+            answer = answer.strip()
+            
+            # 마지막 문자가 한글인 경우 적절한 종결어미 추가
+            if answer and answer[-1] in '가나다라마바사아자차카타파하':
+                answer += '입니다.'
+            elif answer and not answer.endswith(('.', '!', '?')):
+                # 어떤 종결도 없는 경우 마침표 추가
+                answer += '.'
+                
+            # 불완전한 문장 제거 (한 글자짜리 단어나 의미없는 끝부분)
+            if len(answer) > 1 and answer.endswith(('다.', '요.', '습니다.')):
+                # 이미 적절히 끝난 경우 그대로 유지
+                pass
+            elif not answer.endswith(('.', '!', '?')):
+                # 여전히 완전하지 않은 경우 강제로 마무리
+                answer = answer.rstrip('.,!?가나다라마바사아자차카타파하') + '입니다.'
+        else:
+            answer = "죄송합니다. 해당 질문에 대한 적절한 답변을 생성할 수 없습니다."
         
         return answer
     

@@ -51,6 +51,38 @@ PDF_module_mk.2/
 └── README.md               # 프로젝트 문서
 ```
 
+## 📁 PDF 파일 관리
+
+시스템은 PDF 파일을 체계적으로 관리할 수 있는 폴더 구조를 제공합니다:
+
+```
+data/
+├── pdfs/                    # PDF 파일 저장소
+│   ├── academic/           # 학술 자료
+│   ├── manuals/           # 매뉴얼 및 가이드
+│   ├── reports/           # 보고서
+│   └── misc/              # 기타 문서
+├── vector_store/          # 벡터 데이터 (자동 생성)
+└── conversation_history/  # 대화 기록
+```
+
+**PDF 추가 방법:**
+```bash
+# 대화형 모드에서
+python main.py --mode interactive
+질문: /add C:\path\to\your\document.pdf
+
+# 명령줄에서 (자동으로 data/pdfs/misc/로 복사됨)
+python main.py --mode interactive --model-name mistral --pdf document.pdf
+```
+
+**관리 명령어:**
+- `/pdfs`: 저장된 PDF 목록 조회
+- `/categories`: 카테고리 및 저장소 정보
+- `/add <경로>`: PDF 파일 추가
+
+상세한 PDF 관리 가이드는 [`docs/PDF_MANAGEMENT_GUIDE.md`](docs/PDF_MANAGEMENT_GUIDE.md)를 참조하세요.
+
 ## 🚀 빠른 시작
 
 ### 1. 환경 설정
@@ -73,9 +105,9 @@ pip install -r requirements.txt
 **Ollama 사용 (권장)**
 ```bash
 # Ollama 설치: https://ollama.ai/
-# 한국어 모델 다운로드
+# 한국어 최적화 모델 다운로드
+ollama pull mistral
 ollama pull llama2:7b
-ollama pull mistral:7b
 ```
 
 **HuggingFace 모델 사용**
@@ -88,25 +120,25 @@ ollama pull mistral:7b
 
 **대화형 모드 (추천)**
 ```bash
-# PDF 파일과 함께 대화형 모드 시작
-python main.py --mode interactive --pdf sample.pdf
+# PDF 파일과 함께 대화형 모드 시작 (한국어 최적화 모델)
+python main.py --mode interactive --model-name mistral --pdf sample.pdf
 
-# 기본 모델로 대화형 모드
-python main.py --mode interactive
+# 기본 한국어 최적화 모드
+python main.py --mode interactive --model-name mistral
 ```
 
 **API 서버 모드**
 ```bash
-# FastAPI 서버 시작
-python main.py --mode server --port 8000
+# FastAPI 서버 시작 (한국어 최적화 모델)
+python main.py --mode server --model-name mistral --port 8000
 
 # API 문서 확인: http://localhost:8000/docs
 ```
 
 **단일 처리 모드**
 ```bash
-# 특정 PDF와 질문 처리
-python main.py --mode process --pdf document.pdf --question "이 문서의 주요 내용은 무엇인가요?"
+# 특정 PDF와 질문 처리 (한국어 최적화 모델)
+python main.py --mode process --model-name mistral --pdf document.pdf --question "이 문서의 주요 내용은 무엇인가요?"
 ```
 
 ## 💻 사용 예시
@@ -116,8 +148,8 @@ python main.py --mode process --pdf document.pdf --question "이 문서의 주�
 ```python
 from main import PDFQASystem
 
-# 시스템 초기화
-system = PDFQASystem(model_type="ollama", model_name="llama2:7b")
+# 시스템 초기화 (한국어 최적화 모델)
+system = PDFQASystem(model_type="ollama", model_name="mistral")
 system.initialize_components()
 
 # PDF 처리
@@ -316,6 +348,6 @@ trainer.train()
 
 **⚡ 빠른 테스트:**
 ```bash
-# 시스템이 정상 작동하는지 확인
-python main.py --mode interactive
+# 시스템이 정상 작동하는지 확인 (한국어 최적화 모델)
+python main.py --mode interactive --model-name mistral
 ```
