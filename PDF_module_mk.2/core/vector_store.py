@@ -115,42 +115,180 @@ class FAISSVectorStore(VectorStoreInterface):
         
         logger.info(f"{len(chunks)}개 청크를 FAISS 인덱스에 추가 (총 {len(self.chunks)}개)")
     
-    def search(self, query_embedding: np.ndarray, top_k: int = 5) -> List[Tuple[TextChunk, float]]:
+    def search(self, query_embedding: np.ndarray, top_k: int = 5, 
+               use_hybrid_search: bool = True) -> List[Tuple[TextChunk, float]]:
         """
-        쿼리 임베딩과 유사한 청크들을 검색
+        쿼리 임베딩과 유사한 청크들을 검색 (개선된 버전)
         
         Args:
-            query_embedding: 쿼리의 임베딩 벡터
-            top_k: 반환할 상위 결과 개수
+            query_embedding: 쿼리 임베딩 벡터
+            top_k: 반환할 최대 결과 수
+            use_hybrid_search: 하이브리드 검색 사용 여부
             
         Returns:
-            (TextChunk, 유사도_점수) 튜플 리스트
+            (TextChunk, 유사도 점수) 튜플 리스트
         """
-        if self.index.ntotal == 0:
+        if len(self.chunks) == 0:
             return []
         
-        # 쿼리 임베딩 정규화
-        query_embedding = query_embedding.copy()
+        # 1. 벡터 유사도 검색
         if self.normalize_embeddings:
-            norm = np.linalg.norm(query_embedding)
-            if norm > 0:
-                query_embedding = query_embedding / norm
+            query_embedding = query_embedding / np.linalg.norm(query_embedding)
         
         # FAISS 검색
-        query_vector = query_embedding.reshape(1, -1).astype('float32')
-        scores, indices = self.index.search(query_vector, min(top_k, self.index.ntotal))
+        scores, indices = self.index.search(
+            query_embedding.reshape(1, -1), 
+            min(top_k * 2, len(self.chunks))  # 더 많은 후보 검색
+        )
         
-        # 결과 구성
-        results = []
-        for score, idx in zip(scores[0], indices[0]):
-            if idx == -1:  # FAISS에서 유효하지 않은 인덱스
+        # 2. 하이브리드 검색 (키워드 매칭 + 벡터 유사도)
+        if use_hybrid_search:
+            results = self._hybrid_search(query_embedding, scores[0], indices[0], top_k)
+        else:
+            results = [(self.chunks[i], float(s)) for s, i in zip(scores[0], indices[0])]
+        
+        # 3. 결과 필터링 및 정렬
+        filtered_results = self._filter_and_rank_results(results, top_k)
+        
+        return filtered_results[:top_k]
+    
+    def _hybrid_search(self, query_embedding: np.ndarray, 
+                      vector_scores: np.ndarray, 
+                      vector_indices: np.ndarray,
+                      top_k: int) -> List[Tuple[TextChunk, float]]:
+        """
+        하이브리드 검색 (벡터 유사도 + 키워드 매칭)
+        
+        Args:
+            query_embedding: 쿼리 임베딩
+            vector_scores: 벡터 유사도 점수들
+            vector_indices: 벡터 인덱스들
+            top_k: 반환할 결과 수
+            
+        Returns:
+            하이브리드 점수로 정렬된 결과들
+        """
+        hybrid_results = []
+        
+        for score, idx in zip(vector_scores, vector_indices):
+            chunk = self.chunks[idx]
+            
+            # 벡터 유사도 점수 (0.6 가중치)
+            vector_score = float(score) * 0.6
+            
+            # 키워드 매칭 점수 (0.4 가중치)
+            keyword_score = self._calculate_keyword_score(chunk) * 0.4
+            
+            # 하이브리드 점수
+            hybrid_score = vector_score + keyword_score
+            
+            hybrid_results.append((chunk, hybrid_score))
+        
+        # 점수로 정렬
+        hybrid_results.sort(key=lambda x: x[1], reverse=True)
+        
+        return hybrid_results
+    
+    def _calculate_keyword_score(self, chunk: TextChunk) -> float:
+        """
+        청크의 키워드 매칭 점수 계산
+        
+        Args:
+            chunk: 평가할 텍스트 청크
+            
+        Returns:
+            키워드 매칭 점수 (0.0 ~ 1.0)
+        """
+        # 중요 키워드 패턴 (도메인별로 확장 가능)
+        important_keywords = [
+            '시스템', '프로그램', '소프트웨어', '애플리케이션',
+            '데이터', '정보', '자료', '파일',
+            '사용자', '관리자', '고객', '이용자',
+            '보안', '인증', '권한', '접근',
+            '성능', '속도', '효율', '품질',
+            '오류', '문제', '장애', '해결',
+            '설정', '구성', '환경', '옵션',
+            '백업', '복구', '저장', '보관',
+            '네트워크', '통신', '연결', '전송',
+            '데이터베이스', 'DB', '테이블', '쿼리'
+        ]
+        
+        content_lower = chunk.content.lower()
+        score = 0.0
+        
+        # 중요 키워드 매칭
+        for keyword in important_keywords:
+            if keyword in content_lower:
+                score += 0.1
+        
+        # 키워드 밀도 계산
+        total_words = len(content_lower.split())
+        if total_words > 0:
+            keyword_density = score / total_words
+            score += keyword_density * 0.5
+        
+        return min(score, 1.0)
+    
+    def _filter_and_rank_results(self, results: List[Tuple[TextChunk, float]], 
+                                top_k: int) -> List[Tuple[TextChunk, float]]:
+        """
+        검색 결과 필터링 및 재정렬
+        
+        Args:
+            results: 원본 검색 결과
+            top_k: 반환할 결과 수
+            
+        Returns:
+            필터링 및 재정렬된 결과
+        """
+        filtered_results = []
+        
+        for chunk, score in results:
+            # 최소 점수 임계값
+            if score < 0.1:
                 continue
             
-            chunk = self.chunks[idx]
-            similarity_score = float(score)  # Inner product 점수
-            results.append((chunk, similarity_score))
+            # 중복 내용 필터링
+            is_duplicate = False
+            for existing_chunk, _ in filtered_results:
+                if self._is_similar_content(chunk.content, existing_chunk.content):
+                    is_duplicate = True
+                    break
+            
+            if not is_duplicate:
+                filtered_results.append((chunk, score))
+            
+            if len(filtered_results) >= top_k:
+                break
         
-        return results
+        return filtered_results
+    
+    def _is_similar_content(self, content1: str, content2: str, 
+                           similarity_threshold: float = 0.8) -> bool:
+        """
+        두 텍스트 내용의 유사도 판단
+        
+        Args:
+            content1: 첫 번째 텍스트
+            content2: 두 번째 텍스트
+            similarity_threshold: 유사도 임계값
+            
+        Returns:
+            유사한 내용인지 여부
+        """
+        # 간단한 Jaccard 유사도 계산
+        words1 = set(content1.lower().split())
+        words2 = set(content2.lower().split())
+        
+        if not words1 or not words2:
+            return False
+        
+        intersection = len(words1 & words2)
+        union = len(words1 | words2)
+        
+        similarity = intersection / union if union > 0 else 0.0
+        
+        return similarity >= similarity_threshold
     
     def save(self, path: str) -> None:
         """

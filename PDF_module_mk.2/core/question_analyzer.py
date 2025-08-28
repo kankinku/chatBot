@@ -20,6 +20,12 @@ from sklearn.metrics.pairwise import cosine_similarity
 import logging
 logger = logging.getLogger(__name__)
 
+# 키워드 향상 모듈 import
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils.keyword_enhancer import KeywordEnhancer
+
 class QuestionType(Enum):
     """질문 유형 분류"""
     FACTUAL = "factual"              # 사실 질문 (무엇, 언제, 어디서)
@@ -66,12 +72,13 @@ class QuestionAnalyzer:
     5. 후속 질문 처리
     """
     
-    def __init__(self, embedding_model: str = "jhgan/ko-sroberta-multitask"):
+    def __init__(self, embedding_model: str = "jhgan/ko-sroberta-multitask", domain: str = "general"):
         """
         QuestionAnalyzer 초기화
         
         Args:
             embedding_model: 임베딩 모델 이름
+            domain: 도메인 (general, technical, business, academic 등)
         """
         # 임베딩 모델 로드
         try:
@@ -87,6 +94,9 @@ class QuestionAnalyzer:
             ngram_range=(1, 3),
             stop_words=None
         )
+        
+        # 키워드 향상 모듈 초기화
+        self.keyword_enhancer = KeywordEnhancer(domain=domain)
         
         # 대화 기록 저장
         self.conversation_history: List[ConversationItem] = []
@@ -130,7 +140,7 @@ class QuestionAnalyzer:
             '그', '저', '이', '그것', '저것', '이것', '것', '수', '때'
         }
         
-        logger.info("QuestionAnalyzer 초기화 완료")
+        logger.info(f"QuestionAnalyzer 초기화 완료 (도메인: {domain})")
     
     def analyze_question(self, question: str, 
                         use_conversation_context: bool = True) -> AnalyzedQuestion:
@@ -237,7 +247,7 @@ class QuestionAnalyzer:
     
     def _extract_keywords(self, question: str) -> List[str]:
         """
-        질문에서 키워드 추출
+        질문에서 키워드 추출 (개선된 버전)
         
         Args:
             question: 전처리된 질문
@@ -245,9 +255,9 @@ class QuestionAnalyzer:
         Returns:
             키워드 리스트
         """
-        # 간단한 토큰화 및 불용어 제거
+        # 1. 기본 토큰화 및 불용어 제거
         tokens = question.split()
-        keywords = []
+        basic_keywords = []
         
         for token in tokens:
             # 불용어 제거
@@ -255,10 +265,30 @@ class QuestionAnalyzer:
                 # 특수문자 제거
                 clean_token = re.sub(r'[^\w가-힣]', '', token)
                 if clean_token and len(clean_token) > 1:
-                    keywords.append(clean_token)
+                    basic_keywords.append(clean_token)
         
-        # 중복 제거
-        return list(set(keywords))
+        # 2. 키워드 향상 (동의어, 약어 확장 등)
+        enhanced_keywords = self.keyword_enhancer.enhance_keywords(basic_keywords)
+        
+        # 3. 도메인 특화 키워드 추가
+        domain_keywords = self.keyword_enhancer.extract_domain_specific_keywords(question)
+        enhanced_keywords.extend(domain_keywords)
+        
+        # 4. 중복 제거 및 정렬
+        unique_keywords = list(set(enhanced_keywords))
+        unique_keywords.sort(key=len, reverse=True)  # 긴 키워드 우선
+        
+        # 5. 키워드 가중치 계산 및 상위 키워드 선택
+        keyword_weights = []
+        for keyword in unique_keywords:
+            weight = self.keyword_enhancer.calculate_keyword_weight(keyword, question)
+            keyword_weights.append((keyword, weight))
+        
+        # 가중치로 정렬하고 상위 15개 선택
+        keyword_weights.sort(key=lambda x: x[1], reverse=True)
+        top_keywords = [kw for kw, _ in keyword_weights[:15]]
+        
+        return top_keywords
     
     def _extract_entities(self, question: str) -> List[str]:
         """

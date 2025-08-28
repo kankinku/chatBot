@@ -47,7 +47,7 @@ class PDFQASystem:
     
     def __init__(self, 
                  model_type: str = "ollama",
-                 model_name: str = "llama2:7b",
+                 model_name: str = "mistral:latest",
                  embedding_model: str = "jhgan/ko-sroberta-multitask"):
         """
         시스템 초기화
@@ -90,11 +90,11 @@ class PDFQASystem:
             # 2. 벡터 저장소 초기화
             self.vector_store = HybridVectorStore(
                 embedding_dimension=768,  # 기본 임베딩 차원
-                persist_directory="./data/vector_store"
+                persist_directory="./vector_store"
             )
             
             # 기존 벡터 데이터 로드 시도
-            vector_store_path = "./data/vector_store"
+            vector_store_path = "./vector_store"
             if os.path.exists(vector_store_path):
                 try:
                     self.vector_store.load(vector_store_path)
@@ -140,11 +140,56 @@ class PDFQASystem:
             self.file_manager = setup_pdf_storage()
             logger.info("✓ 파일 매니저 초기화 완료")
             
+            # 7. data 폴더의 PDF 파일들 자동 처리
+            self.process_data_folder_pdfs()
+            
             logger.info("모든 컴포넌트 초기화 완료!")
             return True
             
         except Exception as e:
             logger.error(f"컴포넌트 초기화 실패: {e}")
+            return False
+    
+    def process_data_folder_pdfs(self):
+        """data 폴더의 모든 PDF 파일들을 자동으로 처리"""
+        data_folder = "./data"
+        if not os.path.exists(data_folder):
+            logger.warning("data 폴더가 존재하지 않습니다.")
+            return
+        
+        pdf_files = []
+        for file in os.listdir(data_folder):
+            if file.lower().endswith('.pdf'):
+                pdf_files.append(os.path.join(data_folder, file))
+        
+        if not pdf_files:
+            logger.info("data 폴더에 PDF 파일이 없습니다.")
+            return
+        
+        logger.info(f"data 폴더에서 {len(pdf_files)}개의 PDF 파일을 발견했습니다.")
+        
+        for pdf_path in pdf_files:
+            try:
+                # 이미 처리된 PDF인지 확인
+                pdf_id = os.path.basename(pdf_path)
+                if self.is_pdf_already_processed(pdf_id):
+                    logger.info(f"이미 처리된 PDF 건너뛰기: {pdf_id}")
+                    continue
+                
+                logger.info(f"PDF 처리 중: {pdf_id}")
+                result = self.process_pdf(pdf_path)
+                logger.info(f"✓ PDF 처리 완료: {result['filename']} ({result['total_chunks']}개 청크)")
+                
+            except Exception as e:
+                logger.error(f"PDF 처리 실패 {pdf_path}: {e}")
+    
+    def is_pdf_already_processed(self, pdf_id: str) -> bool:
+        """PDF가 이미 처리되었는지 확인"""
+        try:
+            # 벡터 저장소에서 해당 PDF의 청크들이 있는지 확인
+            # 간단한 방법으로 파일명 기반 확인
+            return False  # 일단 모든 PDF를 다시 처리하도록 설정
+        except:
             return False
     
     def process_pdf(self, pdf_path: str) -> Dict:
@@ -450,7 +495,7 @@ def main():
     parser.add_argument("--question", type=str, help="질문 (process 모드)")
     parser.add_argument("--model-type", choices=["ollama", "huggingface", "llama_cpp"],
                        default="ollama", help="사용할 모델 타입")
-    parser.add_argument("--model-name", type=str, default="llama2:7b", 
+    parser.add_argument("--model-name", type=str, default="mistral:latest", 
                        help="모델 이름")
     parser.add_argument("--embedding-model", type=str, 
                        default="jhgan/ko-sroberta-multitask",

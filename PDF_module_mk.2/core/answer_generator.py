@@ -382,9 +382,11 @@ class AnswerGenerator:
         # 한국어 생성에 최적화된 기본 설정
         if generation_config is None:
             self.generation_config = GenerationConfig(
-                temperature=0.3,  # 더 결정적인 생성으로 일관된 한국어
-                top_p=0.8,       # 상위 확률 토큰만 고려
-                top_k=30         # 상위 30개 토큰만 고려
+                temperature=0.1,  # 더 결정적이고 일관된 답변
+                top_p=0.9,       # 상위 확률 토큰 고려
+                top_k=50,        # 상위 50개 토큰 고려
+                max_length=256,  # 적절한 답변 길이
+                repetition_penalty=1.2  # 반복 방지
             )
         else:
             self.generation_config = generation_config
@@ -416,82 +418,91 @@ class AnswerGenerator:
         한국어에 최적화된 프롬프트를 사용합니다.
         """
         return {
-            "basic": """다음은 문서의 내용 중 일부입니다:
+            "basic": """당신은 한국어 문서를 기반으로 질문에 답변하는 전문가입니다.
 
+주어진 문서 내용을 정확히 읽고 질문에 답변해주세요.
+
+문서 내용:
 {context}
 
-사용자 질문: {question}
+질문: {question}
 
-지시사항:
-1. 반드시 한국어로만 답변하세요.
-2. 2-4문장으로 간결하고 핵심적인 답변을 제공하세요.
-3. 문서에 없는 내용은 추측하지 말고 "문서에서 해당 정보를 찾을 수 없습니다"라고 말하세요.
-4. 반드시 완전한 문장으로 끝내세요 (예: ~습니다. ~입니다. ~됩니다.)
-5. 영어나 다른 언어를 사용하지 마세요.
+답변 규칙:
+1. 반드시 한국어로만 답변하세요
+2. 문서에 명시된 정보만을 사용하세요
+3. 구체적인 숫자, 이름, 날짜 등이 있다면 정확히 포함하세요
+4. 문서에 없는 내용은 "문서에서 해당 정보를 찾을 수 없습니다"라고 답변하세요
+5. 2-4문장으로 간결하고 명확하게 답변하세요
+6. 반드시 완전한 문장으로 끝내세요
 
-완전한 한국어 답변:""",
+답변:""",
 
-            "with_context": """다음은 이전 대화 내용입니다:
+            "with_context": """당신은 한국어 문서를 기반으로 질문에 답변하는 전문가입니다.
+
+이전 대화 내용:
 {conversation_history}
 
-현재 문서의 관련 내용:
+현재 문서 내용:
 {context}
 
-사용자 질문: {question}
+질문: {question}
 
-지시사항:
-1. 반드시 한국어로만 답변하세요.
-2. 2-4문장으로 간결하게 답변하세요.
-3. 반드시 완전한 문장으로 끝내세요 (예: ~습니다. ~입니다. ~됩니다.)
-4. 이전 대화와 자연스럽게 연결되도록 답변하세요.
-5. 영어나 다른 언어를 절대 사용하지 마세요.
+답변 규칙:
+1. 반드시 한국어로만 답변하세요
+2. 문서에 명시된 정보만을 사용하세요
+3. 이전 대화와 자연스럽게 연결되도록 답변하세요
+4. 구체적인 정보가 있다면 정확히 포함하세요
+5. 2-4문장으로 간결하게 답변하세요
 
-완전한 한국어 답변:""",
+답변:""",
 
-            "comparative": """다음은 문서의 관련 내용들입니다:
+            "comparative": """당신은 한국어 문서를 기반으로 비교 분석을 수행하는 전문가입니다.
 
+문서 내용:
 {context}
 
-사용자 질문: {question}
+질문: {question}
 
-지시사항:
-1. 반드시 한국어로만 답변하세요.
-2. 위 내용을 바탕으로 비교 분석하여 답변하세요.
-3. 차이점과 유사점을 명확히 구분하여 설명하고, 구체적인 근거를 제시하세요.
-4. 정중하고 자연스러운 한국어로 작성하세요.
-5. 영어나 다른 언어를 절대 사용하지 마세요.
+답변 규칙:
+1. 반드시 한국어로만 답변하세요
+2. 문서 내용을 바탕으로 비교 분석을 수행하세요
+3. 차이점과 유사점을 명확히 구분하여 설명하세요
+4. 구체적인 근거를 제시하세요
+5. 3-5문장으로 자세히 답변하세요
 
-한국어 답변:""",
+답변:""",
 
-            "procedural": """다음은 문서의 관련 내용입니다:
+            "procedural": """당신은 한국어 문서를 기반으로 절차를 설명하는 전문가입니다.
 
+문서 내용:
 {context}
 
-사용자 질문: {question}
+질문: {question}
 
-지시사항:
-1. 반드시 한국어로만 답변하세요.
-2. 위 내용을 바탕으로 단계별로 설명하세요.
-3. 각 단계를 명확히 구분하고, 순서대로 정리하여 답변하세요.
-4. 정중하고 자연스러운 한국어로 작성하세요.
-5. 영어나 다른 언어를 절대 사용하지 마세요.
+답변 규칙:
+1. 반드시 한국어로만 답변하세요
+2. 문서 내용을 바탕으로 단계별로 설명하세요
+3. 각 단계를 명확히 구분하고 순서대로 정리하세요
+4. 구체적인 방법이나 절차를 포함하세요
+5. 3-5문장으로 자세히 답변하세요
 
-한국어 답변:""",
+답변:""",
 
-            "clarification": """다음은 문서의 관련 내용입니다:
+            "clarification": """당신은 한국어 문서를 기반으로 추가 설명을 제공하는 전문가입니다.
 
+문서 내용:
 {context}
 
-이전 답변이나 설명에 대한 추가 질문: {question}
+질문: {question}
 
-지시사항:
-1. 반드시 한국어로만 답변하세요.
-2. 위 내용을 바탕으로 더 구체적이고 자세한 설명을 제공하세요.
-3. 기술적인 용어가 있다면 쉽게 풀어서 설명하세요.
-4. 정중하고 자연스러운 한국어로 작성하세요.
-5. 영어나 다른 언어를 절대 사용하지 마세요.
+답변 규칙:
+1. 반드시 한국어로만 답변하세요
+2. 문서 내용을 바탕으로 더 구체적이고 자세한 설명을 제공하세요
+3. 기술적인 용어가 있다면 쉽게 풀어서 설명하세요
+4. 관련된 추가 정보나 배경 지식을 포함하세요
+5. 3-5문장으로 자세히 답변하세요
 
-한국어 답변:"""
+답변:"""
         }
     
     def generate_answer(self, 
@@ -584,9 +595,17 @@ class AnswerGenerator:
         context_parts = []
         current_length = 0
         
-        # 유사도 순으로 정렬된 청크들을 순서대로 추가
-        for i, (chunk, similarity) in enumerate(relevant_chunks):
-            chunk_text = f"[문서 {i+1}] {chunk.content}"
+        # 유사도 순으로 정렬된 청크들을 순서대로 추가 (최대 5개까지)
+        for i, (chunk, similarity) in enumerate(relevant_chunks[:5]):
+            # 청크 내용을 정리하고 페이지 정보 포함
+            chunk_content = chunk.content.strip()
+            
+            # 너무 긴 내용은 자르기
+            if len(chunk_content) > 800:
+                chunk_content = chunk_content[:800] + "..."
+            
+            # 페이지 정보 포함
+            chunk_text = f"[페이지 {chunk.page_number}] {chunk_content}"
             
             # 길이 제한 확인
             if current_length + len(chunk_text) > max_context_length:
@@ -763,7 +782,7 @@ class AnswerGenerator:
                             relevant_chunks: List[Tuple[TextChunk, float]],
                             generated_answer: str) -> float:
         """
-        답변의 신뢰도 계산
+        답변의 신뢰도 계산 (개선된 버전)
         
         Args:
             analyzed_question: 분석된 질문
@@ -775,40 +794,253 @@ class AnswerGenerator:
         """
         confidence = 0.0
         
-        # 1. 관련 청크의 유사도 기반 신뢰도
+        # 1. 관련 청크의 유사도 기반 신뢰도 (30%)
         if relevant_chunks:
             avg_similarity = sum(sim for _, sim in relevant_chunks) / len(relevant_chunks)
-            confidence += avg_similarity * 0.4
+            confidence += avg_similarity * 0.3
         
-        # 2. 답변 길이 기반 신뢰도 (너무 짧거나 길면 감점)
-        answer_length = len(generated_answer)
-        if 50 <= answer_length <= 500:
-            length_score = 1.0
-        elif answer_length < 50:
-            length_score = answer_length / 50.0
-        else:
-            length_score = max(0.5, 1.0 - (answer_length - 500) / 1000.0)
+        # 2. 키워드 매칭 점수 (25%)
+        keyword_score = self._calculate_keyword_matching_score(
+            analyzed_question, generated_answer
+        )
+        confidence += keyword_score * 0.25
         
-        confidence += length_score * 0.2
+        # 3. 답변 품질 점수 (20%)
+        quality_score = self._calculate_answer_quality_score(generated_answer)
+        confidence += quality_score * 0.2
         
-        # 3. 질문-답변 키워드 매칭
+        # 4. 컨텍스트 활용도 점수 (15%)
+        context_score = self._calculate_context_utilization_score(
+            relevant_chunks, generated_answer
+        )
+        confidence += context_score * 0.15
+        
+        # 5. 답변 완성도 점수 (10%)
+        completeness_score = self._calculate_completeness_score(generated_answer)
+        confidence += completeness_score * 0.1
+        
+        return min(confidence, 1.0)
+    
+    def _calculate_keyword_matching_score(self, 
+                                        analyzed_question: AnalyzedQuestion,
+                                        generated_answer: str) -> float:
+        """
+        질문-답변 키워드 매칭 점수 계산
+        
+        Args:
+            analyzed_question: 분석된 질문
+            generated_answer: 생성된 답변
+            
+        Returns:
+            키워드 매칭 점수 (0.0 ~ 1.0)
+        """
         question_keywords = set(analyzed_question.keywords)
         answer_words = set(generated_answer.lower().split())
         
-        if question_keywords:
-            keyword_overlap = len(question_keywords & answer_words) / len(question_keywords)
-            confidence += keyword_overlap * 0.2
+        if not question_keywords:
+            return 0.5  # 키워드가 없는 경우 중간 점수
         
-        # 4. 답변 완성도 (문장 부호, 문법 등)
-        completeness_score = 0.0
+        # 1. 정확한 키워드 매칭
+        exact_matches = len(question_keywords & answer_words)
+        exact_score = exact_matches / len(question_keywords)
+        
+        # 2. 부분 키워드 매칭 (한국어 특성 고려)
+        partial_score = 0.0
+        for q_keyword in question_keywords:
+            for answer_word in answer_words:
+                # 부분 문자열 매칭
+                if len(q_keyword) >= 3 and len(answer_word) >= 3:
+                    if q_keyword in answer_word or answer_word in q_keyword:
+                        partial_score += 0.5
+                        break
+        
+        partial_score = min(partial_score / len(question_keywords), 1.0)
+        
+        # 3. 동의어 매칭
+        synonym_score = self._calculate_synonym_matching_score(
+            question_keywords, answer_words
+        )
+        
+        # 가중 평균
+        total_score = (exact_score * 0.5 + partial_score * 0.3 + synonym_score * 0.2)
+        
+        return min(total_score, 1.0)
+    
+    def _calculate_synonym_matching_score(self, 
+                                        question_keywords: set,
+                                        answer_words: set) -> float:
+        """
+        동의어 매칭 점수 계산
+        
+        Args:
+            question_keywords: 질문 키워드들
+            answer_words: 답변 단어들
+            
+        Returns:
+            동의어 매칭 점수 (0.0 ~ 1.0)
+        """
+        # 한국어 동의어 사전
+        synonyms = {
+            '방법': ['방식', '기법', '기술', '수단'],
+            '과정': ['절차', '단계', '순서', '진행'],
+            '결과': ['성과', '효과', '결과물', '산출물'],
+            '문제': ['이슈', '과제', '해결사항'],
+            '개선': ['향상', '발전', '고도화', '최적화'],
+            '분석': ['검토', '조사', '연구', '평가'],
+            '시스템': ['플랫폼', '솔루션', '도구'],
+            '데이터': ['정보', '자료', '내용'],
+            '관리': ['운영', '유지보수'],
+            '보안': ['안전', '보호', '안전성'],
+            '성능': ['효율', '속도', '품질'],
+            '비용': ['금액', '가격', '지출'],
+            '시간': ['기간', '소요시간', '기한'],
+            '사용자': ['고객', '이용자'],
+            '기능': ['특성', '역할', '작용'],
+            '구조': ['체계', '구성', '설계'],
+            '환경': ['조건', '상황', '배경'],
+            '요구사항': ['필요사항', '요구', '필요'],
+            '정책': ['규정', '지침', '방침'],
+            '절차': ['순서', '과정', '단계']
+        }
+        
+        synonym_matches = 0
+        total_keywords = len(question_keywords)
+        
+        for keyword in question_keywords:
+            if keyword in synonyms:
+                keyword_synonyms = synonyms[keyword]
+                for synonym in keyword_synonyms:
+                    if synonym in answer_words:
+                        synonym_matches += 1
+                        break
+        
+        return synonym_matches / total_keywords if total_keywords > 0 else 0.0
+    
+    def _calculate_answer_quality_score(self, generated_answer: str) -> float:
+        """
+        답변 품질 점수 계산
+        
+        Args:
+            generated_answer: 생성된 답변
+            
+        Returns:
+            품질 점수 (0.0 ~ 1.0)
+        """
+        score = 0.0
+        
+        # 1. 답변 길이 적절성
+        answer_length = len(generated_answer)
+        if 50 <= answer_length <= 500:
+            score += 0.3
+        elif 30 <= answer_length <= 800:
+            score += 0.2
+        else:
+            score += 0.1
+        
+        # 2. 문장 완성도
         if generated_answer.endswith(('.', '!', '?', '다', '습니다', '요')):
-            completeness_score += 0.5
-        if not any(phrase in generated_answer for phrase in ["찾을 수 없습니다", "모르겠습니다"]):
-            completeness_score += 0.5
+            score += 0.2
         
-        confidence += completeness_score * 0.2
+        # 3. 한국어 비율
+        korean_chars = len(re.findall(r'[가-힣]', generated_answer))
+        total_chars = len(re.findall(r'[a-zA-Z가-힣]', generated_answer))
         
-        return min(confidence, 1.0)
+        if total_chars > 0:
+            korean_ratio = korean_chars / total_chars
+            if korean_ratio >= 0.7:
+                score += 0.3
+            elif korean_ratio >= 0.5:
+                score += 0.2
+            else:
+                score += 0.1
+        
+        # 4. 부정적 표현 제거
+        negative_phrases = [
+            "찾을 수 없습니다", "모르겠습니다", "알 수 없습니다",
+            "정보가 없습니다", "답변할 수 없습니다"
+        ]
+        
+        has_negative = any(phrase in generated_answer for phrase in negative_phrases)
+        if not has_negative:
+            score += 0.2
+        
+        return min(score, 1.0)
+    
+    def _calculate_context_utilization_score(self,
+                                           relevant_chunks: List[Tuple[TextChunk, float]],
+                                           generated_answer: str) -> float:
+        """
+        컨텍스트 활용도 점수 계산
+        
+        Args:
+            relevant_chunks: 관련 청크들
+            generated_answer: 생성된 답변
+            
+        Returns:
+            컨텍스트 활용도 점수 (0.0 ~ 1.0)
+        """
+        if not relevant_chunks:
+            return 0.0
+        
+        # 청크 내용에서 중요한 정보 추출
+        chunk_keywords = set()
+        for chunk, _ in relevant_chunks:
+            # 청크에서 중요한 단어들 추출
+            important_words = re.findall(r'\b\w{2,}\b', chunk.content.lower())
+            chunk_keywords.update(important_words[:10])  # 상위 10개만
+        
+        # 답변에서 청크 키워드 사용 여부 확인
+        answer_words = set(generated_answer.lower().split())
+        
+        if chunk_keywords:
+            utilization_ratio = len(chunk_keywords & answer_words) / len(chunk_keywords)
+            return min(utilization_ratio, 1.0)
+        
+        return 0.5  # 기본 점수
+    
+    def _calculate_completeness_score(self, generated_answer: str) -> float:
+        """
+        답변 완성도 점수 계산
+        
+        Args:
+            generated_answer: 생성된 답변
+            
+        Returns:
+            완성도 점수 (0.0 ~ 1.0)
+        """
+        score = 0.0
+        
+        # 1. 문장 완성도
+        sentences = generated_answer.split('.')
+        complete_sentences = 0
+        
+        for sentence in sentences:
+            sentence = sentence.strip()
+            if len(sentence) > 10:  # 의미있는 문장 길이
+                complete_sentences += 1
+        
+        if complete_sentences > 0:
+            score += min(complete_sentences * 0.2, 0.6)
+        
+        # 2. 구체적 정보 포함 여부
+        specific_patterns = [
+            r'\d+',  # 숫자
+            r'\d{4}년',  # 연도
+            r'\d+월',  # 월
+            r'\d+일',  # 일
+            r'[가-힣]{2,}시스템',  # 시스템명
+            r'[가-힣]{2,}프로그램',  # 프로그램명
+            r'[가-힣]{2,}기능',  # 기능명
+        ]
+        
+        specific_info_count = 0
+        for pattern in specific_patterns:
+            if re.search(pattern, generated_answer):
+                specific_info_count += 1
+        
+        score += min(specific_info_count * 0.1, 0.4)
+        
+        return min(score, 1.0)
     
     def batch_generate(self, 
                       questions_and_chunks: List[Tuple[AnalyzedQuestion, List[Tuple[TextChunk, float]]]],
