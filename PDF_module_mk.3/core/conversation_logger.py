@@ -404,3 +404,4 @@ class ConversationLogger:
                 "type_statistics": type_stats,
                 "average_confidence": round(avg_confidence, 3)
             }
+
