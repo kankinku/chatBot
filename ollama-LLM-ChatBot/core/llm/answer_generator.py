@@ -30,8 +30,15 @@ except ImportError:
 from core.document.pdf_processor import TextChunk
 from core.query.question_analyzer import AnalyzedQuestion
 from core.cache.fast_cache import get_question_cache
-from core.config.company_config import CompanyConfig
 from core.utils.memory_optimizer import model_memory_manager, memory_profiler
+
+# 통합 설정 import (폴백 포함)
+try:
+    from core.config.unified_config import get_config
+except ImportError:
+    import os
+    def get_config(key, default=None):
+        return os.getenv(key, default)
 
 logger = logging.getLogger(__name__)
 
@@ -412,7 +419,9 @@ class AnswerGenerator:
         # (Ollama는 필요 시 자동 제공, 로컬/다른 모델 사용 안 함)
         
         # 회사 컨텍스트 설정
-        self.company_config = CompanyConfig()
+        # 통합 설정 사용
+        self.company_name = get_config('COMPANY_NAME')
+        self.project_name = get_config('PROJECT_NAME')
         
         # 기본 프롬프트 템플릿
         self.prompt_template = {

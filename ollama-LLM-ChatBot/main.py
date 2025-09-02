@@ -47,11 +47,30 @@ logging.getLogger('sentence_transformers').setLevel(logging.WARNING)
 
 logger = logging.getLogger(__name__)
 
+# 통합 시스템 임포트 (데코레이터 사용 전에)
+try:
+    from utils.unified_logger import unified_logger, log_info, log_error, LogCategory, log_execution_time
+    from core.config.unified_config import get_config, config
+    from core.utils.singleton_manager import singleton_manager
+except ImportError as e:
+    logger.warning(f"통합 시스템 임포트 실패, 기본 시스템 사용: {e}")
+    # 폴백: 기본 함수들 정의
+    def log_execution_time(category, operation):
+        def decorator(func):
+            return func
+        return decorator
+    
+    def get_config(key, default=None):
+        return os.getenv(key, default)
+    
+    class LogCategory:
+        SYSTEM = "system"
 
+@log_execution_time(LogCategory.SYSTEM, "Ollama 모델 확인")
 def ensure_qwen_ollama_model() -> bool:
-    """Ollama에서 Qwen 모델 사용 가능 여부 확인"""
-    base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434").rstrip("/")
-    model_name = os.getenv("MODEL_NAME", "qwen2:1.5b-instruct-q4_K_M")
+    """Ollama에서 Qwen 모델 사용 가능 여부 확인 (통합 설정 사용)"""
+    base_url = get_config("OLLAMA_BASE_URL", "http://localhost:11434").rstrip("/")
+    model_name = get_config("LLM_MODEL", "qwen2:1.5b-instruct-q4_K_M")
     try:
         # Ollama 서버 헬스 체크
         r = requests.get(f"{base_url}/api/tags", timeout=5)
@@ -59,12 +78,21 @@ def ensure_qwen_ollama_model() -> bool:
         data = r.json()
         tags = [t.get("name") for t in data.get("models", []) if t.get("name")]
         if model_name in tags:
-            logger.info(f"Qwen(Ollama) 모델 확인 성공: {model_name}")
+            try:
+                log_info(f"Qwen(Ollama) 모델 확인 성공: {model_name}", LogCategory.SYSTEM, "main")
+            except:
+                logger.info(f"Qwen(Ollama) 모델 확인 성공: {model_name}")
             return True
-        logger.warning(f"Qwen 모델이 아직 없습니다: {model_name}. ollama pull 필요")
+        try:
+            log_error(f"Qwen 모델이 아직 없습니다: {model_name}. ollama pull 필요", LogCategory.SYSTEM, "main")
+        except:
+            logger.warning(f"Qwen 모델이 아직 없습니다: {model_name}. ollama pull 필요")
         return False
     except Exception as e:
-        logger.error(f"Ollama 연결 실패: {e}")
+        try:
+            log_error(f"Ollama 연결 실패: {e}", LogCategory.SYSTEM, "main")
+        except:
+            logger.error(f"Ollama 연결 실패: {e}")
         return False
 
 # 핵심 모듈들 임포트
