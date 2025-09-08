@@ -10,7 +10,6 @@ from typing import List, Dict, Optional, Tuple
 from dataclasses import dataclass
 from enum import Enum
 import os
-import json
 
 try:
     import requests
@@ -36,7 +35,6 @@ from core.utils.memory_optimizer import model_memory_manager, memory_profiler
 try:
     from core.config.unified_config import get_config
 except ImportError:
-    import os
     def get_config(key, default=None):
         return os.getenv(key, default)
 

@@ -23,8 +23,7 @@ from core.document.pdf_processor import TextChunk
 import logging
 logger = logging.getLogger(__name__)
 
-# VectorStore 클래스 (HybridVectorStore의 별칭)
-VectorStore = None  # 나중에 정의
+# VectorStore 클래스는 HybridVectorStore로 대체됨
 
 class VectorStoreInterface(ABC):
     """벡터 저장소 인터페이스"""

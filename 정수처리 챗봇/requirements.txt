@@ -1,0 +1,38 @@
+# 웹 서버 및 API
+fastapi>=0.104.1
+uvicorn[standard]>=0.24.0
+pydantic>=2.5.2
+python-multipart>=0.0.6
+
+# 기본 유틸리티
+python-dotenv>=1.0.0
+requests>=2.31.0
+numpy>=1.24.3
+pandas>=2.1.4
+
+# PDF 처리
+PyPDF2>=3.0.1
+pymupdf>=1.23.14
+pdfplumber>=0.10.4
+
+# 벡터 저장소 및 임베딩
+sentence-transformers>=2.2.2
+faiss-cpu>=1.7.4
+chromadb>=0.4.18
+
+# AI 모델 및 머신러닝 (GPU 지원)
+transformers>=4.36.2
+tokenizers>=0.15.0
+
+# GPU 지원 추가 패키지
+accelerate>=0.25.0
+bitsandbytes>=0.41.1
+
+# SQL 관련 데이터베이스 의존성이 제거되었습니다.
+
+# 시스템 모니터링
+psutil>=5.9.6
+
+# 로깅
+loguru>=0.7.2
+

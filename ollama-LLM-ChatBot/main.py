@@ -101,7 +101,8 @@ try:
     from core.document.vector_store import HybridVectorStore, VectorStoreInterface
     from core.query.question_analyzer import QuestionAnalyzer, AnalyzedQuestion
     from core.llm.answer_generator import AnswerGenerator, Answer
-    from core.database.sql_generator import SQLGenerator, DatabaseSchema, SQLQuery
+    from core.database.enhanced_sql_system import EnhancedSQLSystem as SQLGenerator, EnhancedSQLResult as SQLQuery
+    from core.database.sql_generator import DatabaseSchema
     from core.query.query_router import QueryRouter, QueryRoute
     from core.query.llm_greeting_handler import GreetingHandler
     from utils.chatbot_logger import chatbot_logger, QuestionType, ProcessingStep
