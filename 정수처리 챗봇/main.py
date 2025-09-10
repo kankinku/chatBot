@@ -55,6 +55,12 @@ logging.basicConfig(
     ]
 )
 
+# Suppress torch TypedStorage deprecation warnings
+warnings.filterwarnings(
+    "ignore",
+    message="TypedStorage is deprecated",
+)
+
 # tqdm 진행률 표시줄 완전 비활성화
 os.environ['TQDM_DISABLE'] = '1'
 os.environ['TQDM_DISABLE_PROGRESS_BAR'] = '1'
@@ -541,7 +547,7 @@ class LocalChatbot:
                 relevant_chunks = self.vector_store.search(
                     analyzed_question.embedding,
                     top_k=10,
-                    similarity_threshold=0.2
+                    similarity_threshold=0.18
                 )
                 search_time = time.time() - search_start
                 

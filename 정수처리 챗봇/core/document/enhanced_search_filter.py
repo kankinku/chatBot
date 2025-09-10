@@ -27,7 +27,8 @@ class SearchFilterConfig:
     """검색 필터 설정"""
     max_chunks: int = 3  # 최대 청크 수 (2-3개)
     min_chunks: int = 1  # 최소 청크 수
-    confidence_threshold: float = 0.4  # 신뢰도 임계값
+    confidence_threshold: float = 0.25  # 신뢰도 임계값(완화)
+    base_confidence: float = 0.65  # confidence 미존재 시 기본 매핑값
     diversity_threshold: float = 0.8  # 다양성 임계값 (중복 제거)
     process_coherence_weight: float = 0.3  # 공정 일관성 가중치
     measurement_bonus: float = 0.1  # 측정값 포함 보너스
@@ -169,11 +170,16 @@ class EnhancedSearchFilter:
             # 청크 추출
             if hasattr(result, 'chunk'):
                 chunk = result.chunk
-                base_confidence = getattr(result, 'confidence', 0.0)
+                _conf = getattr(result, 'confidence', None)
+                if _conf is None:
+                    _conf = getattr(result, 'score', None)
+                if _conf is None:
+                    _conf = getattr(result, 'rerank_score', None)
+                base_confidence = float(_conf) if _conf is not None else self.config.base_confidence
             else:
                 # 직접 청크인 경우
                 chunk = result
-                base_confidence = 0.5
+                base_confidence = self.config.base_confidence
             
             # TextChunk로 변환 (필요한 경우)
             if not isinstance(chunk, TextChunk):

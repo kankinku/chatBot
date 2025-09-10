@@ -291,7 +291,7 @@ def create_optimized_pdf_router(embedding_model: str = "jhgan/ko-sroberta-multit
         max_results_accuracy=5,
         enable_reranking=True,
         enable_multiview=True,
-        similarity_threshold=0.3
+        similarity_threshold=0.18
     )
     return PDFRouter(embedding_model=embedding_model, config=config)
 
@@ -305,4 +305,3 @@ def create_speed_pdf_router(embedding_model: str = "jhgan/ko-sroberta-multitask"
         similarity_threshold=0.25
     )
     return PDFRouter(embedding_model=embedding_model, config=config)
-

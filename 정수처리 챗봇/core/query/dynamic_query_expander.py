@@ -178,24 +178,48 @@ class DynamicQueryExpander:
     
     def _call_qwen_with_timeout(self, prompt: str) -> str:
         """타임아웃을 적용한 Qwen 호출"""
-        import signal
-        
-        def timeout_handler(signum, frame):
-            raise TimeoutError("Qwen 호출 타임아웃")
-        
-        # 타임아웃 설정
-        old_handler = signal.signal(signal.SIGALRM, timeout_handler)
-        signal.alarm(int(self.config.timeout_seconds))
-        
         try:
-            response = self.ollama.generate(prompt)
-            signal.alarm(0)  # 타임아웃 해제
-            return response
-        except Exception as e:
-            signal.alarm(0)  # 타임아웃 해제
-            raise e
-        finally:
-            signal.signal(signal.SIGALRM, old_handler)
+            import signal
+            has_alarm = hasattr(signal, 'SIGALRM')
+        except Exception:
+            signal = None
+            has_alarm = False
+
+        timeout_sec = max(0.1, float(self.config.timeout_seconds or 2.0))
+
+        if has_alarm:
+            def timeout_handler(signum, frame):
+                raise TimeoutError("Qwen 호출 타임아웃")
+
+            old_handler = signal.signal(signal.SIGALRM, timeout_handler)
+            signal.alarm(int(timeout_sec))
+            try:
+                response = self.ollama.generate(prompt)
+                signal.alarm(0)
+                return response
+            except Exception as e:
+                signal.alarm(0)
+                raise e
+            finally:
+                signal.signal(signal.SIGALRM, old_handler)
+        else:
+            import threading
+            result = {'text': None, 'err': None}
+
+            def _worker():
+                try:
+                    result['text'] = self.ollama.generate(prompt)
+                except Exception as e:
+                    result['err'] = e
+
+            t = threading.Thread(target=_worker, daemon=True)
+            t.start()
+            t.join(timeout=timeout_sec)
+            if t.is_alive():
+                raise TimeoutError("Qwen 호출 타임아웃")
+            if result['err'] is not None:
+                raise result['err']
+            return result['text'] or ''
     
     def _parse_qwen_response(self, response: str, original_query: str) -> List[str]:
         """Qwen 응답 파싱"""

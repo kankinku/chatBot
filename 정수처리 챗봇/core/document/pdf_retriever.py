@@ -32,7 +32,7 @@ class PDFSearchConfig:
     mmr_k: int = 0              # MMR 비활성화 (정확도 우선)
     rrf_constant: int = 60      # RRF 상수
     multiview_enabled: bool = True  # 멀티뷰 검색 사용
-    similarity_threshold: float = 0.25  # 유사도 임계값 상향(정밀도 우선)
+    similarity_threshold: float = 0.18  # 유사도 임계값 완화(재현율↑)
 
 @dataclass
 class PDFSearchResult:

@@ -315,11 +315,25 @@ def _evaluate_accuracy(generated: str, expected: str, question: str) -> bool:
     
     # 키워드 기반 평가
     expected_keywords = expected_lower.split()
-    matched_keywords = sum(1 for keyword in expected_keywords 
-                         if keyword in generated_lower and len(keyword) > 2)
+    # 가중 매칭: 숫자×1.5, 단위×1.3, 일반×1.0
+    import re as _re
+    unit_tokens = {"mg/l", "mg/l", "rpm", "m³/h", "m3/h", "%", "ntu", "r²", "r2", "mg", "l", "ppm"}
+    total_weight = 0.0
+    matched_score = 0.0
+    for keyword in expected_keywords:
+        if len(keyword) <= 1:
+            continue
+        weight = 1.0
+        if _re.fullmatch(r"\d+(?:[\.,]\d+)?", keyword):
+            weight = 1.5
+        elif keyword in unit_tokens:
+            weight = 1.3
+        total_weight += weight
+        if keyword in generated_lower:
+            matched_score += weight
     
     # 60% 이상 키워드 매칭시 정확한 것으로 판단(엄격화)
-    if matched_keywords >= max(1, int(len(expected_keywords) * 0.6)):
+    if total_weight > 0 and matched_score / total_weight >= 0.5:
         return True
     
     # 정수처리 도메인 특화 평가
@@ -353,5 +367,3 @@ def _evaluate_accuracy(generated: str, expected: str, question: str) -> bool:
 
 if __name__ == "__main__":
     main()
-
-

@@ -521,7 +521,7 @@ class AnswerGenerator:
             return original_text
 
     @staticmethod
-    def _limit_sentences(answer_text: str, max_sentences: int = 2) -> str:
+    def _limit_sentences(answer_text: str, max_sentences: int = 3) -> str:
         """답변을 최대 N문장으로 제한한다."""
         try:
             if not answer_text:
@@ -624,7 +624,7 @@ class AnswerGenerator:
         
         try:
             # 컨텍스트 텍스트 생성 (가독성 위해 상위 2개로 제한)
-            trimmed_chunks = context_chunks[:2]
+            trimmed_chunks = context_chunks[:6]
             
             # 질문 분석 결과에서 목표 정보 추출
             answer_target = ""
@@ -741,7 +741,7 @@ class AnswerGenerator:
             # 불릿/줄바꿈 제거가 인용 레이아웃을 깨뜨리지 않도록 한다
             answer_text = self._format_answer_for_readability(answer_text)
             # 문장 수 제한 (최대 2문장)
-            answer_text = self._limit_sentences(answer_text, max_sentences=2)
+            answer_text = self._limit_sentences(answer_text, max_sentences=3)
 
             # 인용(출처) 표기를 답변에서 제거: 메타데이터에만 유지
             citations: List[Dict[str, str]] = []
@@ -975,7 +975,7 @@ class AnswerGenerator:
                 denom = max(1, len(answer_vocab))
                 overlap_ratio = overlap / denom
                 # 임계치: 답변 토큰의 20% 미만이 문서와 겹치면 환상 가능성 높음
-                if overlap_ratio < 0.20:
+                if overlap_ratio < 0.12:
                     logger.warning(f"문서-답변 토큰 겹침 비율 낮음: {overlap_ratio:.3f}")
                     return "제공된 문서에서 해당 정보를 찾을 수 없습니다. 문서에 명시된 내용만을 기반으로 답변드릴 수 있습니다."
             
@@ -993,9 +993,10 @@ class AnswerGenerator:
                     token_hits = sum(1 for t in token_pattern.findall(s_low) if len(t) >= 3 and t in context_text)
                     unique_tokens = len(set(t for t in token_pattern.findall(s_low) if len(t) >= 3)) or 1
                     ratio = token_hits / unique_tokens
-                    # 임계: 문장 토큰의 0.15 미만이 컨텍스트에서 발견되면 제거
-                    if ratio >= 0.15:
-                        kept_sentences.append(s)
+                    # 임계: 문장 토큰의 0.12 미만이면 경고만 남기고 유지
+                    if ratio < 0.12:
+                        logger.warning(f"문장 스니펫 매칭 약함(ratio={ratio:.2f}): {s[:50]}")
+                    kept_sentences.append(s)
                 # 최소 1문장 보장
                 if kept_sentences:
                     answer = ". ".join(kept_sentences)

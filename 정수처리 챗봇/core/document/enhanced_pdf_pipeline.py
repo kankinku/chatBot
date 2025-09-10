@@ -43,13 +43,13 @@ class EnhancedPDFConfig:
     
     # LLM 설정
     llm_model: str = "qwen2:1.5b-instruct-q4_K_M"
-    max_context_chunks: int = 3  # 2-3개로 감소
+    max_context_chunks: int = 6  # 근거 커버리지 확대(6~8 권장)
     max_tokens: int = 256
     window_expand: int = 1  # 인접 윈도우 확장 (같은 페이지 인접 청크 우선)
     
     # 검색 필터 설정
     enable_enhanced_filtering: bool = True
-    filter_confidence_threshold: float = 0.4
+    filter_confidence_threshold: float = 0.25
     
     # 쿼리 확장 설정
     enable_query_expansion: bool = True
@@ -281,7 +281,7 @@ class EnhancedPDFPipeline:
             # 6. 향상된 검색 필터링 적용
             if self.search_filter and search_results.results:
                 filtered_results = self.search_filter.filter_search_results(
-                    search_results=search_results.results,
+                    search_results=(enhanced_search_results + (search_results.results or [])),
                     query=query,
                     expected_answer=expected_answer
                 )
@@ -294,6 +294,47 @@ class EnhancedPDFPipeline:
             context_chunks = self._prepare_context(filtered_chunks)
             
             # 8. 답변 생성 (PDF-only 정책: 컨텍스트 없으면 무응답)
+            # 7.5 무응답 완충: 컨텍스트가 비면 임계 완화 재시도 → 단일 스팬
+            fallback_info = {}
+            if not context_chunks:
+                if self.search_filter and (search_results.results or enhanced_search_results):
+                    try:
+                        original_th = self.search_filter.config.confidence_threshold
+                        self.search_filter.config.confidence_threshold = max(0.0, original_th * 0.8)
+                        merged_candidates = (enhanced_search_results + (search_results.results or []))
+                        filtered_results = self.search_filter.filter_search_results(
+                            search_results=merged_candidates,
+                            query=query,
+                            expected_answer=expected_answer
+                        )
+                        filtered_chunks = [result.chunk for result in filtered_results]
+                        context_chunks = self._prepare_context(filtered_chunks)
+                        fallback_info['low_confidence_retry'] = True
+                    finally:
+                        self.search_filter.config.confidence_threshold = original_th
+                if not context_chunks and (search_results.results or enhanced_search_results):
+                    # 최후 수단: 상위 1개 스팬만 투입
+                    merged_candidates = (enhanced_search_results + (search_results.results or []))
+                    top_candidate = None
+                    best_score = -1.0
+                    for r in merged_candidates:
+                        score = 0.0
+                        for attr in ('confidence', 'score', 'rerank_score', 'relevance_score'):
+                            if hasattr(r, attr):
+                                try:
+                                    score = float(getattr(r, attr))
+                                    break
+                                except Exception:
+                                    pass
+                        if score > best_score:
+                            best_score = score
+                            top_candidate = r
+                    if top_candidate is not None:
+                        ch = top_candidate.chunk if hasattr(top_candidate, 'chunk') else top_candidate
+                        context_chunks = [ch]
+                        filtered_chunks = [ch]
+                        fallback_info['single_span_fallback'] = True
+
             if context_chunks:
                 answer = self.answer_generator.generate_context_answer(
                     question=query,
@@ -361,6 +402,7 @@ class EnhancedPDFPipeline:
                     'model_scores': {model: np.mean([r.model_scores.get(model, 0.0) for r in enhanced_search_results]) 
                                    for model in self.enhanced_searcher.embedding_models.keys()} if enhanced_search_results else {}
                 },
+                'fallback': fallback_info,
                 'validation': {
                     'is_accurate': validation_result.is_accurate,
                     'confidence_score': validation_result.confidence_score,
@@ -504,7 +546,7 @@ def create_enhanced_pdf_pipeline(embedding_model: str = "jhgan/ko-sroberta-multi
         enable_query_expansion=True,
         enable_wastewater_reranking=True,
         max_context_chunks=3,  # 2-3개로 제한
-        filter_confidence_threshold=0.4,
+        filter_confidence_threshold=0.25,
         max_query_expansions=3,
         domain_rerank_weight=0.4
     )

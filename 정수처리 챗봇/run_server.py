@@ -19,6 +19,7 @@ FastAPI 서버 모드로 실행합니다.
 import sys
 import os
 import logging
+import warnings
 import time
 import torch
 from pathlib import Path
@@ -51,6 +52,12 @@ logging.basicConfig(
     handlers=[
         logging.StreamHandler(sys.stdout)
     ]
+)
+
+# Torch deprecation noise (Windows/CPU): TypedStorage
+warnings.filterwarnings(
+    "ignore",
+    message="TypedStorage is deprecated",
 )
 
 # tqdm 진행률 표시줄 완전 비활성화
