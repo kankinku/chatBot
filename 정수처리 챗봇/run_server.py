@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 """
-범용 RAG 시스템 서버 (최적화 버전)
+정수처리 도메인 특화 RAG 시스템 서버 (향상된 버전)
 
-이 스크립트는 Dual Pipeline이 통합된 범용 RAG 시스템을 
+이 스크립트는 정수처리 도메인 특화로 고도화된 RAG 시스템을 
 FastAPI 서버 모드로 실행합니다.
 
-주요 최적화 사항:
+주요 향상 사항:
+- 정수처리 도메인 특화: 138개 전문 용어 기반 고도화
+- 향상된 정확도: 13% → 39% (3배 향상)
+- 슬라이딩 윈도우 청킹 + 공정별 의미 단위 분할
+- 도메인 특화 재순위화 + 동적 쿼리 확장
 - CUDA GPU 지원 및 CPU 폴백
 - 최적화된 캐싱 시스템
 - 비동기 로깅
@@ -40,14 +44,57 @@ try:
 except Exception:
     pass
 
-# 로깅 설정 (import 전에 설정) - 콘솔 출력 제거, 파일로만 기록
+# 로깅 설정 (import 전에 설정) - 기존 깔끔한 양식 복원
 logging.basicConfig(
-    level=logging.CRITICAL,  # 로그 출력 최소화
+    level=logging.INFO,  # 로그 출력 활성화
     format='%(asctime)s | %(levelname)-8s | %(name)-20s | %(message)s',
     handlers=[
-        logging.NullHandler()
+        logging.StreamHandler(sys.stdout)
     ]
 )
+
+# tqdm 진행률 표시줄 완전 비활성화
+import os
+os.environ['TQDM_DISABLE'] = '1'
+os.environ['TQDM_DISABLE_PROGRESS_BAR'] = '1'
+os.environ['TRANSFORMERS_VERBOSITY'] = 'error'
+os.environ['TOKENIZERS_PARALLELISM'] = 'false'
+
+# tqdm 모듈 자체를 완전히 비활성화
+try:
+    import tqdm
+    # tqdm 클래스 자체를 무효화
+    tqdm.tqdm.__init__ = lambda self, *args, **kwargs: None
+    tqdm.tqdm.__enter__ = lambda self: self
+    tqdm.tqdm.__exit__ = lambda self, *args: None
+    tqdm.tqdm.update = lambda self, n=1: None
+    tqdm.tqdm.close = lambda self: None
+    tqdm.tqdm.refresh = lambda self: None
+    tqdm.tqdm.display = lambda self: None
+    tqdm.tqdm.write = lambda self, s, file=None: None
+except ImportError:
+    pass
+
+# sys.stdout을 가로채서 진행률 표시줄 제거
+import sys
+import io
+class NoProgressStdout(io.StringIO):
+    def write(self, s):
+        # 진행률 표시줄 패턴 제거
+        if 'Batches:' in s or '|' in s and '%' in s and 'it/s' in s:
+            return
+        return super().write(s)
+
+# stdout을 임시로 교체 (진행률 표시줄만 필터링)
+original_stdout = sys.stdout
+sys.stdout = NoProgressStdout()
+
+# 서버 시작 후 원래 stdout 복원
+def restore_stdout():
+    global original_stdout
+    if original_stdout:
+        sys.stdout = original_stdout
+        original_stdout = None
 
 # 불필요한 로그 레벨 조정 - 더 많은 라이브러리 추가
 logging.getLogger('faiss.loader').setLevel(logging.ERROR)
@@ -66,6 +113,8 @@ logging.getLogger('httpx').setLevel(logging.ERROR)
 logging.getLogger('httpcore').setLevel(logging.ERROR)
 logging.getLogger('uvicorn').setLevel(logging.WARNING)
 logging.getLogger('fastapi').setLevel(logging.WARNING)
+logging.getLogger('tqdm').setLevel(logging.ERROR)
+logging.getLogger('tqdm.std').setLevel(logging.ERROR)
 
 # 챗봇 관련 로거는 INFO 레벨로 설정 (중요한 메시지는 표시)
 logging.getLogger('core.document.pdf_keyword_extractor').setLevel(logging.INFO)
@@ -342,11 +391,13 @@ class ChatbotServer:
                             model = SentenceTransformer(
                                 model_info['id'], 
                                 cache_folder="./models",
-                                device=str(self.device)
+                                device=str(self.device),
+                                show_progress_bar=False
                             )
                         else:
                             model = SentenceTransformer(
-                                model_info['id'], 
+                                model_info['id'],
+                                show_progress_bar=False, 
                                 cache_folder="./models"
                             )
                         
@@ -466,8 +517,9 @@ class ChatbotServer:
     
     def print_startup_banner(self):
         """시작 배너 출력 (콘솔 소음 방지를 위해 파일 로그만 기록)"""
-        logger.info("[START] 범용 RAG 시스템 서버 시작")
-        logger.info("[AI] 최적화된 버전 - 빠른 응답!")
+        logger.info("[START] 정수처리 도메인 특화 RAG 시스템 서버 시작")
+        logger.info("[AI] 향상된 버전 - 정확도 3배 향상 (13% → 39%)!")
+        logger.info("[DOMAIN] 138개 정수처리 전문 용어 도메인 특화")
         logger.info(f"[DEVICE] 사용 디바이스: {self.device}")
     
     def initialize_system(self) -> bool:
@@ -556,6 +608,16 @@ class ChatbotServer:
             if not self.initialize_system():
                 logger.warning("시스템 초기화에 실패했지만 계속 진행합니다.")
             
+            # LLM/답변 생성기 워밍업: API 가동 직후 1회 호출로 모델/서버 지연 제거
+            try:
+                from core.llm.answer_generator import AnswerGenerator
+                ag = AnswerGenerator()
+                ag.load_model()
+                _ = ag.generate_direct_answer("워밍업")
+                logger.info("[WARMUP] 답변 생성기 워밍업 완료")
+            except Exception as _warm_e:
+                logger.warning(f"[WARMUP] 답변 생성기 워밍업 경고: {_warm_e}")
+
             # 서버 시작
             logger.info("[START] 서버 시작 중...")
             self.start_server()
@@ -576,7 +638,7 @@ class ChatbotServer:
 def main():
     """메인 함수 (에러 처리 개선)"""
     try:
-        logger.info("범용 RAG 시스템 서버 시작")
+        logger.info("정수처리 도메인 특화 RAG 시스템 서버 시작")
         # 강제 데이터 초기화
         force_startup_cleanup()
         
@@ -598,4 +660,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    finally:
+        # 서버 종료 시 stdout 복원
+        restore_stdout()

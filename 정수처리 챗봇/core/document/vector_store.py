@@ -18,7 +18,7 @@ import chromadb
 from chromadb.config import Settings
 from sklearn.metrics.pairwise import cosine_similarity
 
-from core.document.pdf_processor import TextChunk
+from core.document.text_chunk import TextChunk
 
 import logging
 logger = logging.getLogger(__name__)
@@ -227,11 +227,11 @@ class FAISSVectorStore(VectorStoreInterface):
         process_keywords = {
             '착수': ['착수', '수위', '목표값', '유입량', '정수지', '밸브', 'k-means', '군집분석', '월별'],
             '약품': ['약품', '응집제', '주입률', 'n-beats', '모델', '탁도', '알칼리도', '전기전도도'],
-            '혼화응집': ['혼화', '응집', '회전속도', 'rpm', '교반', 'g값', '설비값', '산출식', '동점성계수'],
+            '혼화응집': ['혼화', '응집', '회전수', '회전속도', 'rpm', '교반', 'g값', '교반 강도', '설비값', '산출식', '동점성계수'],
             '침전': ['침전', '슬러지', '발생량', '수집기', '대차', '운전', '스케줄', 'naoh', '활성탄'],
-            '여과': ['여과', '여과지', '세척', '주기', '운전', '스케줄', '수위', '운영지수'],
+            '여과': ['여과', '여과지', '세척', '세척 주기', '역세척', '주기', '운전', '스케줄', '수위', '운영지수'],
             '소독': ['소독', '염소', '잔류염소', '주입률', '체류시간', '전차염', '농도'],
-            'ems': ['ems', '펌프', '제어', '전력', '피크', '에너지', '사용량'],
+            'ems': ['ems', '펌프', '제어', '전력', '피크', '에너지', '사용량', '피크 관리'],
             'pms': ['pms', '모터', '진단', '전류', '진동', '온도', '고장'],
             '대시보드': ['대시보드', '영역', '사이드바', '메뉴', '콘텐츠', '상단', '좌측', '우측'],
             '사용자관리': ['사용자', '관리', '권한', '관리자', '운용자', '로그인', '접근'],
@@ -241,6 +241,7 @@ class FAISSVectorStore(VectorStoreInterface):
         # 일반 중요 키워드
         general_keywords = [
             '시스템', '데이터', 'ai', '모델', '알고리즘', '예측', '분석', '성능',
+            'n-beats', 'xgb', 'extreme gradient boosting', '피크 관리',
             '설정', '구성', '운영', '관리', '모니터링', '제어', '최적화'
         ]
         

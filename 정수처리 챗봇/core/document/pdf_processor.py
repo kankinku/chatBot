@@ -37,6 +37,7 @@ except ImportError:
 # 키워드 추출기 import
 from .pdf_keyword_extractor import PDFKeywordExtractor
 from .units import normalize_unit, is_excluded_numeric_context
+from .wastewater_chunker import WastewaterChunker, create_wastewater_chunker
 # 메모리 최적화 import
 from core.utils.memory_optimizer import memory_profiler, model_memory_manager
 
@@ -44,17 +45,8 @@ from core.utils.memory_optimizer import memory_profiler, model_memory_manager
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-@dataclass
-class TextChunk:
-    """텍스트 청크 데이터 클래스"""
-    content: str
-    page_number: int
-    chunk_id: str
-    embedding: Optional[np.ndarray] = None
-    metadata: Optional[Dict] = None
-    pdf_id: Optional[str] = None
-    filename: Optional[str] = None
-    upload_time: Optional[str] = None
+# TextChunk는 별도 모듈로 분리됨
+from .text_chunk import TextChunk
 
 class PDFProcessor:
     """
@@ -74,7 +66,10 @@ class PDFProcessor:
                  chunk_overlap: int = 30,
                  enable_keyword_extraction: bool = True,
                  keyword_cache_threshold: int = 5,
-                 max_memory_usage_gb: float = 2.0):
+                 max_memory_usage_gb: float = 2.0,
+                 enable_wastewater_chunking: bool = True,
+                 wastewater_chunk_size: int = 384,
+                 wastewater_overlap_ratio: float = 0.25):
         """
         PDFProcessor 초기화
         
@@ -85,11 +80,25 @@ class PDFProcessor:
             enable_keyword_extraction: 키워드 추출 기능 활성화 여부
             keyword_cache_threshold: 키워드 추가 임계값
             max_memory_usage_gb: 최대 메모리 사용량 (GB)
+            enable_wastewater_chunking: 정수처리 도메인 특화 청킹 활성화
+            wastewater_chunk_size: 정수처리 청킹 크기
+            wastewater_overlap_ratio: 정수처리 청킹 오버랩 비율
         """
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
         self.enable_keyword_extraction = enable_keyword_extraction
         self.max_memory_usage_gb = max_memory_usage_gb
+        self.enable_wastewater_chunking = enable_wastewater_chunking
+        
+        # 정수처리 도메인 특화 청킹기 초기화
+        if self.enable_wastewater_chunking:
+            self.wastewater_chunker = create_wastewater_chunker(
+                max_chunk_size=wastewater_chunk_size,
+                overlap_ratio=wastewater_overlap_ratio
+            )
+            logger.info(f"정수처리 도메인 특화 청킹 활성화 (크기: {wastewater_chunk_size}, 오버랩: {wastewater_overlap_ratio:.1%})")
+        else:
+            self.wastewater_chunker = None
         
         # 키워드 추출기 초기화
         if self.enable_keyword_extraction:
@@ -115,7 +124,10 @@ class PDFProcessor:
         if not self._embedding_model_loaded:
             with memory_profiler(f"임베딩 모델 로딩: {self.embedding_model_name}"):
                 try:
-                    self.embedding_model = SentenceTransformer(self.embedding_model_name)
+                    self.embedding_model = SentenceTransformer(
+                        self.embedding_model_name,
+                        show_progress_bar=False
+                    )
                     logger.info(f"임베딩 모델 로드 완료: {self.embedding_model_name}")
                     
                     # 메모리 매니저에 등록
@@ -128,7 +140,10 @@ class PDFProcessor:
                     self._embedding_model_loaded = True
                 except Exception as e:
                     logger.warning(f"한국어 모델 로드 실패, 기본 모델 사용: {e}")
-                    self.embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
+                    self.embedding_model = SentenceTransformer(
+                        "all-MiniLM-L6-v2",
+                        show_progress_bar=False
+                    )
                     self._embedding_model_loaded = True
     
     def _clean_text(self, text: str) -> str:
@@ -359,6 +374,7 @@ class PDFProcessor:
     def chunk_text(self, text: str, pdf_id: str = None) -> List[TextChunk]:
         """
         텍스트를 의미적 단위로 청크화 (메모리 최적화 적용)
+        정수처리 도메인 특화 청킹 우선 적용
         
         Args:
             text: 원본 텍스트
@@ -371,6 +387,16 @@ class PDFProcessor:
             if not text.strip():
                 return []
             
+            # 정수처리 도메인 특화 청킹 사용
+            if self.enable_wastewater_chunking and self.wastewater_chunker:
+                try:
+                    chunks = self.wastewater_chunker.chunk_text(text, pdf_id)
+                    logger.info(f"정수처리 도메인 특화 청킹 완료: {len(chunks)}개 청크 생성")
+                    return chunks
+                except Exception as e:
+                    logger.warning(f"정수처리 청킹 실패, 기본 청킹 사용: {e}")
+            
+            # 기본 청킹 로직 (기존 방식)
             chunks = []
             lines = text.split('\n')
             current_chunk = []
@@ -436,7 +462,7 @@ class PDFProcessor:
                         metadata={"pdf_id": pdf_id, "chunk_index": len(chunks)}
                     ))
             
-            logger.info(f"텍스트 청크화 완료: {len(chunks)}개 청크 생성")
+            logger.info(f"기본 텍스트 청크화 완료: {len(chunks)}개 청크 생성")
             return chunks
 
     # ==== 숫자·단위·대상 구조화 추출 (경량 규칙 기반) ====

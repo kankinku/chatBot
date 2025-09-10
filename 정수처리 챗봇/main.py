@@ -55,6 +55,40 @@ logging.basicConfig(
     ]
 )
 
+# tqdm 진행률 표시줄 완전 비활성화
+os.environ['TQDM_DISABLE'] = '1'
+os.environ['TQDM_DISABLE_PROGRESS_BAR'] = '1'
+os.environ['TRANSFORMERS_VERBOSITY'] = 'error'
+os.environ['TOKENIZERS_PARALLELISM'] = 'false'
+
+# tqdm 모듈 자체를 완전히 비활성화
+try:
+    import tqdm
+    # tqdm 클래스 자체를 무효화
+    tqdm.tqdm.__init__ = lambda self, *args, **kwargs: None
+    tqdm.tqdm.__enter__ = lambda self: self
+    tqdm.tqdm.__exit__ = lambda self, *args: None
+    tqdm.tqdm.update = lambda self, n=1: None
+    tqdm.tqdm.close = lambda self: None
+    tqdm.tqdm.refresh = lambda self: None
+    tqdm.tqdm.display = lambda self: None
+    tqdm.tqdm.write = lambda self, s, file=None: None
+except ImportError:
+    pass
+
+# sys.stdout을 가로채서 진행률 표시줄 제거
+import io
+class NoProgressStdout(io.StringIO):
+    def write(self, s):
+        # 진행률 표시줄 패턴 제거
+        if 'Batches:' in s or '|' in s and '%' in s and 'it/s' in s:
+            return
+        return super().write(s)
+
+# stdout을 임시로 교체 (진행률 표시줄만 필터링)
+original_stdout = sys.stdout
+sys.stdout = NoProgressStdout()
+
 # 불필요한 경고/로그 레벨 조정
 warnings.filterwarnings("ignore", message="Failed to load image Python extension")
 warnings.filterwarnings("ignore", category=UserWarning, module=r"torchvision\\.io\\.image")
@@ -267,11 +301,18 @@ class LocalChatbot:
             self.pdf_processor = PDFProcessor()
             self.vector_store = HybridVectorStore()
             self.question_analyzer = QuestionAnalyzer()
-            # Ollama(Qwen)만 사용할 경우 프리로드 불필요
+            # Ollama(Qwen)만 사용할 경우 기본은 프리로드 불필요이나, 질의 지연 방지 위해 경량 워밍업 수행
             self.answer_generator = AnswerGenerator(preload_models=False)
             self.query_router = QueryRouter()
             self.llm_greeting_handler = GreetingHandler(self.answer_generator)
             
+            # 경량 워밍업: 최초 질의 지연 방지
+            try:
+                self.answer_generator.load_model()
+                _ = self.answer_generator.generate_direct_answer("워밍업")
+            except Exception as _warm_e:
+                logger.warning(f"답변 생성기 워밍업 경고: {_warm_e}")
+
             logger.info("모든 컴포넌트 초기화 완료")
             
             # 기존 PDF 문서 로드
@@ -825,4 +866,9 @@ def main():
     return 0
 
 if __name__ == "__main__":
-    exit(main())
+    try:
+        exit(main())
+    finally:
+        # 프로그램 종료 시 stdout 복원
+        if 'original_stdout' in globals():
+            sys.stdout = original_stdout

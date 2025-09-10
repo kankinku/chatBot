@@ -1,0 +1,260 @@
+{
+  "domain": "facilities",
+  "description": "시설: 정수장, 정수시설, 정수지 등 시설 관련 용어",
+  "total_terms": 16,
+  "generated_date": "2025-01-27",
+  "version": "1.0",
+  "terms": [
+    {
+      "term": "pH",
+      "definition": "수소이온의 몰농도 역수의 상용대수치. pH7은 중성, pH가 7보다 값이 작아질수록 산성이 강해지고, 값이 커질수록 알칼리성이 강해짐. 물의 기본적인 지표의 하나이고, 이화학적 수질, 생물학적 수질, 정수처리효과, 관로의 부식 등에 관계되는 중요한 인자임. 측정법은 비색법과 유리전극법이 있음. pharyngo conjunctival fever.",
+      "confidence": 0.25,
+      "keywords": [
+        "ph",
+        "정수처리",
+        "관로",
+        "관",
+        "측정",
+        "농도",
+        "pH"
+      ],
+      "all_domains": [
+        "disinfection",
+        "water_quality_parameters",
+        "chemical_analysis",
+        "facilities",
+        "piping"
+      ]
+    },
+    {
+      "term": "관리",
+      "definition": "정수장의 시설과 공정을 유지보수하고 최적화하는 활동이다.",
+      "confidence": 0.4444444444444444,
+      "keywords": [
+        "최적화",
+        "관",
+        "정수장",
+        "관리"
+      ],
+      "all_domains": [
+        "ems_system",
+        "facilities",
+        "piping",
+        "performance_metrics"
+      ]
+    },
+    {
+      "term": "기기",
+      "definition": "정수장에서 사용되는 각종 측정 및 제어 장비를 의미한다.",
+      "confidence": 0.4,
+      "keywords": [
+        "정수장",
+        "측정",
+        "기기",
+        "장비",
+        "제어"
+      ],
+      "all_domains": [
+        "ems_system",
+        "chemical_analysis",
+        "facilities",
+        "equipment"
+      ]
+    },
+    {
+      "term": "모니터링",
+      "definition": "정수처리 공정과 수질을 지속적으로 관찰하고 측정하는 활동이다.",
+      "confidence": 0.6666666666666666,
+      "keywords": [
+        "관",
+        "정수처리",
+        "측정"
+      ],
+      "all_domains": [
+        "chemical_analysis",
+        "facilities",
+        "piping"
+      ]
+    },
+    {
+      "term": "설비",
+      "definition": "정수장에서 사용되는 모든 기계장치와 기구를 통칭한다.",
+      "confidence": 0.5714285714285714,
+      "keywords": [
+        "설비",
+        "정수장"
+      ],
+      "all_domains": [
+        "facilities",
+        "equipment"
+      ]
+    },
+    {
+      "term": "소독지",
+      "definition": "정수처리된 물에 소독제를 주입하여 병원균을 제거하는 시설이다.",
+      "confidence": 0.5555555555555556,
+      "keywords": [
+        "소독제",
+        "정수처리",
+        "소독지",
+        "소독"
+      ],
+      "all_domains": [
+        "disinfection",
+        "facilities"
+      ]
+    },
+    {
+      "term": "알칼리도",
+      "definition": "물의 산을 중화할 수 있는 능력을 나타내는 지표로, 정수처리 공정의 안정성에 영향을 준다.",
+      "confidence": 0.5,
+      "keywords": [
+        "알칼리도",
+        "정수처리"
+      ],
+      "all_domains": [
+        "water_quality_parameters",
+        "facilities"
+      ]
+    },
+    {
+      "term": "염소",
+      "definition": "정수처리에서 가장 널리 사용되는 소독제로, 병원균을 제거하고 잔류염소를 유지하여 재오염을 방지한다.",
+      "confidence": 0.6666666666666666,
+      "keywords": [
+        "염소",
+        "잔류염소",
+        "정수처리",
+        "소독",
+        "소독제"
+      ],
+      "all_domains": [
+        "disinfection",
+        "facilities"
+      ]
+    },
+    {
+      "term": "운영",
+      "definition": "정수장의 시설과 공정을 관리하여 안정적으로 정수를 생산하는 활동이다.",
+      "confidence": 0.6666666666666666,
+      "keywords": [
+        "관",
+        "정수장",
+        "관리"
+      ],
+      "all_domains": [
+        "ems_system",
+        "facilities",
+        "piping"
+      ]
+    },
+    {
+      "term": "운전",
+      "definition": "정수장의 각종 시설을 조작하여 정수처리 공정을 수행하는 활동이다.",
+      "confidence": 1.0,
+      "keywords": [
+        "정수장",
+        "정수처리"
+      ],
+      "all_domains": [
+        "facilities"
+      ]
+    },
+    {
+      "term": "정수시설",
+      "definition": "수원에서 취수한 원수를 음용수로 처리하는 시설로, 정수처리공정을 수행하는 모든 시설을 포함한다.",
+      "confidence": 0.5714285714285714,
+      "keywords": [
+        "취수",
+        "수원",
+        "정수처리",
+        "정수시설"
+      ],
+      "all_domains": [
+        "intake_process",
+        "facilities"
+      ]
+    },
+    {
+      "term": "정수장",
+      "definition": "원수를 정수처리하여 음용수로 만드는 시설로, 응집, 침전, 여과, 소독 등의 공정을 거쳐 안전한 상수를 생산한다.",
+      "confidence": 0.42105263157894735,
+      "keywords": [
+        "침전",
+        "정수처리",
+        "정수장",
+        "응집",
+        "소독",
+        "여과"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation",
+        "sedimentation",
+        "filtration",
+        "disinfection",
+        "facilities"
+      ]
+    },
+    {
+      "term": "정수지",
+      "definition": "정수처리된 물을 저장하는 저수지로, 운전 안정성과 지진 대응을 고려하여 설계된 시설이다.",
+      "confidence": 0.7272727272727273,
+      "keywords": [
+        "정수지",
+        "정수처리"
+      ],
+      "all_domains": [
+        "intake_process",
+        "facilities"
+      ]
+    },
+    {
+      "term": "정수처리",
+      "definition": "원수를 음용수로 만들기 위해 수행하는 일련의 처리과정으로, 응집, 침전, 여과, 소독 등의 공정을 포함한다.",
+      "confidence": 0.26666666666666666,
+      "keywords": [
+        "침전",
+        "정수처리",
+        "응집",
+        "소독",
+        "여과"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation",
+        "sedimentation",
+        "filtration",
+        "disinfection",
+        "facilities"
+      ]
+    },
+    {
+      "term": "제어",
+      "definition": "정수처리 공정의 각종 변수를 조절하여 최적의 처리효과를 얻는 활동이다.",
+      "confidence": 0.8,
+      "keywords": [
+        "제어",
+        "정수처리"
+      ],
+      "all_domains": [
+        "ems_system",
+        "facilities"
+      ]
+    },
+    {
+      "term": "조절지",
+      "definition": "여과량 등을 조절하기 위해 설치된 시설로, 정수장의 안정적인 운영을 위한 조절 기능을 수행한다.",
+      "confidence": 0.7272727272727273,
+      "keywords": [
+        "여과",
+        "조절지",
+        "정수장"
+      ],
+      "all_domains": [
+        "filtration",
+        "facilities"
+      ]
+    }
+  ]
+}

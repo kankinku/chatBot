@@ -18,7 +18,11 @@ from .pdf_router import PDFRouter, PDFMode, PDFResponse, create_optimized_pdf_ro
 from .vector_store import HybridVectorStore
 from .enhanced_vector_search import EnhancedVectorSearcher, create_enhanced_searcher
 from .accuracy_validator import AccuracyValidator
+from .enhanced_search_filter import EnhancedSearchFilter, create_enhanced_search_filter
+from .wastewater_reranker import WastewaterReranker, create_wastewater_reranker
+from core.query.llm_query_expander import LLMQueryExpander, create_llm_query_expander
 from core.llm.answer_generator import AnswerGenerator, Answer
+from core.llm.hallucination_prevention import create_hallucination_prevention
 
 import logging
 logger = logging.getLogger(__name__)
@@ -39,9 +43,25 @@ class EnhancedPDFConfig:
     
     # LLM 설정
     llm_model: str = "qwen2:1.5b-instruct-q4_K_M"
-    max_context_chunks: int = 5
+    max_context_chunks: int = 3  # 2-3개로 감소
     max_tokens: int = 256
     window_expand: int = 1  # 인접 윈도우 확장 (같은 페이지 인접 청크 우선)
+    
+    # 검색 필터 설정
+    enable_enhanced_filtering: bool = True
+    filter_confidence_threshold: float = 0.4
+    
+    # 쿼리 확장 설정
+    enable_query_expansion: bool = True
+    max_query_expansions: int = 3
+    
+    # 재순위화 설정
+    enable_wastewater_reranking: bool = True
+    domain_rerank_weight: float = 0.4
+    
+    # 환상 방지 설정
+    enable_hallucination_prevention: bool = True
+    strict_mode: bool = True
 
 class EnhancedPDFPipeline:
     """향상된 PDF 파이프라인"""
@@ -50,12 +70,15 @@ class EnhancedPDFPipeline:
         """파이프라인 초기화"""
         self.config = config or EnhancedPDFConfig()
         
-        # PDF 처리기
+        # PDF 처리기 (정수처리 특화 청킹 활성화)
         self.pdf_processor = PDFProcessor(
             embedding_model=self.config.embedding_model,
             chunk_size=256,
             chunk_overlap=30,
-            enable_keyword_extraction=True
+            enable_keyword_extraction=True,
+            enable_wastewater_chunking=True,
+            wastewater_chunk_size=384,
+            wastewater_overlap_ratio=0.25
         )
         
         # PDF 라우터 (최적화된 설정)
@@ -84,6 +107,38 @@ class EnhancedPDFPipeline:
         self.accuracy_validator = AccuracyValidator(
             embedding_model=self.config.embedding_model
         )
+        
+        # 향상된 검색 필터
+        if self.config.enable_enhanced_filtering:
+            self.search_filter = create_enhanced_search_filter(
+                max_chunks=self.config.max_context_chunks,
+                confidence_threshold=self.config.filter_confidence_threshold
+            )
+        else:
+            self.search_filter = None
+        
+        # LLM 쿼리 확장기
+        if self.config.enable_query_expansion:
+            self.query_expander = create_llm_query_expander(
+                llm_model=self.config.llm_model,
+                max_expansions=self.config.max_query_expansions
+            )
+        else:
+            self.query_expander = None
+        
+        # 정수처리 도메인 특화 재순위화기
+        if self.config.enable_wastewater_reranking:
+            self.wastewater_reranker = create_wastewater_reranker(
+                domain_weight=self.config.domain_rerank_weight
+            )
+        else:
+            self.wastewater_reranker = None
+        
+        # 환상 방지 시스템
+        if self.config.enable_hallucination_prevention:
+            self.hallucination_prevention = create_hallucination_prevention()
+        else:
+            self.hallucination_prevention = None
         
         logger.info("향상된 PDF 파이프라인 초기화 완료")
     
@@ -136,31 +191,109 @@ class EnhancedPDFPipeline:
         logger.info(f"PDF 검색 및 답변 생성 시작: '{query}' (모드: {mode.value})")
         
         try:
-            # 1. 향상된 벡터 검색 수행
-            enhanced_search_results = self.enhanced_searcher.search(
-                query=query,
-                top_k=max_results or self.config.max_results * 2,  # 더 많은 후보 검색
-                context=expected_answer  # 예상 답변을 컨텍스트로 활용
-            )
+            # 1. 쿼리 확장 (선택적)
+            expanded_queries = []
+            if self.query_expander:
+                try:
+                    expansion_result = self.query_expander.expand_query(query)
+                    expanded_queries = expansion_result.expanded_queries
+                    logger.info(f"쿼리 확장 완료: {len(expanded_queries)}개 확장 쿼리 생성")
+                except Exception as e:
+                    logger.warning(f"쿼리 확장 실패, 원본 쿼리 사용: {e}")
             
-            # 2. PDF 라우터로 추가 검색 (기존 방식과 병행)
+            # 검색할 쿼리 목록 (원본 + 확장)
+            search_queries = [query] + expanded_queries
+            
+            # 2. 향상된 벡터 검색 수행 (다중 쿼리)
+            all_search_results = []
+            for search_query in search_queries:
+                try:
+                    results = self.enhanced_searcher.search(
+                        query=search_query,
+                        top_k=max_results or self.config.max_results,
+                        context=expected_answer
+                    )
+                    all_search_results.extend(results)
+                except Exception as e:
+                    logger.warning(f"검색 실패 (쿼리: '{search_query}'): {e}")
+            
+            # 중복 제거 및 상위 결과 선택
+            unique_results = []
+            seen_chunk_ids = set()
+            for result in all_search_results:
+                chunk_id = getattr(result.chunk if hasattr(result, 'chunk') else result, 'chunk_id', None)
+                if chunk_id and chunk_id not in seen_chunk_ids:
+                    unique_results.append(result)
+                    seen_chunk_ids.add(chunk_id)
+                elif not chunk_id:  # chunk_id가 없는 경우도 포함
+                    unique_results.append(result)
+            
+            # 상위 결과만 선택 (원본 검색 결과 형태로 유지)
+            enhanced_search_results = unique_results[:max_results or self.config.max_results * 2]
+            
+            # 3. PDF 라우터로 추가 검색 (기존 방식과 병행)
             search_results = self.pdf_router.search_pdf(
                 query=query,
                 mode=mode,
                 top_k=max_results or self.config.max_results
             )
             
-            # 3. 검색 결과 정확도 검증
+            # 4. 정수처리 도메인 특화 재순위화 적용
+            if self.wastewater_reranker and search_results.results:
+                try:
+                    # 청크 추출
+                    chunks_to_rerank = []
+                    for result in search_results.results:
+                        if hasattr(result, 'chunk'):
+                            chunks_to_rerank.append(result.chunk)
+                        else:
+                            # 직접 청크인 경우 TextChunk로 변환
+                            if not isinstance(result, TextChunk):
+                                result = TextChunk(
+                                    content=getattr(result, 'content', str(result)),
+                                    page_number=getattr(result, 'page_number', 1),
+                                    chunk_id=getattr(result, 'chunk_id', f"chunk_{len(chunks_to_rerank)}"),
+                                    metadata=getattr(result, 'metadata', {})
+                                )
+                            chunks_to_rerank.append(result)
+                    
+                    # 재순위화 수행
+                    reranked_results = self.wastewater_reranker.rerank(
+                        query=query,
+                        chunks=chunks_to_rerank,
+                        top_k=len(chunks_to_rerank)
+                    )
+                    
+                    # 재순위화된 결과로 업데이트
+                    search_results.results = [chunk for chunk, score in reranked_results]
+                    logger.info(f"정수처리 재순위화 완료: {len(reranked_results)}개 청크")
+                    
+                except Exception as e:
+                    logger.warning(f"정수처리 재순위화 실패, 원본 결과 사용: {e}")
+            
+            # 5. 검색 결과 정확도 검증
             validation_result = self.accuracy_validator.validate_search_results(
                 query=query,
                 search_results=enhanced_search_results,
                 expected_answer=expected_answer
             )
             
-            # 2. 컨텍스트 준비 (인접 윈도우 확장 포함)
-            context_chunks = self._prepare_context(search_results.results)
+            # 6. 향상된 검색 필터링 적용
+            if self.search_filter and search_results.results:
+                filtered_results = self.search_filter.filter_search_results(
+                    search_results=search_results.results,
+                    query=query,
+                    expected_answer=expected_answer
+                )
+                # SearchResult를 다시 청크로 변환
+                filtered_chunks = [result.chunk for result in filtered_results]
+            else:
+                filtered_chunks = search_results.results
             
-            # 3. 답변 생성 (PDF-only 정책: 컨텍스트 없으면 무응답)
+            # 7. 컨텍스트 준비 (인접 윈도우 확장 포함)
+            context_chunks = self._prepare_context(filtered_chunks)
+            
+            # 8. 답변 생성 (PDF-only 정책: 컨텍스트 없으면 무응답)
             if context_chunks:
                 answer = self.answer_generator.generate_context_answer(
                     question=query,
@@ -194,12 +327,27 @@ class EnhancedPDFPipeline:
             
             total_time = time.time() - start_time
             
-            # 4. 결과 구성
+            # 9. 결과 구성
             result = {
                 'query': query,
                 'answer': answer.content,
                 'confidence': answer.confidence,
-                'sources': self._format_sources(search_results.results),
+                'sources': self._format_sources(filtered_chunks),
+                'filtering_stats': self.search_filter.get_filter_stats(filtered_results) if self.search_filter and 'filtered_results' in locals() else {},
+                'query_expansion': {
+                    'original_query': query,
+                    'expanded_queries': expanded_queries,
+                    'total_search_queries': len(search_queries),
+                    'expansion_enabled': self.config.enable_query_expansion
+                },
+                'reranking_stats': {
+                    'wastewater_reranking_enabled': self.config.enable_wastewater_reranking,
+                    'domain_weight': self.config.domain_rerank_weight
+                },
+                'hallucination_prevention': {
+                    'enabled': self.config.enable_hallucination_prevention,
+                    'strict_mode': self.config.strict_mode
+                },
                 'search_results': {
                     'total_found': len(search_results.results),
                     'threshold_passed': sum(1 for r in search_results.results if r.passed_threshold),
@@ -344,13 +492,21 @@ class EnhancedPDFPipeline:
 # 편의 함수들
 def create_enhanced_pdf_pipeline(embedding_model: str = "jhgan/ko-sroberta-multitask",
                                 llm_model: str = "qwen2:1.5b-instruct-q4_K_M") -> EnhancedPDFPipeline:
-    """향상된 PDF 파이프라인 생성"""
+    """향상된 PDF 파이프라인 생성 (정수처리 특화 기능 포함)"""
     config = EnhancedPDFConfig(
         embedding_model=embedding_model,
         llm_model=llm_model,
         enable_hybrid_search=True,
         enable_reranking=True,
-        enable_multiview=True
+        enable_multiview=True,
+        # 정수처리 특화 설정
+        enable_enhanced_filtering=True,
+        enable_query_expansion=True,
+        enable_wastewater_reranking=True,
+        max_context_chunks=3,  # 2-3개로 제한
+        filter_confidence_threshold=0.4,
+        max_query_expansions=3,
+        domain_rerank_weight=0.4
     )
     return EnhancedPDFPipeline(config=config)
 
@@ -361,10 +517,38 @@ def create_fast_pdf_pipeline(embedding_model: str = "jhgan/ko-sroberta-multitask
         embedding_model=embedding_model,
         llm_model=llm_model,
         enable_hybrid_search=True,
-        enable_reranking=True,  # 재순위화 활성화
+        enable_reranking=True,
         enable_multiview=False,  # 멀티뷰 비활성화
         similarity_threshold=0.25,
-        max_results=8
+        max_results=8,
+        # 속도 최적화를 위한 설정
+        enable_enhanced_filtering=True,
+        enable_query_expansion=False,  # 쿼리 확장 비활성화
+        enable_wastewater_reranking=True,
+        max_context_chunks=2,  # 더 적은 청크
+        max_query_expansions=1
+    )
+    return EnhancedPDFPipeline(config=config)
+
+def create_accuracy_focused_pipeline(embedding_model: str = "jhgan/ko-sroberta-multitask",
+                                    llm_model: str = "qwen2:1.5b-instruct-q4_K_M") -> EnhancedPDFPipeline:
+    """정확도 중심 PDF 파이프라인 생성 (모든 고급 기능 활성화)"""
+    config = EnhancedPDFConfig(
+        embedding_model=embedding_model,
+        llm_model=llm_model,
+        enable_hybrid_search=True,
+        enable_reranking=True,
+        enable_multiview=True,
+        # 정확도 최적화 설정
+        enable_enhanced_filtering=True,
+        enable_query_expansion=True,
+        enable_wastewater_reranking=True,
+        max_context_chunks=3,
+        filter_confidence_threshold=0.5,  # 더 높은 임계값
+        max_query_expansions=5,  # 더 많은 확장
+        domain_rerank_weight=0.6,  # 도메인 가중치 증가
+        similarity_threshold=0.4,
+        rerank_threshold=0.6
     )
     return EnhancedPDFPipeline(config=config)
 

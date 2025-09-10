@@ -1,0 +1,385 @@
+{
+  "domain": "disinfection",
+  "description": "소독공정: 소독제, 염소, 잔류염소 관련 용어",
+  "total_terms": 24,
+  "generated_date": "2025-01-27",
+  "version": "1.0",
+  "terms": [
+    {
+      "term": "0차반응",
+      "definition": "반응속도가 선분의 농도에 무관한 비가역반응. 반응속도식에 농도항이 포함되지 않으며, 반응차수가 0이라고 볼 수 있으므로, 0차반응이라고 함.A→생성물 이라는 반응에서, A의 농도, A의 처음농도, 반응률이라 한다면, 반응속도식은 다음식으로 표시될 수 있음. 또는, 식을 적분하면, 을 얻으며, 와 의 관계에 따라, 직선의 기울기로부터 반응속도정수 k를 구할 수 있음. 1,1,1-트리클로로에탄.",
+      "confidence": 0.5,
+      "keywords": [
+        "농도",
+        "관"
+      ],
+      "all_domains": [
+        "disinfection",
+        "piping"
+      ]
+    },
+    {
+      "term": "1차반응",
+      "definition": "반응속도가 반응에 관여하는 물질 중 어느 하나의 농도에 비례하는 반응. 반응속도가 단지 한 가지 반응물 농도에 비례하는 것을 가리킴. 반응속도가 반응물질의 농도에 직접 비례하는 경우이며, 반응물질이 일정한 속도로 감소하거나 다른 물질로 전환되는 경우 등이 해당됨. 전자의 경우 BOD 시험을 할 때 산소요구량의 시간적 변화나 방사성물질의 자연붕괴 등이 있으며, 후자의 경우 산화질소의 분해반응 등이 있음. 일반적으로 반응속도를 좌우하는 물질을 A, B,…로 나타내면 반응속도는 이 됨. 여기서 k를 반응속도상수, n을 반응차수(反應次數)라고 하는데, 양과 음의 정수 및 분수를 취함. 1차분해.",
+      "confidence": 0.5,
+      "keywords": [
+        "농도",
+        "bod",
+        "시험",
+        "관"
+      ],
+      "all_domains": [
+        "disinfection",
+        "water_quality_parameters",
+        "chemical_analysis",
+        "piping"
+      ]
+    },
+    {
+      "term": "BAT",
+      "definition": "미국에서는 합성유기화합물 등의 최대허용농도를 설정할 때, 그 기준을 달성하기 위해 처리방법만이 아닌 비용이나 수도사업체의 사정도 고려한 최선의 처리기술을 규정. 그들의 처리기술을 일반적으로 머리글자를 따서 BAT라 함. BCYE-α한천배지.",
+      "confidence": 1.0,
+      "keywords": [
+        "농도"
+      ],
+      "all_domains": [
+        "disinfection"
+      ]
+    },
+    {
+      "term": "BHC",
+      "definition": "빛을 쪼여 염소와 벤젠을 반응시켜 만든 유기화합물로 농약의 일종으로 농약 관리법에 의해 작물 잔류성 농약으로 지정되어 있음. BHC에는 ,,, 등 7종류의 이성질체가 있음. 이중의 한 이성질체가 린덴 또는 가멕산이라는 상품명으로 시판되는 살충제. 1825년 처음으로 만들어졌으며, 1944년에는 γ-이성질체가 이 반응에서 생기는 다른 이성질체보다 약 1,000배나 더 독성이 강한 살충효과가 있다고 확인됨. 각 이성질체는 탄소원자로 이루어진 고리에 염소원자가 어떤 방향으로 붙어 있느냐에 따라 구조적으로 구분됨. 벤젠을 염소와 첨가반응을 시키면 BHC의 가능한 8개 이성질체 중 6개 이상의 이성질체가 포함되어 있는 혼합물이 만들어지며, 그중 γ-이성질체가 20～25％를 차지하는데, γ-이성질체는 특정 용매에 다른 이성질체보다 더 잘 녹아 농축된 형태로 추출될 수 있음. BHC는 DDT보다 휘발성이 크고 곤충에 살충효과가 더 빠르게 작용하지만, 지속성은 떨어지며, BHC는 다른 살충제들이 경쟁적으로 생산되고 물 속에 단 1ppm 정도만 있어도 물고기를 죽이기 때문에 사용이 점점 줄어들고 있으며, 1960년대 이후에는 사용이 제한되고 있음. bio-assay.",
+      "confidence": 0.6,
+      "keywords": [
+        "염소",
+        "관",
+        "관리"
+      ],
+      "all_domains": [
+        "disinfection",
+        "ems_system",
+        "piping"
+      ]
+    },
+    {
+      "term": "CHN분석계",
+      "definition": "유기물의 주요성분인 탄소, 수소, 질소를 동시에 정량하는 분석기기. C, H, N은 연소, 분해되어 각각 , , 로 변환되며, 열전도도법에 의해 농도를 측정하여 정량함. 열전도도의 측정법으로서는 가스크로마토그래피방식, 자기적분방식, 테크니콘방식 3종류가 이용됨. 종래의 C, H와 N을 개별 분석계를 사용하여 측정하는 방법에 비교하여 측정시간과 시료량이 줄어듦. clinker.",
+      "confidence": 0.6666666666666666,
+      "keywords": [
+        "분석",
+        "CHN분석계",
+        "측정",
+        "농도",
+        "크로마토그래피",
+        "기기"
+      ],
+      "all_domains": [
+        "disinfection",
+        "chemical_analysis",
+        "equipment",
+        "ai_models"
+      ]
+    },
+    {
+      "term": "CT값",
+      "definition": "병원성미생물 등과 소독제와의 접촉량에 대한 지표로 소독제의 농도와 소독제가 잔류하여 있는 시간을 곱한 것. 단위는 일반적으로 이 쓰임. 일정량의 병원미생물(90%, 99%, 99.9%)을 불활성화시키기 위하여 필요한 CT값은 각각의 세균, 원생동물 등에 대하여 소독제별로 구함. Darcy’s법칙.",
+      "confidence": 0.6666666666666666,
+      "keywords": [
+        "CT값",
+        "미생물",
+        "농도",
+        "소독",
+        "소독제",
+        "세균"
+      ],
+      "all_domains": [
+        "disinfection",
+        "microbiological_analysis"
+      ]
+    },
+    {
+      "term": "DBP",
+      "definition": "☞ 소독부산물 DCS.",
+      "confidence": 1.0,
+      "keywords": [
+        "소독"
+      ],
+      "all_domains": [
+        "disinfection"
+      ]
+    },
+    {
+      "term": "DPD법",
+      "definition": "잔류염소의 측정법. 수질기준을 보완하는 항목에 관계되는 측정법인 과장통지로 정해지는 방법. 잔류염소와 N, N-디에틸-p-페닐렌디아민이 반응하면 용액의 색이 분홍내지 적분홍색을 띔. 이것을 C. I. Acid Red 265를 이용해서 작성한 표준비색렬과 비교해, 잔류염소치를 구함. N, N-디에틸-p-페닐렌디아민법이라고도 함. DPD를 넣은 시점에서 유리(遊離)잔류염소가 구해지고, 다시금 요오드화칼륨을 넣으면 잔류염소가 구해짐. DPD와 잔류염소가 반응해서 분홍색의 용액이 되지만, 유산제1철암모늄을 넣으면 무색이 되는 것을 이용한 적정(滴定)에 의한 측정법도 있음. drain separator.",
+      "confidence": 0.4117647058823529,
+      "keywords": [
+        "염소",
+        "잔류염소",
+        "ai",
+        "관",
+        "측정",
+        "DPD법"
+      ],
+      "all_domains": [
+        "disinfection",
+        "chemical_analysis",
+        "piping",
+        "ai_models"
+      ]
+    },
+    {
+      "term": "Iprobenfos",
+      "definition": "이프로벤포스라고 부르며, 유지질계 살충제는 유제, 분제, 분립제, 입제가 있음. 종류명은 IBP. 벼의 도열병, 이삭이 시드는 것의 대책으로 사용. 염소처리에서 분해된 클로로톨루엔이나 벤젠알데히드가 생성되어 일부가 정수 중에 검출되기도 함. Iprodione.",
+      "confidence": 1.0,
+      "keywords": [
+        "염소"
+      ],
+      "all_domains": [
+        "disinfection"
+      ]
+    },
+    {
+      "term": "K값규제",
+      "definition": "확산식에 근거해 각 배연발생시설에서 배출되는 유황산화물의 최대착지농도가 일정한 값 이하가 되도록 각 시설의 배출구 높이에 따라서 유황산화물의 허용배출량을 정하는 규제 방식. 굴뚝을 높게 함으로서 착지농도는 감소하는데 배연이 이르는 범위는 확대하게 됨. K형조인트.",
+      "confidence": 1.0,
+      "keywords": [
+        "농도"
+      ],
+      "all_domains": [
+        "disinfection"
+      ]
+    },
+    {
+      "term": "MIB",
+      "definition": "방선균 또는 남조류에 의해서 생산되고 이취미(異臭味)물질로 알려져 있음. 보통은 곰팡이냄새를 내지만, 흙냄새, 먹물냄새를 내는 것도 있음. 응집침전 급속여과시설로 제거되지 않는 경우는 분말활성탄처리, 입상활성탄처리, 오존처리 등으로 제거함. 3차 처리.",
+      "confidence": 0.2727272727272727,
+      "keywords": [
+        "여과",
+        "침전",
+        "응집",
+        "오존"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation",
+        "sedimentation",
+        "filtration",
+        "disinfection"
+      ]
+    },
+    {
+      "term": "M비",
+      "definition": "미생물농도와 먹이가되는 폐수 중의 기질 농도와의 비. 활성슬러지는 그의 대부분이 미생물로 하수 중의 유기물은 미생물에 관한 먹이로써 생각할 수 있으므로 그의 비가 중요한 의미를 가지고 계량할 수 없으므로 활성슬러지법에서는 BOD/SS 부하를 이용. ☞ 하수처리, BOD부하 FC/FS비.",
+      "confidence": 0.3333333333333333,
+      "keywords": [
+        "슬러지",
+        "bod",
+        "미생물",
+        "관",
+        "농도",
+        "BOD부하"
+      ],
+      "all_domains": [
+        "sedimentation",
+        "disinfection",
+        "water_quality_parameters",
+        "microbiological_analysis",
+        "piping"
+      ]
+    },
+    {
+      "term": "pH",
+      "definition": "수소이온의 몰농도 역수의 상용대수치. pH7은 중성, pH가 7보다 값이 작아질수록 산성이 강해지고, 값이 커질수록 알칼리성이 강해짐. 물의 기본적인 지표의 하나이고, 이화학적 수질, 생물학적 수질, 정수처리효과, 관로의 부식 등에 관계되는 중요한 인자임. 측정법은 비색법과 유리전극법이 있음. pharyngo conjunctival fever.",
+      "confidence": 0.25,
+      "keywords": [
+        "ph",
+        "정수처리",
+        "관로",
+        "관",
+        "측정",
+        "농도",
+        "pH"
+      ],
+      "all_domains": [
+        "disinfection",
+        "water_quality_parameters",
+        "chemical_analysis",
+        "facilities",
+        "piping"
+      ]
+    },
+    {
+      "term": "디클로로벤젠",
+      "definition": ", 분자량 147.01, p-DCB. 1,4-디클로로벤젠으로도 불림. 비중 1.46(20℃), 녹는 점 53℃, 끓는 점 174℃의 무색결정. 증기압 0.4mmHg(25℃). 물에 대한 용해도는 79mg/l(25℃). 주된 용도는 탈취제, 살충제 등. 토양 중에 방출되면 토양에 남아 천천히 지하수로 이동. 독성은 고농도 폭로의 경우에는 간장장해를 일으키는 경우도 있음. P-알칼리도.",
+      "confidence": 0.8,
+      "keywords": [
+        "농도",
+        "알칼리도"
+      ],
+      "all_domains": [
+        "disinfection",
+        "water_quality_parameters"
+      ]
+    },
+    {
+      "term": "막\n\n\n\nMX",
+      "definition": "MX-5-hydroxy-2-furanone 3-클로로-4-5-히드록시-2-퓨란. 제지업의 염소처리수중에서 비교적 강한 변이원성을 보이는 할로겐화합물로써 분리되어, MX로 명명된 것이 최초임. MX가 그림과 같이 furanone고리로 있는 것은 pH 5.3 이하의 경우이며, 중성부근에서는 열린 고리로 되어 oxobutenoic acid로써 존재하고 있음. 일반적으로 수도의 염소처리에 따라 수중의 리그닌과 후민질과 염소와의 반응에 따라 생성하는 것이 명확해지고 있음. MX는 염기대 치환형의 직접 변이원물질로 하고, 정수 내의 전변이원성에 대한 MX의 기여율은 1% 정도임. ☞ 소독부산물 m값.",
+      "confidence": 0.6,
+      "keywords": [
+        "ph",
+        "염소",
+        "pH",
+        "소독"
+      ],
+      "all_domains": [
+        "disinfection",
+        "water_quality_parameters"
+      ]
+    },
+    {
+      "term": "소독공정",
+      "definition": "소독제를 주입하여 병원균을 제거하는 처리과정이다.",
+      "confidence": 1.0,
+      "keywords": [
+        "소독공정",
+        "소독제",
+        "소독"
+      ],
+      "all_domains": [
+        "disinfection"
+      ]
+    },
+    {
+      "term": "소독제",
+      "definition": "병원균을 제거하는 약품으로, 염소, 오존, 자외선 등이 사용된다.",
+      "confidence": 0.9166666666666666,
+      "keywords": [
+        "염소",
+        "약품",
+        "자외선",
+        "소독",
+        "오존",
+        "소독제"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "disinfection"
+      ]
+    },
+    {
+      "term": "소독지",
+      "definition": "정수처리된 물에 소독제를 주입하여 병원균을 제거하는 시설이다.",
+      "confidence": 0.5555555555555556,
+      "keywords": [
+        "소독제",
+        "정수처리",
+        "소독지",
+        "소독"
+      ],
+      "all_domains": [
+        "disinfection",
+        "facilities"
+      ]
+    },
+    {
+      "term": "염소",
+      "definition": "정수처리에서 가장 널리 사용되는 소독제로, 병원균을 제거하고 잔류염소를 유지하여 재오염을 방지한다.",
+      "confidence": 0.6666666666666666,
+      "keywords": [
+        "염소",
+        "잔류염소",
+        "정수처리",
+        "소독",
+        "소독제"
+      ],
+      "all_domains": [
+        "disinfection",
+        "facilities"
+      ]
+    },
+    {
+      "term": "오존",
+      "definition": "강력한 산화력을 가진 소독제로, 염소보다 효과적이지만 잔류효과가 없어 2차 소독이 필요하다.",
+      "confidence": 1.0,
+      "keywords": [
+        "오존",
+        "소독제",
+        "염소",
+        "소독"
+      ],
+      "all_domains": [
+        "disinfection"
+      ]
+    },
+    {
+      "term": "잔류염소",
+      "definition": "소독 후에도 남아있는 염소의 양으로, 0.1 mg/L 이상 유지하여 재오염을 방지한다.",
+      "confidence": 1.0,
+      "keywords": [
+        "염소",
+        "잔류염소",
+        "소독"
+      ],
+      "all_domains": [
+        "disinfection"
+      ]
+    },
+    {
+      "term": "정수장",
+      "definition": "원수를 정수처리하여 음용수로 만드는 시설로, 응집, 침전, 여과, 소독 등의 공정을 거쳐 안전한 상수를 생산한다.",
+      "confidence": 0.42105263157894735,
+      "keywords": [
+        "침전",
+        "정수처리",
+        "정수장",
+        "응집",
+        "소독",
+        "여과"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation",
+        "sedimentation",
+        "filtration",
+        "disinfection",
+        "facilities"
+      ]
+    },
+    {
+      "term": "정수처리",
+      "definition": "원수를 음용수로 만들기 위해 수행하는 일련의 처리과정으로, 응집, 침전, 여과, 소독 등의 공정을 포함한다.",
+      "confidence": 0.26666666666666666,
+      "keywords": [
+        "침전",
+        "정수처리",
+        "응집",
+        "소독",
+        "여과"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation",
+        "sedimentation",
+        "filtration",
+        "disinfection",
+        "facilities"
+      ]
+    },
+    {
+      "term": "트리클로로에탄",
+      "definition": ", 분자량 133.40. β-트리클로로에탄이라고도 함. 비중 1.44(20℃). 융점-37.0℃, 비점 113.5℃의 액체. 물에 대한 용해도는 0.45g/100g(20℃)로, 에탄올, 에테르 및 유기염소계 용제와 혼합하며, 증기압 16.7㎜Hg(20℃). 주된 용도는 유지(油脂), 왁스, 천연수지 및 알칼로이드의 용제임. 독성은 LD50 1,140㎎/㎏로, 중추신경계 억제작용 및 간기능 장애를 일으킴. 12345678910 개인정보처리방침 영상정보 처리기기 운영방침 이용약관 오시는길 페이스북 블로그 유튜브 인스타그램 관련사이트 우리집 수돗물 안심 확인제 교육 홈페이지 단체표준인증 WATER KOREA 물산업 PM 양성과정 파이프에셋 수돗물홍보협의회 서울특별시 영등포구 대림로 244 한국상하수도협회 Tel:02-3156-7777Fax:02-3156-7778 Tel:02-3156-7777Fax:02-3156-7778 Copyright 2018 Korea Water and Wastewater Works Association All rights reserved.",
+      "confidence": 0.4,
+      "keywords": [
+        "파이프",
+        "염소",
+        "관",
+        "기기"
+      ],
+      "all_domains": [
+        "disinfection",
+        "equipment",
+        "piping"
+      ]
+    }
+  ]
+}

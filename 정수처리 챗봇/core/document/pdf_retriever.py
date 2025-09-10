@@ -100,7 +100,8 @@ class PDFRetriever:
             try:
                 self.embedding_model = SentenceTransformer(
                     self.embedding_model_name,
-                    cache_folder="./models"
+                    cache_folder="./models",
+                    show_progress_bar=False
                 )
                 self._embedding_model_loaded = True
                 logger.info(f"PDF 검색용 임베딩 모델 로드: {self.embedding_model_name}")

@@ -274,7 +274,7 @@ class ChatbotLogger:
             timestamp = datetime.now().isoformat()
             
             # 단계별 로그 메시지 생성
-            step_msg = f"[{session_id}] {step.value} : {step_time:.3f}초"
+            step_msg = f"[{session_id}] {step.name} : {step_time:.3f}초"
             if details:
                 step_msg += f" | {details}"
             

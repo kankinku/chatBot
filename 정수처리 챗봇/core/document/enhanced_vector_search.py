@@ -95,7 +95,8 @@ class EnhancedVectorSearcher:
             try:
                 self.embedding_models[model_name] = SentenceTransformer(
                     model_name,
-                    cache_folder="./models"
+                    cache_folder="./models",
+                    show_progress_bar=False
                 )
                 logger.info(f"임베딩 모델 로드: {model_name}")
             except Exception as e:

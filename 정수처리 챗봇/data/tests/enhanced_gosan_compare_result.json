@@ -1,0 +1,168 @@
+{
+  "test_info": {
+    "system": "enhanced_water_treatment_pipeline",
+    "description": "향상된 정수처리 도메인 특화 시스템",
+    "improvements": [
+      "138개 전문 용어 도메인 분류",
+      "슬라이딩 윈도우 청킹 + 공정별 의미 단위 분할",
+      "도메인 특화 재순위화 + 동적 쿼리 확장",
+      "컨텍스트 최적화 (상위 2-3개 청크 선별)"
+    ],
+    "expected_accuracy_improvement": "13% → 39% (3배 향상)",
+    "actual_accuracy": "0.0%",
+    "total_questions": 15,
+    "correct_answers": 0
+  },
+  "results": [
+    {
+      "no": 1,
+      "question": "PMS의 주요 목적은 무엇인가요?",
+      "expected": "펌프 모터의 자율 진단과 정밀 진단을 통해 고장을 예방하는 것입니다.",
+      "generated": "제공된 문서에서 해당 정보를 찾을 수 없습니다. 문서에 명시된 내용만을 기반으로 답변드릴 수 있습니다.",
+      "accuracy": false,
+      "confidence": 0.9,
+      "processing_time": 26.012442350387573,
+      "improvement": "enhanced_system"
+    },
+    {
+      "no": 2,
+      "question": "침전 공정에서 슬러지 발생량과 가장 높은 상관관계를 가지는 변수는 무엇인가요?",
+      "expected": "원수 탁도(상관계수 0.72)입니다.",
+      "generated": "슬러지 발생량과 가장 높은 상관관계를 가지는 변수는 응집제 주입률입니다. 이에 따르면, 응집제 주입률과 슬러지 발생량의 상관계수는 0.72로 높은 양의 상관관계를 가짐으로써 이 관계가 가장 강력하게 나타났습니다.",
+      "accuracy": false,
+      "confidence": 0.9,
+      "processing_time": 25.318099975585938,
+      "improvement": "enhanced_system"
+    },
+    {
+      "no": 3,
+      "question": "PMS에서 확인 가능한 정보는 무엇인가요?",
+      "expected": "모터 전류, 진동, 온도, 운전 시간, 고장 이력 등입니다.",
+      "generated": "통계 - 진단. 설정 - AI.",
+      "accuracy": false,
+      "confidence": 0.9,
+      "processing_time": 25.44053840637207,
+      "improvement": "enhanced_system"
+    },
+    {
+      "no": 4,
+      "question": "로그인 후 자동 로그아웃은 몇 분으로 설정 가능한가요?",
+      "expected": "10분 ~ 60분 사이에서 관리자가 설정할 수 있습니다.",
+      "generated": "제공된 문서에서 해당 정보를 찾을 수 없습니다. 문서에 명시된 내용만을 기반으로 답변드릴 수 있습니다.",
+      "accuracy": false,
+      "confidence": 0.9,
+      "processing_time": 23.68475079536438,
+      "improvement": "enhanced_system"
+    },
+    {
+      "no": 5,
+      "question": "장애 대응 운영 관리에서 제공되는 기능은 무엇인가요?",
+      "expected": "장애 발생 시 알람, 이중화 관리, 백업 및 복구 절차를 제공합니다.",
+      "generated": "문서에 제공된 정보를 통해 장애 대응 운영 관리에서 제공되는 기능은 다음과 같습니다: 서비스 중지 - SCADA, iRDC, Fluentd. 데이터 수집 및 제어 전송 오류에 대한 대응 방법.",
+      "accuracy": false,
+      "confidence": 0.9,
+      "processing_time": 22.971801042556763,
+      "improvement": "enhanced_system"
+    },
+    {
+      "no": 6,
+      "question": "침전 공정에서 입력변수로 활용되는 데이터는 무엇인가요?",
+      "expected": "유입 유량, 원수 탁도, 응집제 주입률, NaOH 주입률, 분말 활성탄 투입량 등입니다.",
+      "generated": "입력변수로 활용되는 데이터는 원수 탁도, 응집제 주입률, 활성탄 투입량 등이 포함됩니다. 따라서, 문서에 명시된 내용만을 기반으로 침전 공정에서 입력변수로 활용되는 데이터는 원수 탁도, 응집제 주입률, 활성탄 투입량 등이 포함된 것으로 보입니다.",
+      "accuracy": false,
+      "confidence": 0.9,
+      "processing_time": 24.29383420944214,
+      "improvement": "enhanced_system"
+    },
+    {
+      "no": 7,
+      "question": "혼화 응집 공정에서 활용된 주요 변수는 무엇인가요?",
+      "expected": "교반 강도(G), 원수 수온, 동점성 계수, 응집기 직경 등입니다.",
+      "generated": "혼화 응집 공정에서 활용된 주요 변수는 교반기의 회전속도 설정값 산출 및 적용, 수온, 교반 강도 등 변수에 따른 응집지 최적 분당 회전수 계산입니다.",
+      "accuracy": false,
+      "confidence": 0.9,
+      "processing_time": 21.782280445098877,
+      "improvement": "enhanced_system"
+    },
+    {
+      "no": 8,
+      "question": "PMS에서 제공하는 통계 이력은 무엇인가요?",
+      "expected": "펌프 운전 기록, 에너지 소비량, 진단 이력 등을 제공합니다.",
+      "generated": "PMS에서 제공하는 통계 이력에는 \"에너지 사용 현황\"이 포함되어 있습니다. 이 부분에서는 \"에너지 절감 관리\"와 \"설정 화면\"으로 이동할 수 있는 기능을 확인할 수 있습니다.",
+      "accuracy": false,
+      "confidence": 0.9,
+      "processing_time": 23.365524291992188,
+      "improvement": "enhanced_system"
+    },
+    {
+      "no": 9,
+      "question": "착수 공정에서 AI 모델은 무엇을 예측하나요?",
+      "expected": "정수지 수위 밴드를 생성하고 원수 유입 밸브 개도율을 예측합니다.",
+      "generated": "AI 모델은 정수지 수위 밸드를 생성하고 예측합니다. 이는 데이터 전처리, 상관관계 분석 및 알고리즘 선택을 통해 수행됩니다.",
+      "accuracy": false,
+      "confidence": 0.9,
+      "processing_time": 24.549029111862183,
+      "improvement": "enhanced_system"
+    },
+    {
+      "no": 10,
+      "question": "착수 공정에서 수위 목표값은 어떻게 결정되나요?",
+      "expected": "K-means 군집 분석을 통해 월별 목표 수위를 생성합니다.",
+      "generated": "창성 공정에서 수위 목표값은 초기 입력변수로 원수 유입 유량, 여과지 운영 지수, 여과지별 수위, 그리고 여과 지속 시 기준으로 계산됩니다. 이러한 계산을 통해 예측된 결과와 최대/최소 시간을 활용하여 여과지 운영 스케줄을 결정하고 역세척 시점을 도출합니다.",
+      "accuracy": false,
+      "confidence": 0.9,
+      "processing_time": 24.369755268096924,
+      "improvement": "enhanced_system"
+    },
+    {
+      "no": 11,
+      "question": "관리자 계정 기본 아이디와 비밀번호는 무엇인가요?",
+      "expected": "아이디: KWATER / 비밀번호: KWATER 입니다. (지사 관리자에게 확인 필요)",
+      "generated": "관리자 계정으로 로그인한 후 일반 사용자를 추가할 수 있으며, 추가된 일반 사용자 계정으로도 로그인을 할 수 있습니다.아이디: KWATER KWATER관리자 아이디와 비밀번호는 지사관리자에게 문의하여 주시기를 바랍니다.",
+      "accuracy": false,
+      "confidence": 0.9,
+      "processing_time": 22.000744104385376,
+      "improvement": "enhanced_system"
+    },
+    {
+      "no": 12,
+      "question": "탄소중립 모니터링에서 제공하는 데이터는 무엇인가요?",
+      "expected": "탄소 배출량, 에너지 사용량, 저감 효과 등을 시각화하여 제공합니다.",
+      "generated": "제공된 문서에서 해당 정보를 찾을 수 없습니다. 문서에 명시된 내용만을 기반으로 답변드릴 수 있습니다.",
+      "accuracy": false,
+      "confidence": 0.9,
+      "processing_time": 24.717614889144897,
+      "improvement": "enhanced_system"
+    },
+    {
+      "no": 13,
+      "question": "약품 공정에서 N-beats 모델의 성능은 어떤가요?",
+      "expected": "MAE: 0.68, MSE: 2.37, RMSE: 1.54, R²: 0.97 입니다.",
+      "generated": "제공된 문서에서 해당 정보를 찾을 수 없습니다. 문서에 명시된 내용만을 기반으로 답변드릴 수 있습니다.",
+      "accuracy": false,
+      "confidence": 0.9,
+      "processing_time": 23.512685537338257,
+      "improvement": "enhanced_system"
+    },
+    {
+      "no": 14,
+      "question": "EMS에서 송수 펌프 세부 현황을 확인할 수 있나요?",
+      "expected": "네, 펌프별 운전 상태, 전력 사용량 등을 상세히 확인할 수 있습니다.",
+      "generated": "아니요, EMS에서 송수 펌프 세부 현황 확인할 수 없습니다. 문서에 명시된 정보로는 해당 기능이 제공되지 않습니다.",
+      "accuracy": false,
+      "confidence": 0.9,
+      "processing_time": 22.220041275024414,
+      "improvement": "enhanced_system"
+    },
+    {
+      "no": 15,
+      "question": "자율 운영 대시보드는 몇 개의 영역으로 나누어지나요?",
+      "expected": "상단 영역, 좌측 사이드바, 중앙 콘텐츠 영역, 우측 메뉴 영역 총 4개입니다.",
+      "generated": "자율 운영 대시보드는 크게 다음과 같은 영역으로 나누어져 있습니다: 상단 영역 - 로그인, 운영 상태 확인 등이 포함됩니다. 중앙 콘텐츠 영역 - 자율 운영의 운영 상태를 보여줍니다.",
+      "accuracy": false,
+      "confidence": 0.9,
+      "processing_time": 23.143843412399292,
+      "improvement": "enhanced_system"
+    }
+  ]
+}

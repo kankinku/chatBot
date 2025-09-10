@@ -10,7 +10,8 @@ from .config.unified_config import config, get_config, set_config
 from .utils.singleton_manager import singleton_manager, get_embedding_model, get_cache
 
 # 기존 모듈들
-from .document.pdf_processor import PDFProcessor, TextChunk
+from .document.pdf_processor import PDFProcessor
+from .document.text_chunk import TextChunk
 from .document.vector_store import HybridVectorStore
 from .query.query_router import QueryRouter, QueryRoute
 from .query.question_analyzer import QuestionAnalyzer, AnalyzedQuestion

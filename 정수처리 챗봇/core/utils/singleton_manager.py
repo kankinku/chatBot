@@ -178,7 +178,7 @@ def _create_embedding_model(model_name: str, **kwargs):
     """임베딩 모델 팩토리"""
     try:
         from sentence_transformers import SentenceTransformer
-        return SentenceTransformer(model_name, cache_folder="./models", **kwargs)
+        return SentenceTransformer(model_name, cache_folder="./models", show_progress_bar=False, **kwargs)
     except Exception as e:
         logger.error(f"임베딩 모델 생성 실패: {model_name}, {e}")
         raise

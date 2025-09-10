@@ -1,0 +1,180 @@
+{
+  "domain": "intake_process",
+  "description": "착수공정: 취수, 수위제어, 유입량 관리 관련 용어",
+  "total_terms": 12,
+  "generated_date": "2025-01-27",
+  "version": "1.0",
+  "terms": [
+    {
+      "term": "1인1일당급수량",
+      "definition": "LPCD은 Liter Per Capita Day 의 약자로서 한사람이 하루 소비하는 급수량을 말하는 것으로 상수 소비량 또는 상수 요구량이라고도 함.",
+      "confidence": 1.0,
+      "keywords": [
+        "급수량",
+        "1인1일당급수량"
+      ],
+      "all_domains": [
+        "intake_process"
+      ]
+    },
+    {
+      "term": "1인1일최대급수량",
+      "definition": "연간 1일 급수량의 최대값을 일최대급수량이라 하며, 이 값을 급수인구로 나눈 값을 1인1일최대급수량이라고 함. 하수도계획에 있어서 오수량의 기본인 생활오수량에서 계획1인1일최대오수량은 해당지역의 상수도 실적 또는 계획1인1일 최대급수량을 감안하여 결정함. 1인1일최대오수량.",
+      "confidence": 1.0,
+      "keywords": [
+        "급수량"
+      ],
+      "all_domains": [
+        "intake_process"
+      ]
+    },
+    {
+      "term": "1인1일평균급수량",
+      "definition": "1일 평균급수량을 인구 1인당으로 나타낸 것. 1일최대오수량.",
+      "confidence": 1.0,
+      "keywords": [
+        "1일평균급수량",
+        "급수량"
+      ],
+      "all_domains": [
+        "intake_process"
+      ]
+    },
+    {
+      "term": "1일최대취수량",
+      "definition": "1년 중 1일 취수량의 최대치. 1일평균오수량.",
+      "confidence": 1.0,
+      "keywords": [
+        "1일최대취수량",
+        "취수"
+      ],
+      "all_domains": [
+        "intake_process"
+      ]
+    },
+    {
+      "term": "Auracoseira",
+      "definition": "원통모양의 세포가 종으로 연결된 사상의 군체를 형성한 규조류 속의 일종의 하나. 호소나 저수지의 플랑크톤으로 흔히 발견되며, 대량번식하여 여과폐색을 유발하는 대표적인 여과장해 생물로서 A.italica 나 A.granualta, A.distans 등이 대표적인 종임. 동일 모양으로 원통형의 세표가 종으로 연결된 군체를 형성하는 melosira 속으로 다루어지고 있지만, 세포 껍질의 형태적 특징이나 연쇄모양의 군체를 만드는 세포 연결의 방법이 melosira 속과 다른 것으로부터 다른 속이라는 것이 이전부터 지적되었음. 또한, melosira 속으로는 m.varians가 수원의 부착조에 있는 완속여과지의 생물막의 구성생물로서 번식하고 있으며 수도와 관련이 깊음. AWWA.",
+      "confidence": 0.6666666666666666,
+      "keywords": [
+        "여과지",
+        "수원",
+        "여과폐색",
+        "관",
+        "여과장해",
+        "여과"
+      ],
+      "all_domains": [
+        "intake_process",
+        "filtration",
+        "piping"
+      ]
+    },
+    {
+      "term": "Parshall flume",
+      "definition": "개수로의 유량을 측정하는 장치. 개수로의 도중에 좁은 부분에 설치함. 좁은 부분에 한계류를 발생시켜서 수면형의 변화를 발생시키고, 좁은 부분과 그 입구의 수위차를 측정하는 것에 의해, 유량을 파악함. flume 중에서, 특히 많은 실적과 높은 정도를 가짐. PC말뚝.",
+      "confidence": 0.75,
+      "keywords": [
+        "수위",
+        "측정"
+      ],
+      "all_domains": [
+        "intake_process",
+        "chemical_analysis"
+      ]
+    },
+    {
+      "term": "flashboard weir",
+      "definition": "널빤지를 이용해 유량을 조절하거나 수류를 차단하는 위어. 구조는 간단하지만 각재의 설치시나 철거시에는 수압이 걸리기 때문에 해당 기술이 필요하며, 널빤지와 구조물 틈으로 물이 새나가기 쉬우므로 수류의 완전차단은 어려움. 하천관리시설 등 구조령의 적용을 받는 취수문에 관해서는 널빤지 위어의 사용은 인정되지 않고, 소규모시설의 간이시설로만 인정되고 있으므로 주의를 요함. flocculator.",
+      "confidence": 0.6,
+      "keywords": [
+        "취수",
+        "관",
+        "관리"
+      ],
+      "all_domains": [
+        "intake_process",
+        "ems_system",
+        "piping"
+      ]
+    },
+    {
+      "term": "계량기",
+      "definition": "물의 유량을 측정하는 기구로, 유량계, 수위계, 압력계 등이 있다.",
+      "confidence": 0.6,
+      "keywords": [
+        "수위계",
+        "압력계",
+        "유량계",
+        "측정",
+        "수위",
+        "계량기"
+      ],
+      "all_domains": [
+        "intake_process",
+        "chemical_analysis",
+        "equipment"
+      ]
+    },
+    {
+      "term": "배관",
+      "definition": "물을 운반하는 파이프라인으로, 취수관, 송수관, 배수관 등이 있다.",
+      "confidence": 0.7692307692307693,
+      "keywords": [
+        "취수관",
+        "취수",
+        "송수관",
+        "관",
+        "파이프",
+        "배수관",
+        "배관"
+      ],
+      "all_domains": [
+        "intake_process",
+        "piping"
+      ]
+    },
+    {
+      "term": "정수시설",
+      "definition": "수원에서 취수한 원수를 음용수로 처리하는 시설로, 정수처리공정을 수행하는 모든 시설을 포함한다.",
+      "confidence": 0.5714285714285714,
+      "keywords": [
+        "취수",
+        "수원",
+        "정수처리",
+        "정수시설"
+      ],
+      "all_domains": [
+        "intake_process",
+        "facilities"
+      ]
+    },
+    {
+      "term": "정수지",
+      "definition": "정수처리된 물을 저장하는 저수지로, 운전 안정성과 지진 대응을 고려하여 설계된 시설이다.",
+      "confidence": 0.7272727272727273,
+      "keywords": [
+        "정수지",
+        "정수처리"
+      ],
+      "all_domains": [
+        "intake_process",
+        "facilities"
+      ]
+    },
+    {
+      "term": "펌프",
+      "definition": "물을 이동시키는 기계장치로, 취수, 송수, 배수 등에 사용된다.",
+      "confidence": 0.42857142857142855,
+      "keywords": [
+        "펌프",
+        "취수"
+      ],
+      "all_domains": [
+        "intake_process",
+        "ems_system",
+        "equipment"
+      ]
+    }
+  ]
+}

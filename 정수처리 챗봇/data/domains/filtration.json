@@ -1,0 +1,268 @@
+{
+  "domain": "filtration",
+  "description": "여과공정: 여과, 세척, 역세척 관련 용어",
+  "total_terms": 17,
+  "generated_date": "2025-01-27",
+  "version": "1.0",
+  "terms": [
+    {
+      "term": "1차여과지",
+      "definition": "2중 여과법에서 최초의 여과지. 1차오염물.",
+      "confidence": 1.0,
+      "keywords": [
+        "여과",
+        "여과지",
+        "1차여과지"
+      ],
+      "all_domains": [
+        "filtration"
+      ]
+    },
+    {
+      "term": "Aulacoseira\n\n\n\nMF막",
+      "definition": "☞ 정밀여과막 21222324252627282930 개인정보처리방침 영상정보 처리기기 운영방침 이용약관 오시는길 페이스북 블로그 유튜브 인스타그램 관련사이트 우리집 수돗물 안심 확인제 교육 홈페이지 단체표준인증 WATER KOREA 물산업 PM 양성과정 파이프에셋 수돗물홍보협의회 서울특별시 영등포구 대림로 244 한국상하수도협회 Tel:02-3156-7777Fax:02-3156-7778 Tel:02-3156-7777Fax:02-3156-7778 Copyright 2018 Korea Water and Wastewater Works Association All rights reserved.",
+      "confidence": 0.4,
+      "keywords": [
+        "여과",
+        "기기",
+        "관",
+        "파이프"
+      ],
+      "all_domains": [
+        "filtration",
+        "equipment",
+        "piping"
+      ]
+    },
+    {
+      "term": "Auracoseira",
+      "definition": "원통모양의 세포가 종으로 연결된 사상의 군체를 형성한 규조류 속의 일종의 하나. 호소나 저수지의 플랑크톤으로 흔히 발견되며, 대량번식하여 여과폐색을 유발하는 대표적인 여과장해 생물로서 A.italica 나 A.granualta, A.distans 등이 대표적인 종임. 동일 모양으로 원통형의 세표가 종으로 연결된 군체를 형성하는 melosira 속으로 다루어지고 있지만, 세포 껍질의 형태적 특징이나 연쇄모양의 군체를 만드는 세포 연결의 방법이 melosira 속과 다른 것으로부터 다른 속이라는 것이 이전부터 지적되었음. 또한, melosira 속으로는 m.varians가 수원의 부착조에 있는 완속여과지의 생물막의 구성생물로서 번식하고 있으며 수도와 관련이 깊음. AWWA.",
+      "confidence": 0.6666666666666666,
+      "keywords": [
+        "여과지",
+        "수원",
+        "여과폐색",
+        "관",
+        "여과장해",
+        "여과"
+      ],
+      "all_domains": [
+        "intake_process",
+        "filtration",
+        "piping"
+      ]
+    },
+    {
+      "term": "Casing수납방식",
+      "definition": "엘리멘트를 수납기에 수납한 막 모듈을 이용하여 막 여과장치를 운전하는 방식으로, 내압식과 외압식이 있음. 이것과 대비되는 것으로서 조 침적 방식이 있음. castable 내화물.",
+      "confidence": 1.0,
+      "keywords": [
+        "여과"
+      ],
+      "all_domains": [
+        "filtration"
+      ]
+    },
+    {
+      "term": "MIB",
+      "definition": "방선균 또는 남조류에 의해서 생산되고 이취미(異臭味)물질로 알려져 있음. 보통은 곰팡이냄새를 내지만, 흙냄새, 먹물냄새를 내는 것도 있음. 응집침전 급속여과시설로 제거되지 않는 경우는 분말활성탄처리, 입상활성탄처리, 오존처리 등으로 제거함. 3차 처리.",
+      "confidence": 0.2727272727272727,
+      "keywords": [
+        "여과",
+        "침전",
+        "응집",
+        "오존"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation",
+        "sedimentation",
+        "filtration",
+        "disinfection"
+      ]
+    },
+    {
+      "term": "critical path method",
+      "definition": "공정계획의 한 방법으로 각 작업의 소요일수와 비용의 관계를 조사하여 최적공기를 설정하는 수법. cross flow여과방식.",
+      "confidence": 0.75,
+      "keywords": [
+        "여과",
+        "관"
+      ],
+      "all_domains": [
+        "filtration",
+        "piping"
+      ]
+    },
+    {
+      "term": "cross flow여과방식",
+      "definition": "막 여과 장치의 운전조작 방법의 하나로, 막 공급수를 막 면을 따라 흘려, 막을 투과하는 물이 공급수와는 직각 방향으로 흐르도록 하는 여과방식임. 십자형 여과방식이라고 함. 막 공급수를 막면과 평행하게 흐르게 함으로써, 막 공급수중의 현탁물질이나 콜로이드 등이 막면에 퇴적, 부착하는 것을 제어하는 것을 목적으로 하고 있음. 여기에 대비되는 것으로서 Dead end 여과방식이 있음. Cross flow 여과방식에는, 농축수를 순환시키는 순환방식과 계외로 배출하는 일과방식이 있지만, 일과방식은 회수율의 관점에서 뒤떨어지기 때문에 수도에서는 채용하지 않음. 정밀여과 법에서는, Cross flow 여과방식과 dead end 여과방식의 어느 것이나 채용 할 수 있지만 한외여과 법이나 역삼투 법에서는 cross flow 여과방식으로 운전되는 것이 많음. Cryptosporidium.",
+      "confidence": 0.6,
+      "keywords": [
+        "여과",
+        "제어",
+        "관"
+      ],
+      "all_domains": [
+        "filtration",
+        "ems_system",
+        "piping"
+      ]
+    },
+    {
+      "term": "end 여과방식",
+      "definition": "막여과장치의 운전조작방식의 하나로, 막공급수를 순환시키는 일 없이 그 전량을 여과하는 방식으로 전량여과방식이라고도 함. 이에 대비하는 방식은 크로스플로우방식으로 최근에는 막(膜)모듈내부에 교반(攪拌)구조를 설치하고, 막면(膜面)에 대해서 물의 흐름이 평행하게 되도록 해서 그 전량을 여과하는 방법 등, 종래의 정의로는 분류하기 어려운 운전조작방법도 고안되고 있음. desoxychlorate.",
+      "confidence": 0.5,
+      "keywords": [
+        "여과",
+        "교반"
+      ],
+      "all_domains": [
+        "mixing_coagulation",
+        "filtration"
+      ]
+    },
+    {
+      "term": "pretreatment filter",
+      "definition": "막여과의 전처리시설의 하나로 막공급수 중의 이물질이나 탁질분을 사전에 제거하고, 막의 손상 및 폐색을 감소시키는 목적으로 사용. 프레피르타의 여과경(徑)은 여과막의 종류에 따라서 달라지며 보통 정밀여과막, 한외.",
+      "confidence": 1.0,
+      "keywords": [
+        "여과"
+      ],
+      "all_domains": [
+        "filtration"
+      ]
+    },
+    {
+      "term": "s식",
+      "definition": "① 여과지트러프의 상류단의 수심을 구하는 식. 여기서, : 트러프상류단의 수심, : 한계수심, : 트러프의 길이, : 트러프바닥의 경사각, 임. ② 침전지의 침전효율에 관한 식 : 상하방향으로는 혼합하지만, 전후방향으로는 비혼합이라고 하는 모델을 상정해 다음 식을 제시함. 여기서, : 입자의 침강속도, Q/A: 수표면적부하. NATM.",
+      "confidence": 0.29411764705882354,
+      "keywords": [
+        "여과지",
+        "침전",
+        "효율",
+        "침전효율",
+        "모델",
+        "관",
+        "침전지",
+        "여과"
+      ],
+      "all_domains": [
+        "sedimentation",
+        "filtration",
+        "piping",
+        "ai_models",
+        "performance_metrics"
+      ]
+    },
+    {
+      "term": "나노 여과막\n\n\n\nNIP",
+      "definition": "인축에 대한 독성이 약하므로 극독물로 지정되어 있지 않음. 동계열의 제초제로 있는 CNP가 개발되어 본제의 제조시에 부산물로써 polychlorinate-ddibenzo-p-dioxin가 생성하는 것이 확인되었으므로 사용량이 격감. Nocardia.",
+      "confidence": 0.75,
+      "keywords": [
+        "여과",
+        "사용량"
+      ],
+      "all_domains": [
+        "filtration",
+        "ems_system"
+      ]
+    },
+    {
+      "term": "여과공정",
+      "definition": "모래층을 통과시켜 미세한 불순물을 제거하는 처리과정이다.",
+      "confidence": 1.0,
+      "keywords": [
+        "여과",
+        "여과공정"
+      ],
+      "all_domains": [
+        "filtration"
+      ]
+    },
+    {
+      "term": "여과지",
+      "definition": "침전지에서 나온 물을 모래층을 통과시켜 미세한 불순물을 제거하는 시설이다.",
+      "confidence": 0.5,
+      "keywords": [
+        "여과",
+        "침전지",
+        "여과지",
+        "침전"
+      ],
+      "all_domains": [
+        "sedimentation",
+        "filtration"
+      ]
+    },
+    {
+      "term": "정수장",
+      "definition": "원수를 정수처리하여 음용수로 만드는 시설로, 응집, 침전, 여과, 소독 등의 공정을 거쳐 안전한 상수를 생산한다.",
+      "confidence": 0.42105263157894735,
+      "keywords": [
+        "침전",
+        "정수처리",
+        "정수장",
+        "응집",
+        "소독",
+        "여과"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation",
+        "sedimentation",
+        "filtration",
+        "disinfection",
+        "facilities"
+      ]
+    },
+    {
+      "term": "정수처리",
+      "definition": "원수를 음용수로 만들기 위해 수행하는 일련의 처리과정으로, 응집, 침전, 여과, 소독 등의 공정을 포함한다.",
+      "confidence": 0.26666666666666666,
+      "keywords": [
+        "침전",
+        "정수처리",
+        "응집",
+        "소독",
+        "여과"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation",
+        "sedimentation",
+        "filtration",
+        "disinfection",
+        "facilities"
+      ]
+    },
+    {
+      "term": "조절지",
+      "definition": "여과량 등을 조절하기 위해 설치된 시설로, 정수장의 안정적인 운영을 위한 조절 기능을 수행한다.",
+      "confidence": 0.7272727272727273,
+      "keywords": [
+        "여과",
+        "조절지",
+        "정수장"
+      ],
+      "all_domains": [
+        "filtration",
+        "facilities"
+      ]
+    },
+    {
+      "term": "케이싱\n\n\n\nRhizosolenia",
+      "definition": "☞ 여과장해생물 ring support.",
+      "confidence": 0.6,
+      "keywords": [
+        "여과",
+        "여과장해",
+        "케이싱"
+      ],
+      "all_domains": [
+        "filtration",
+        "piping"
+      ]
+    }
+  ]
+}

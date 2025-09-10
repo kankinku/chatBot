@@ -95,24 +95,28 @@ class ConsoleLogObserver(LogObserver):
             print(formatted)
     
     def _format_for_console(self, entry: LogEntry) -> str:
-        """콘솔용 로그 포맷팅"""
-        level_colors = {
-            LogLevel.DEBUG: '\033[36m',    # 청록색
-            LogLevel.INFO: '\033[32m',     # 녹색
-            LogLevel.WARNING: '\033[33m',  # 노란색
-            LogLevel.ERROR: '\033[31m',    # 빨간색
-            LogLevel.CRITICAL: '\033[35m'  # 자주색
-        }
-        reset_color = '\033[0m'
+        """콘솔용 로그 포맷팅 - 기존 깔끔한 양식 복원"""
+        # 기존 양식: 시간 | INFO | 출처 | 사유 | 성공/실패 | 모듈
+        timestamp = entry.timestamp.strftime('%Y-%m-%d %H:%M:%S')
         
-        color = level_colors.get(entry.level, '')
+        # 성공/실패 상태 판단
+        status = "성공"
+        if entry.level in [LogLevel.ERROR, LogLevel.CRITICAL]:
+            status = "실패"
+        elif entry.level == LogLevel.WARNING:
+            status = "경고"
         
-        base = f"{color}[{entry.timestamp}] {entry.level.value} | {entry.category.value} | {entry.message}{reset_color}"
+        # 모듈명 추출 (category에서)
+        module = entry.category.value if entry.category else "SYSTEM"
         
+        # 기존 깔끔한 양식으로 포맷팅
+        formatted = f"{timestamp} | {entry.level.value:8s} | {module:15s} | {entry.message:30s} | {status:4s} | {module}"
+        
+        # 실행 시간이 있으면 추가
         if entry.execution_time_ms:
-            base += f" ({entry.execution_time_ms:.2f}ms)"
+            formatted += f" ({entry.execution_time_ms:.2f}ms)"
         
-        return base
+        return formatted
 
 class UnifiedLogger:
     """

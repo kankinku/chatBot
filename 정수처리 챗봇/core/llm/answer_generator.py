@@ -28,12 +28,13 @@ except ImportError:
     logging.warning("PyTorch를 찾을 수 없습니다.")
 
 # 상대 경로 import (필요시에만 로딩)
-from core.document.pdf_processor import TextChunk
+from core.document.text_chunk import TextChunk
 from core.query.question_analyzer import AnalyzedQuestion
 from core.cache.fast_cache import get_question_cache
 from core.utils.memory_optimizer import model_memory_manager, memory_profiler
 from core.document.units import normalize_unit
 from core.document.defined_value_detector import DefinedValueDetector, DefinedValue
+from core.llm.hallucination_prevention import HallucinationPrevention, create_hallucination_prevention
 from utils.qa_logger import log_question_answer
 
 # 통합 설정 import (폴백 포함)
@@ -438,20 +439,29 @@ class AnswerGenerator:
         self.company_name = get_config('COMPANY_NAME')
         self.project_name = get_config('PROJECT_NAME')
         
-        # 기본 프롬프트 템플릿 (도메인 SSOT 주입)
-        domain = str(get_config('DOMAIN_TEMPLATE', 'general'))
-        variant = str(get_config('PROMPT_VARIANT', 'A'))
-        version = str(get_config('PROMPT_VERSION', '1'))
+        # 엄격한 프롬프트 템플릿 사용 (환상 방지 강화)
         try:
-            from core.config.prompt_catalog import get_templates
-            self.prompt_template = get_templates(domain, variant=variant, version=version)
+            from core.config.strict_prompt_templates import get_strict_templates
+            self.prompt_template = get_strict_templates('wastewater', variant='A', version='1')
+            logger.info("엄격한 프롬프트 템플릿 적용 (환상 방지 강화)")
         except Exception:
-            # 폴백: general A v1
-            from core.config.prompt_catalog import get_templates
-            self.prompt_template = get_templates('general', variant='A', version='1')
+            # 폴백: 기본 템플릿
+            domain = str(get_config('DOMAIN_TEMPLATE', 'general'))
+            variant = str(get_config('PROMPT_VARIANT', 'A'))
+            version = str(get_config('PROMPT_VERSION', '1'))
+            try:
+                from core.config.prompt_catalog import get_templates
+                self.prompt_template = get_templates(domain, variant=variant, version=version)
+            except Exception:
+                # 최종 폴백: general A v1
+                from core.config.prompt_catalog import get_templates
+                self.prompt_template = get_templates('general', variant='A', version='1')
         
         # 정의된 값 감지기 초기화
         self.defined_value_detector = DefinedValueDetector()
+        
+        # 환상 방지 시스템 초기화
+        self.hallucination_prevention = create_hallucination_prevention()
         
         logger.info(f"경량화된 답변 생성기 초기화 완료: {model_name}")
     
@@ -718,6 +728,14 @@ class AnswerGenerator:
             
             # 답변 검증: 문서 기반 답변인지 확인
             answer_text = self._validate_document_based_answer(answer_text, context_text, question)
+            
+            # 환상 방지 검증 (강화된 검증)
+            answer_text, was_corrected = self.hallucination_prevention.validate_answer_strictly(
+                answer_text, context_text, question
+            )
+            
+            if was_corrected:
+                logger.warning("환상 방지 시스템에 의해 답변이 수정되었습니다.")
 
             # 가독성 포맷은 인용(출처) 추가 전 단계에서만 적용하여
             # 불릿/줄바꿈 제거가 인용 레이아웃을 깨뜨리지 않도록 한다
@@ -1141,6 +1159,19 @@ class AnswerGenerator:
             # 백틱으로 감싸기
             for u in unique_urls:
                 cleaned = cleaned.replace(u, f"`{u}`")
+
+            # 2-1) 자격증명/시간/지표 정규화
+            # 아이디/비밀번호 패턴 (KWATER 고정 우선 교정)
+            cleaned = re.sub(r"(아이디|ID)\s*[:：]?\s*kwater", "아이디: KWATER", cleaned, flags=re.IGNORECASE)
+            cleaned = re.sub(r"(비밀번호|PW|Password)\s*[:：]?\s*kwater", "비밀번호: KWATER", cleaned, flags=re.IGNORECASE)
+            # 시간 표현 보정: "10분 내" → "10분"
+            cleaned = re.sub(r"(\d+)\s*분\s*내", r"\\1분", cleaned)
+            # 성능 지표 표기 통일: MAE/MSE/RMSE/R²: 값
+            def _metric_norm(m):
+                key = m.group(1).upper()
+                key = 'R²' if key in ['R2', 'R²'] else key
+                return f"{key}: {m.group(2)}"
+            cleaned = re.sub(r"\b(mae|mse|rmse|r2|r²)\s*[:=]\s*([0-9]+(?:\.[0-9]+)?)", _metric_norm, cleaned, flags=re.IGNORECASE)
 
             # 3) 문장 분리(간단): 마침표/물음표/느낌표 기준
             sentences = re.split(r"(?<=[\.?\!])\s+", cleaned)

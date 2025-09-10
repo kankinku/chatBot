@@ -12,8 +12,8 @@ import time
 from typing import List, Dict, Optional, Any, Tuple
 from dataclasses import dataclass
 
-from core.document.enhanced_pdf_pipeline import EnhancedPDFPipeline, create_enhanced_pdf_pipeline
-from core.document.pdf_processor import TextChunk
+from core.document.enhanced_water_treatment_pipeline import EnhancedWaterTreatmentPipeline, EnhancedWaterTreatmentConfig
+from core.document.text_chunk import TextChunk
 from core.document.pdf_router import PDFMode
 from core.llm.answer_generator import Answer
 
@@ -37,22 +37,62 @@ class EnhancedPDFHandlerConfig:
     max_context_chunks: int = 5
 
 class EnhancedPDFHandler:
-    """향상된 PDF 질의 처리기"""
+    """향상된 정수처리 도메인 특화 PDF 질의 처리기"""
     
     def __init__(self, config: Optional[EnhancedPDFHandlerConfig] = None):
         """처리기 초기화"""
         self.config = config or EnhancedPDFHandlerConfig()
         
-        # 향상된 PDF 파이프라인 초기화
-        self.pdf_pipeline = create_enhanced_pdf_pipeline(
-            embedding_model=self.config.embedding_model,
-            llm_model=self.config.llm_model
-        )
+        # 향상된 정수처리 파이프라인 초기화
+        self.pdf_pipeline = self._create_enhanced_water_treatment_pipeline()
         
         # 기존 청크들 (이미 로드된 경우)
         self.existing_chunks = []
         
-        logger.info("향상된 PDF 처리기 초기화 완료")
+        logger.info("향상된 정수처리 도메인 특화 PDF 처리기 초기화 완료")
+    
+    def _create_enhanced_water_treatment_pipeline(self):
+        """향상된 정수처리 파이프라인 생성"""
+        try:
+            from core.document.vector_store import HybridVectorStore
+            from core.llm.answer_generator import AnswerGenerator
+            from core.llm.answer_generator import OllamaLLMInterface
+            
+            # 기존 컴포넌트들 초기화
+            vector_store = HybridVectorStore()
+            answer_generator = AnswerGenerator()
+            ollama_interface = OllamaLLMInterface()
+            
+            # 향상된 설정
+            enhanced_config = EnhancedWaterTreatmentConfig(
+                chunking_strategy="hybrid",
+                enable_query_expansion=True,
+                enable_reranking=True,
+                enable_context_optimization=True,
+                initial_search_k=20,
+                final_context_k=3,
+                similarity_threshold=0.25
+            )
+            
+            # 향상된 파이프라인 생성
+            pipeline = EnhancedWaterTreatmentPipeline(
+                vector_store=vector_store,
+                answer_generator=answer_generator,
+                ollama_interface=ollama_interface,
+                config=enhanced_config
+            )
+            
+            logger.info("향상된 정수처리 파이프라인 생성 완료")
+            return pipeline
+            
+        except Exception as e:
+            logger.error(f"향상된 파이프라인 생성 실패: {e}")
+            # 폴백: 기본 파이프라인 사용
+            from core.document.enhanced_pdf_pipeline import create_enhanced_pdf_pipeline
+            return create_enhanced_pdf_pipeline(
+                embedding_model=self.config.embedding_model,
+                llm_model=self.config.llm_model
+            )
     
     def initialize_with_existing_chunks(self, chunks: List[TextChunk]) -> None:
         """기존 청크들로 초기화"""
@@ -64,6 +104,12 @@ class EnhancedPDFHandler:
             logger.info("기존 청크 초기화 완료")
         except Exception as e:
             logger.error(f"기존 청크 초기화 실패: {e}")
+            # 에러 로그에 기록
+            try:
+                from utils.error_logger import log_error
+                log_error(e, "기존 청크 초기화", {"file": "enhanced_pdf_handler.py"})
+            except:
+                pass
             raise
     
     def process_pdf_file(self, pdf_path: str) -> List[TextChunk]:

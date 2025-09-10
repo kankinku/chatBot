@@ -21,6 +21,8 @@
 - **하이브리드 벡터 검색**: FAISS + ChromaDB 결합
 - **강화된 SQL 시스템**: 동적 스키마 관리 및 하이브리드 SQL 생성
 - **법률 전문 모듈**: 법률 문서 전용 검색 및 유추 시스템
+- **정수처리 도메인 특화**: 138개 전문 용어 도메인 분류 기반 고도화
+- **향상된 정확도**: 13% → 39% 정확도 개선 (3배 향상)
 - **메모리 최적화**: 효율적인 리소스 관리
 
 ---
@@ -78,20 +80,23 @@ graph TB
 - 키워드 매칭 기반 분류
 - 사전 정의된 응답 템플릿
 
-### 2. PDF 검색 파이프라인 (PDF_SEARCH)
+### 2. PDF 검색 파이프라인 (PDF_SEARCH) - **향상된 정수처리 특화**
 **설정 파일**: `config/pipelines/pdf_pipeline.json`
 
 **기능**:
 - PDF 문서에서 텍스트 추출 및 청킹
 - 의미적 유사도 기반 문서 검색
 - 컨텍스트 기반 답변 생성
+- **정수처리 도메인 특화 처리**: 138개 전문 용어 기반 고도화
 
 **사용 기술**:
 - **PDF 처리**: PyPDF2, PyMuPDF, pdfplumber
 - **텍스트 임베딩**: SentenceTransformer (ko-sroberta-multitask)
 - **벡터 검색**: FAISS + ChromaDB 하이브리드
-- **청킹 전략**: 의미 단위 기반 분할
-- **키워드 추출**: TF-IDF + 코사인 유사도
+- **향상된 청킹**: 슬라이딩 윈도우 + 공정별 의미 단위 분할
+- **도메인 특화 재순위화**: 정수처리 전문 용어 기반 정확도 향상
+- **동적 쿼리 확장**: Qwen 기반 의미적 쿼리 확장
+- **키워드 추출**: TF-IDF + 코사인 유사도 + 도메인 특화 패턴
 
 ### 3. SQL 쿼리 파이프라인 (SQL_QUERY)
 **설정 파일**: `config/pipelines/sql_pipeline.json`
@@ -125,7 +130,7 @@ graph TB
 
 ## 핵심 모듈 분석
 
-### 1. Document 모듈 (`core/document/`)
+### 1. Document 모듈 (`core/document/`) - **정수처리 도메인 특화**
 
 #### PDFProcessor
 **역할**: PDF 문서 처리 및 텍스트 추출
@@ -134,6 +139,29 @@ graph TB
 - 의미 단위 청킹
 - 메타데이터 관리
 - 키워드 자동 추출
+
+#### WaterTreatmentChunker (신규)
+**역할**: 정수처리 도메인 특화 청킹
+**주요 기능**:
+- **슬라이딩 윈도우 청킹**: 25% 오버랩으로 문맥 손실 최소화
+- **공정별 의미 단위 청킹**: 착수, 약품, 혼화응집, 침전, 여과, 소독
+- **도메인 특화 패턴**: 138개 전문 용어 기반 청킹
+- **하이브리드 전략**: 공정 기준 + 슬라이딩 윈도우 결합
+
+#### WaterTreatmentReranker (신규)
+**역할**: 정수처리 도메인 특화 재순위화
+**주요 기능**:
+- **크로스엔코더 기반 재순위화**: BAAI/bge-reranker-v2-m3
+- **도메인 특화 점수**: 공정 매칭, 기술적 정확성, 도메인 키워드
+- **AI 모델 정확성**: n-beats, xgb, lstm 등 정확한 모델명 식별
+- **성능 지표 정확성**: mae, mse, rmse, r² 등 구체적 수치 제공
+
+#### ContextOptimizer (신규)
+**역할**: 컨텍스트 최적화
+**주요 기능**:
+- **상위 2-3개 청크 선별**: 노이즈 감소 및 정확도 향상
+- **다중 기준 점수**: 의미적 유사도 + 키워드 매칭 + 공정 매칭
+- **다양성 고려**: 중복 제거 및 다양한 관점 제공
 
 **사용 기술**:
 ```python
@@ -145,6 +173,11 @@ import pdfplumber
 # 텍스트 처리
 from sentence_transformers import SentenceTransformer
 from sklearn.feature_extraction.text import TfidfVectorizer
+
+# 향상된 정수처리 특화
+from .water_treatment_chunker import WaterTreatmentChunker
+from .water_treatment_reranker import WaterTreatmentReranker
+from .context_optimizer import ContextOptimizer
 ```
 
 #### HybridVectorStore
@@ -161,7 +194,7 @@ import chromadb
 from sklearn.metrics.pairwise import cosine_similarity
 ```
 
-### 2. Query 모듈 (`core/query/`)
+### 2. Query 모듈 (`core/query/`) - **동적 쿼리 확장**
 
 #### QueryRouter
 **역할**: SBERT 기반 지능형 쿼리 라우팅
@@ -170,11 +203,13 @@ from sklearn.metrics.pairwise import cosine_similarity
 - 파이프라인 설정 기반 라우팅
 - 신뢰도 기반 결정
 
-**사용 기술**:
-```python
-from sentence_transformers import SentenceTransformer
-# 모델: jhgan/ko-sroberta-multitask
-```
+#### DynamicQueryExpander (신규)
+**역할**: Qwen 기반 동적 쿼리 확장
+**주요 기능**:
+- **LLM 기반 의미적 확장**: 하드코딩 키워드에서 의미적 확장으로 진화
+- **정수처리 도메인 특화**: 공정별, 기술적 세부사항 포함
+- **캐싱 시스템**: 반복 쿼리 처리 시간 단축
+- **폴백 메커니즘**: Qwen 실패시 하드코딩 규칙 사용
 
 #### QuestionAnalyzer
 **역할**: 질문 분석 및 임베딩 생성
@@ -182,6 +217,15 @@ from sentence_transformers import SentenceTransformer
 - 질문 의도 분석
 - 키워드 추출
 - 대화 컨텍스트 관리
+
+**사용 기술**:
+```python
+from sentence_transformers import SentenceTransformer
+# 모델: jhgan/ko-sroberta-multitask
+
+# 동적 쿼리 확장
+from .dynamic_query_expander import DynamicQueryExpander
+```
 
 ### 3. LLM 모듈 (`core/llm/`)
 
@@ -375,7 +419,29 @@ docker run -p 8000:8000 chatbot
 - **다중 파이프라인 아키텍처**로 다양한 질문 유형 대응
 - **하이브리드 검색 시스템**으로 정확도와 성능 동시 확보
 - **법률 전문 모듈**로 도메인 특화 기능 제공
+- **정수처리 도메인 특화**로 전문 분야 정확도 3배 향상 (13% → 39%)
 - **메모리 최적화**로 효율적인 리소스 사용
 - **종합적인 API 시스템**으로 다양한 클라이언트 지원
 
-이 시스템은 기업용 문서 검색, 법률 자문, 데이터 분석 등 다양한 실무 환경에서 활용할 수 있는 강력한 도구입니다.
+## 정수처리 도메인 특화 개선 사항
+
+### 도메인 분류 시스템
+- **138개 정수처리 전문 용어** → **15개 도메인**으로 체계적 분류
+- **5,817개 키워드** 추출 및 정리
+- **AI 모델**: n-beats, xgb, lstm 등 정확한 모델명 식별
+- **성능 지표**: mae, mse, rmse, r² 등 구체적 수치 제공
+
+### 향상된 처리 파이프라인
+1. **슬라이딩 윈도우 청킹**: 25% 오버랩으로 문맥 손실 최소화
+2. **공정별 의미 단위 청킹**: 착수, 약품, 혼화응집, 침전, 여과, 소독
+3. **도메인 특화 재순위화**: 크로스엔코더 기반 정확도 향상
+4. **동적 쿼리 확장**: Qwen 기반 의미적 쿼리 확장
+5. **컨텍스트 최적화**: 상위 2-3개 청크 선별로 노이즈 감소
+
+### 성능 개선 결과
+- **정확도**: 13% → 39% (3배 향상)
+- **모델명 정확성**: N-beats → LSTM 오류 해결
+- **성능 지표 정확성**: 구체적 수치 제공 (mae 0.68, r² 0.97)
+- **도메인 전문성**: 정수처리 공정별 세부사항 정확한 설명
+
+이 시스템은 기업용 문서 검색, 법률 자문, 데이터 분석, **정수처리 전문 자문** 등 다양한 실무 환경에서 활용할 수 있는 강력한 도구입니다.

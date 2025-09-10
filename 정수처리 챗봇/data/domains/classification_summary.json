@@ -1,0 +1,4465 @@
+{
+  "total_terms": 279,
+  "total_domains": 15,
+  "domain_distribution": {
+    "disinfection": 24,
+    "piping": 42,
+    "intake_process": 12,
+    "water_quality_parameters": 19,
+    "chemical_analysis": 22,
+    "sedimentation": 20,
+    "ems_system": 24,
+    "filtration": 17,
+    "ai_models": 7,
+    "chemical_process": 15,
+    "mixing_coagulation": 14,
+    "microbiological_analysis": 16,
+    "equipment": 25,
+    "performance_metrics": 6,
+    "facilities": 16
+  },
+  "generated_date": "2025-01-27",
+  "version": "1.0",
+  "all_classifications": [
+    {
+      "term": "0차반응",
+      "definition": "반응속도가 선분의 농도에 무관한 비가역반응. 반응속도식에 농도항이 포함되지 않으며, 반응차수가 0이라고 볼 수 있으므로, 0차반응이라고 함.A→생성물 이라는 반응에서, A의 농도, A의 처음농도, 반응률이라 한다면, 반응속도식은 다음식으로 표시될 수 있음. 또는, 식을 적분하면, 을 얻으며, 와 의 관계에 따라, 직선의 기울기로부터 반응속도정수 k를 구할 수 있음. 1,1,1-트리클로로에탄.",
+      "confidence": 0.5,
+      "keywords": [
+        "농도",
+        "관"
+      ],
+      "all_domains": [
+        "disinfection",
+        "piping"
+      ]
+    },
+    {
+      "term": "1차반응",
+      "definition": "반응속도가 반응에 관여하는 물질 중 어느 하나의 농도에 비례하는 반응. 반응속도가 단지 한 가지 반응물 농도에 비례하는 것을 가리킴. 반응속도가 반응물질의 농도에 직접 비례하는 경우이며, 반응물질이 일정한 속도로 감소하거나 다른 물질로 전환되는 경우 등이 해당됨. 전자의 경우 BOD 시험을 할 때 산소요구량의 시간적 변화나 방사성물질의 자연붕괴 등이 있으며, 후자의 경우 산화질소의 분해반응 등이 있음. 일반적으로 반응속도를 좌우하는 물질을 A, B,…로 나타내면 반응속도는 이 됨. 여기서 k를 반응속도상수, n을 반응차수(反應次數)라고 하는데, 양과 음의 정수 및 분수를 취함. 1차분해.",
+      "confidence": 0.5,
+      "keywords": [
+        "농도",
+        "bod",
+        "시험",
+        "관"
+      ],
+      "all_domains": [
+        "disinfection",
+        "water_quality_parameters",
+        "chemical_analysis",
+        "piping"
+      ]
+    },
+    {
+      "term": "BAT",
+      "definition": "미국에서는 합성유기화합물 등의 최대허용농도를 설정할 때, 그 기준을 달성하기 위해 처리방법만이 아닌 비용이나 수도사업체의 사정도 고려한 최선의 처리기술을 규정. 그들의 처리기술을 일반적으로 머리글자를 따서 BAT라 함. BCYE-α한천배지.",
+      "confidence": 1.0,
+      "keywords": [
+        "농도"
+      ],
+      "all_domains": [
+        "disinfection"
+      ]
+    },
+    {
+      "term": "BHC",
+      "definition": "빛을 쪼여 염소와 벤젠을 반응시켜 만든 유기화합물로 농약의 일종으로 농약 관리법에 의해 작물 잔류성 농약으로 지정되어 있음. BHC에는 ,,, 등 7종류의 이성질체가 있음. 이중의 한 이성질체가 린덴 또는 가멕산이라는 상품명으로 시판되는 살충제. 1825년 처음으로 만들어졌으며, 1944년에는 γ-이성질체가 이 반응에서 생기는 다른 이성질체보다 약 1,000배나 더 독성이 강한 살충효과가 있다고 확인됨. 각 이성질체는 탄소원자로 이루어진 고리에 염소원자가 어떤 방향으로 붙어 있느냐에 따라 구조적으로 구분됨. 벤젠을 염소와 첨가반응을 시키면 BHC의 가능한 8개 이성질체 중 6개 이상의 이성질체가 포함되어 있는 혼합물이 만들어지며, 그중 γ-이성질체가 20～25％를 차지하는데, γ-이성질체는 특정 용매에 다른 이성질체보다 더 잘 녹아 농축된 형태로 추출될 수 있음. BHC는 DDT보다 휘발성이 크고 곤충에 살충효과가 더 빠르게 작용하지만, 지속성은 떨어지며, BHC는 다른 살충제들이 경쟁적으로 생산되고 물 속에 단 1ppm 정도만 있어도 물고기를 죽이기 때문에 사용이 점점 줄어들고 있으며, 1960년대 이후에는 사용이 제한되고 있음. bio-assay.",
+      "confidence": 0.6,
+      "keywords": [
+        "염소",
+        "관",
+        "관리"
+      ],
+      "all_domains": [
+        "disinfection",
+        "ems_system",
+        "piping"
+      ]
+    },
+    {
+      "term": "CHN분석계",
+      "definition": "유기물의 주요성분인 탄소, 수소, 질소를 동시에 정량하는 분석기기. C, H, N은 연소, 분해되어 각각 , , 로 변환되며, 열전도도법에 의해 농도를 측정하여 정량함. 열전도도의 측정법으로서는 가스크로마토그래피방식, 자기적분방식, 테크니콘방식 3종류가 이용됨. 종래의 C, H와 N을 개별 분석계를 사용하여 측정하는 방법에 비교하여 측정시간과 시료량이 줄어듦. clinker.",
+      "confidence": 0.6666666666666666,
+      "keywords": [
+        "분석",
+        "CHN분석계",
+        "측정",
+        "농도",
+        "크로마토그래피",
+        "기기"
+      ],
+      "all_domains": [
+        "disinfection",
+        "chemical_analysis",
+        "equipment",
+        "ai_models"
+      ]
+    },
+    {
+      "term": "CT값",
+      "definition": "병원성미생물 등과 소독제와의 접촉량에 대한 지표로 소독제의 농도와 소독제가 잔류하여 있는 시간을 곱한 것. 단위는 일반적으로 이 쓰임. 일정량의 병원미생물(90%, 99%, 99.9%)을 불활성화시키기 위하여 필요한 CT값은 각각의 세균, 원생동물 등에 대하여 소독제별로 구함. Darcy’s법칙.",
+      "confidence": 0.6666666666666666,
+      "keywords": [
+        "CT값",
+        "미생물",
+        "농도",
+        "소독",
+        "소독제",
+        "세균"
+      ],
+      "all_domains": [
+        "disinfection",
+        "microbiological_analysis"
+      ]
+    },
+    {
+      "term": "DBP",
+      "definition": "☞ 소독부산물 DCS.",
+      "confidence": 1.0,
+      "keywords": [
+        "소독"
+      ],
+      "all_domains": [
+        "disinfection"
+      ]
+    },
+    {
+      "term": "DPD법",
+      "definition": "잔류염소의 측정법. 수질기준을 보완하는 항목에 관계되는 측정법인 과장통지로 정해지는 방법. 잔류염소와 N, N-디에틸-p-페닐렌디아민이 반응하면 용액의 색이 분홍내지 적분홍색을 띔. 이것을 C. I. Acid Red 265를 이용해서 작성한 표준비색렬과 비교해, 잔류염소치를 구함. N, N-디에틸-p-페닐렌디아민법이라고도 함. DPD를 넣은 시점에서 유리(遊離)잔류염소가 구해지고, 다시금 요오드화칼륨을 넣으면 잔류염소가 구해짐. DPD와 잔류염소가 반응해서 분홍색의 용액이 되지만, 유산제1철암모늄을 넣으면 무색이 되는 것을 이용한 적정(滴定)에 의한 측정법도 있음. drain separator.",
+      "confidence": 0.4117647058823529,
+      "keywords": [
+        "염소",
+        "잔류염소",
+        "ai",
+        "관",
+        "측정",
+        "DPD법"
+      ],
+      "all_domains": [
+        "disinfection",
+        "chemical_analysis",
+        "piping",
+        "ai_models"
+      ]
+    },
+    {
+      "term": "Iprobenfos",
+      "definition": "이프로벤포스라고 부르며, 유지질계 살충제는 유제, 분제, 분립제, 입제가 있음. 종류명은 IBP. 벼의 도열병, 이삭이 시드는 것의 대책으로 사용. 염소처리에서 분해된 클로로톨루엔이나 벤젠알데히드가 생성되어 일부가 정수 중에 검출되기도 함. Iprodione.",
+      "confidence": 1.0,
+      "keywords": [
+        "염소"
+      ],
+      "all_domains": [
+        "disinfection"
+      ]
+    },
+    {
+      "term": "K값규제",
+      "definition": "확산식에 근거해 각 배연발생시설에서 배출되는 유황산화물의 최대착지농도가 일정한 값 이하가 되도록 각 시설의 배출구 높이에 따라서 유황산화물의 허용배출량을 정하는 규제 방식. 굴뚝을 높게 함으로서 착지농도는 감소하는데 배연이 이르는 범위는 확대하게 됨. K형조인트.",
+      "confidence": 1.0,
+      "keywords": [
+        "농도"
+      ],
+      "all_domains": [
+        "disinfection"
+      ]
+    },
+    {
+      "term": "MIB",
+      "definition": "방선균 또는 남조류에 의해서 생산되고 이취미(異臭味)물질로 알려져 있음. 보통은 곰팡이냄새를 내지만, 흙냄새, 먹물냄새를 내는 것도 있음. 응집침전 급속여과시설로 제거되지 않는 경우는 분말활성탄처리, 입상활성탄처리, 오존처리 등으로 제거함. 3차 처리.",
+      "confidence": 0.2727272727272727,
+      "keywords": [
+        "여과",
+        "침전",
+        "응집",
+        "오존"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation",
+        "sedimentation",
+        "filtration",
+        "disinfection"
+      ]
+    },
+    {
+      "term": "M비",
+      "definition": "미생물농도와 먹이가되는 폐수 중의 기질 농도와의 비. 활성슬러지는 그의 대부분이 미생물로 하수 중의 유기물은 미생물에 관한 먹이로써 생각할 수 있으므로 그의 비가 중요한 의미를 가지고 계량할 수 없으므로 활성슬러지법에서는 BOD/SS 부하를 이용. ☞ 하수처리, BOD부하 FC/FS비.",
+      "confidence": 0.3333333333333333,
+      "keywords": [
+        "슬러지",
+        "bod",
+        "미생물",
+        "관",
+        "농도",
+        "BOD부하"
+      ],
+      "all_domains": [
+        "sedimentation",
+        "disinfection",
+        "water_quality_parameters",
+        "microbiological_analysis",
+        "piping"
+      ]
+    },
+    {
+      "term": "pH",
+      "definition": "수소이온의 몰농도 역수의 상용대수치. pH7은 중성, pH가 7보다 값이 작아질수록 산성이 강해지고, 값이 커질수록 알칼리성이 강해짐. 물의 기본적인 지표의 하나이고, 이화학적 수질, 생물학적 수질, 정수처리효과, 관로의 부식 등에 관계되는 중요한 인자임. 측정법은 비색법과 유리전극법이 있음. pharyngo conjunctival fever.",
+      "confidence": 0.25,
+      "keywords": [
+        "ph",
+        "정수처리",
+        "관로",
+        "관",
+        "측정",
+        "농도",
+        "pH"
+      ],
+      "all_domains": [
+        "disinfection",
+        "water_quality_parameters",
+        "chemical_analysis",
+        "facilities",
+        "piping"
+      ]
+    },
+    {
+      "term": "디클로로벤젠",
+      "definition": ", 분자량 147.01, p-DCB. 1,4-디클로로벤젠으로도 불림. 비중 1.46(20℃), 녹는 점 53℃, 끓는 점 174℃의 무색결정. 증기압 0.4mmHg(25℃). 물에 대한 용해도는 79mg/l(25℃). 주된 용도는 탈취제, 살충제 등. 토양 중에 방출되면 토양에 남아 천천히 지하수로 이동. 독성은 고농도 폭로의 경우에는 간장장해를 일으키는 경우도 있음. P-알칼리도.",
+      "confidence": 0.8,
+      "keywords": [
+        "농도",
+        "알칼리도"
+      ],
+      "all_domains": [
+        "disinfection",
+        "water_quality_parameters"
+      ]
+    },
+    {
+      "term": "막\n\n\n\nMX",
+      "definition": "MX-5-hydroxy-2-furanone 3-클로로-4-5-히드록시-2-퓨란. 제지업의 염소처리수중에서 비교적 강한 변이원성을 보이는 할로겐화합물로써 분리되어, MX로 명명된 것이 최초임. MX가 그림과 같이 furanone고리로 있는 것은 pH 5.3 이하의 경우이며, 중성부근에서는 열린 고리로 되어 oxobutenoic acid로써 존재하고 있음. 일반적으로 수도의 염소처리에 따라 수중의 리그닌과 후민질과 염소와의 반응에 따라 생성하는 것이 명확해지고 있음. MX는 염기대 치환형의 직접 변이원물질로 하고, 정수 내의 전변이원성에 대한 MX의 기여율은 1% 정도임. ☞ 소독부산물 m값.",
+      "confidence": 0.6,
+      "keywords": [
+        "ph",
+        "염소",
+        "pH",
+        "소독"
+      ],
+      "all_domains": [
+        "disinfection",
+        "water_quality_parameters"
+      ]
+    },
+    {
+      "term": "소독공정",
+      "definition": "소독제를 주입하여 병원균을 제거하는 처리과정이다.",
+      "confidence": 1.0,
+      "keywords": [
+        "소독공정",
+        "소독제",
+        "소독"
+      ],
+      "all_domains": [
+        "disinfection"
+      ]
+    },
+    {
+      "term": "소독제",
+      "definition": "병원균을 제거하는 약품으로, 염소, 오존, 자외선 등이 사용된다.",
+      "confidence": 0.9166666666666666,
+      "keywords": [
+        "염소",
+        "약품",
+        "자외선",
+        "소독",
+        "오존",
+        "소독제"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "disinfection"
+      ]
+    },
+    {
+      "term": "소독지",
+      "definition": "정수처리된 물에 소독제를 주입하여 병원균을 제거하는 시설이다.",
+      "confidence": 0.5555555555555556,
+      "keywords": [
+        "소독제",
+        "정수처리",
+        "소독지",
+        "소독"
+      ],
+      "all_domains": [
+        "disinfection",
+        "facilities"
+      ]
+    },
+    {
+      "term": "염소",
+      "definition": "정수처리에서 가장 널리 사용되는 소독제로, 병원균을 제거하고 잔류염소를 유지하여 재오염을 방지한다.",
+      "confidence": 0.6666666666666666,
+      "keywords": [
+        "염소",
+        "잔류염소",
+        "정수처리",
+        "소독",
+        "소독제"
+      ],
+      "all_domains": [
+        "disinfection",
+        "facilities"
+      ]
+    },
+    {
+      "term": "오존",
+      "definition": "강력한 산화력을 가진 소독제로, 염소보다 효과적이지만 잔류효과가 없어 2차 소독이 필요하다.",
+      "confidence": 1.0,
+      "keywords": [
+        "오존",
+        "소독제",
+        "염소",
+        "소독"
+      ],
+      "all_domains": [
+        "disinfection"
+      ]
+    },
+    {
+      "term": "잔류염소",
+      "definition": "소독 후에도 남아있는 염소의 양으로, 0.1 mg/L 이상 유지하여 재오염을 방지한다.",
+      "confidence": 1.0,
+      "keywords": [
+        "염소",
+        "잔류염소",
+        "소독"
+      ],
+      "all_domains": [
+        "disinfection"
+      ]
+    },
+    {
+      "term": "정수장",
+      "definition": "원수를 정수처리하여 음용수로 만드는 시설로, 응집, 침전, 여과, 소독 등의 공정을 거쳐 안전한 상수를 생산한다.",
+      "confidence": 0.42105263157894735,
+      "keywords": [
+        "침전",
+        "정수처리",
+        "정수장",
+        "응집",
+        "소독",
+        "여과"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation",
+        "sedimentation",
+        "filtration",
+        "disinfection",
+        "facilities"
+      ]
+    },
+    {
+      "term": "정수처리",
+      "definition": "원수를 음용수로 만들기 위해 수행하는 일련의 처리과정으로, 응집, 침전, 여과, 소독 등의 공정을 포함한다.",
+      "confidence": 0.26666666666666666,
+      "keywords": [
+        "침전",
+        "정수처리",
+        "응집",
+        "소독",
+        "여과"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation",
+        "sedimentation",
+        "filtration",
+        "disinfection",
+        "facilities"
+      ]
+    },
+    {
+      "term": "트리클로로에탄",
+      "definition": ", 분자량 133.40. β-트리클로로에탄이라고도 함. 비중 1.44(20℃). 융점-37.0℃, 비점 113.5℃의 액체. 물에 대한 용해도는 0.45g/100g(20℃)로, 에탄올, 에테르 및 유기염소계 용제와 혼합하며, 증기압 16.7㎜Hg(20℃). 주된 용도는 유지(油脂), 왁스, 천연수지 및 알칼로이드의 용제임. 독성은 LD50 1,140㎎/㎏로, 중추신경계 억제작용 및 간기능 장애를 일으킴. 12345678910 개인정보처리방침 영상정보 처리기기 운영방침 이용약관 오시는길 페이스북 블로그 유튜브 인스타그램 관련사이트 우리집 수돗물 안심 확인제 교육 홈페이지 단체표준인증 WATER KOREA 물산업 PM 양성과정 파이프에셋 수돗물홍보협의회 서울특별시 영등포구 대림로 244 한국상하수도협회 Tel:02-3156-7777Fax:02-3156-7778 Tel:02-3156-7777Fax:02-3156-7778 Copyright 2018 Korea Water and Wastewater Works Association All rights reserved.",
+      "confidence": 0.4,
+      "keywords": [
+        "파이프",
+        "염소",
+        "관",
+        "기기"
+      ],
+      "all_domains": [
+        "disinfection",
+        "equipment",
+        "piping"
+      ]
+    },
+    {
+      "term": "0차반응",
+      "definition": "반응속도가 선분의 농도에 무관한 비가역반응. 반응속도식에 농도항이 포함되지 않으며, 반응차수가 0이라고 볼 수 있으므로, 0차반응이라고 함.A→생성물 이라는 반응에서, A의 농도, A의 처음농도, 반응률이라 한다면, 반응속도식은 다음식으로 표시될 수 있음. 또는, 식을 적분하면, 을 얻으며, 와 의 관계에 따라, 직선의 기울기로부터 반응속도정수 k를 구할 수 있음. 1,1,1-트리클로로에탄.",
+      "confidence": 0.5,
+      "keywords": [
+        "농도",
+        "관"
+      ],
+      "all_domains": [
+        "disinfection",
+        "piping"
+      ]
+    },
+    {
+      "term": "1차반응",
+      "definition": "반응속도가 반응에 관여하는 물질 중 어느 하나의 농도에 비례하는 반응. 반응속도가 단지 한 가지 반응물 농도에 비례하는 것을 가리킴. 반응속도가 반응물질의 농도에 직접 비례하는 경우이며, 반응물질이 일정한 속도로 감소하거나 다른 물질로 전환되는 경우 등이 해당됨. 전자의 경우 BOD 시험을 할 때 산소요구량의 시간적 변화나 방사성물질의 자연붕괴 등이 있으며, 후자의 경우 산화질소의 분해반응 등이 있음. 일반적으로 반응속도를 좌우하는 물질을 A, B,…로 나타내면 반응속도는 이 됨. 여기서 k를 반응속도상수, n을 반응차수(反應次數)라고 하는데, 양과 음의 정수 및 분수를 취함. 1차분해.",
+      "confidence": 0.5,
+      "keywords": [
+        "농도",
+        "bod",
+        "시험",
+        "관"
+      ],
+      "all_domains": [
+        "disinfection",
+        "water_quality_parameters",
+        "chemical_analysis",
+        "piping"
+      ]
+    },
+    {
+      "term": "ALT비",
+      "definition": "응집제 중에 알루미늄과 원수 중의 탁도의 비를 표시하는 지표. ALT비＝로 표시. 이 경우 알루미늄 양은 응집제의 양이 아니라, 내부에 포함되어 있는 알루미늄 그 자체를 말함. ALT비의 의의는 두 가지가 있음. 첫째는 응집블록형성에 있어서, 응집첨가량의 수치를 제공하는 지표라는 것. 즉, 원수의 탁도와 양호한 플럭을 생성하는 ALT비는 고탁도시 작고, 저탁도시 크다는 일반적인 관계가 있음. 통상 ALT비가 0.05～0.2라고 범위에서 처리가 행해짐. 또 하나는 침전지, 투과지에서 인발된 슬러지의 농축성, 탈수성의 지표. ALT비가 작을수록 농축성, 탈수성이 양호함. 따라서 더러운 벌의 발생량을 저감하기 위해서는 가능한 저ALT의 조건을 적용하는 것이 바람직함. ☞ 응집제 주입율, 슬러지 처리 AMP.",
+      "confidence": 0.43478260869565216,
+      "keywords": [
+        "발생량",
+        "침전",
+        "응집제",
+        "슬러지",
+        "ALT비",
+        "탁도",
+        "응집",
+        "관",
+        "침전지"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation",
+        "sedimentation",
+        "water_quality_parameters",
+        "piping"
+      ]
+    },
+    {
+      "term": "Aulacoseira\n\n\n\nMF막",
+      "definition": "☞ 정밀여과막 21222324252627282930 개인정보처리방침 영상정보 처리기기 운영방침 이용약관 오시는길 페이스북 블로그 유튜브 인스타그램 관련사이트 우리집 수돗물 안심 확인제 교육 홈페이지 단체표준인증 WATER KOREA 물산업 PM 양성과정 파이프에셋 수돗물홍보협의회 서울특별시 영등포구 대림로 244 한국상하수도협회 Tel:02-3156-7777Fax:02-3156-7778 Tel:02-3156-7777Fax:02-3156-7778 Copyright 2018 Korea Water and Wastewater Works Association All rights reserved.",
+      "confidence": 0.4,
+      "keywords": [
+        "여과",
+        "기기",
+        "관",
+        "파이프"
+      ],
+      "all_domains": [
+        "filtration",
+        "equipment",
+        "piping"
+      ]
+    },
+    {
+      "term": "Auracoseira",
+      "definition": "원통모양의 세포가 종으로 연결된 사상의 군체를 형성한 규조류 속의 일종의 하나. 호소나 저수지의 플랑크톤으로 흔히 발견되며, 대량번식하여 여과폐색을 유발하는 대표적인 여과장해 생물로서 A.italica 나 A.granualta, A.distans 등이 대표적인 종임. 동일 모양으로 원통형의 세표가 종으로 연결된 군체를 형성하는 melosira 속으로 다루어지고 있지만, 세포 껍질의 형태적 특징이나 연쇄모양의 군체를 만드는 세포 연결의 방법이 melosira 속과 다른 것으로부터 다른 속이라는 것이 이전부터 지적되었음. 또한, melosira 속으로는 m.varians가 수원의 부착조에 있는 완속여과지의 생물막의 구성생물로서 번식하고 있으며 수도와 관련이 깊음. AWWA.",
+      "confidence": 0.6666666666666666,
+      "keywords": [
+        "여과지",
+        "수원",
+        "여과폐색",
+        "관",
+        "여과장해",
+        "여과"
+      ],
+      "all_domains": [
+        "intake_process",
+        "filtration",
+        "piping"
+      ]
+    },
+    {
+      "term": "BHC",
+      "definition": "빛을 쪼여 염소와 벤젠을 반응시켜 만든 유기화합물로 농약의 일종으로 농약 관리법에 의해 작물 잔류성 농약으로 지정되어 있음. BHC에는 ,,, 등 7종류의 이성질체가 있음. 이중의 한 이성질체가 린덴 또는 가멕산이라는 상품명으로 시판되는 살충제. 1825년 처음으로 만들어졌으며, 1944년에는 γ-이성질체가 이 반응에서 생기는 다른 이성질체보다 약 1,000배나 더 독성이 강한 살충효과가 있다고 확인됨. 각 이성질체는 탄소원자로 이루어진 고리에 염소원자가 어떤 방향으로 붙어 있느냐에 따라 구조적으로 구분됨. 벤젠을 염소와 첨가반응을 시키면 BHC의 가능한 8개 이성질체 중 6개 이상의 이성질체가 포함되어 있는 혼합물이 만들어지며, 그중 γ-이성질체가 20～25％를 차지하는데, γ-이성질체는 특정 용매에 다른 이성질체보다 더 잘 녹아 농축된 형태로 추출될 수 있음. BHC는 DDT보다 휘발성이 크고 곤충에 살충효과가 더 빠르게 작용하지만, 지속성은 떨어지며, BHC는 다른 살충제들이 경쟁적으로 생산되고 물 속에 단 1ppm 정도만 있어도 물고기를 죽이기 때문에 사용이 점점 줄어들고 있으며, 1960년대 이후에는 사용이 제한되고 있음. bio-assay.",
+      "confidence": 0.6,
+      "keywords": [
+        "염소",
+        "관",
+        "관리"
+      ],
+      "all_domains": [
+        "disinfection",
+        "ems_system",
+        "piping"
+      ]
+    },
+    {
+      "term": "COD측정방식",
+      "definition": "공장폐수 시험방법으로 ① 100℃에서 과망간산칼륨에 의해 산소 소비량을 측정하는 방법. ② 20℃에서 과망간산칼륨에 의해 산소 소비량을 측정하는 방법. ③ 알칼리성 과망간산칼륨에 의해 산소소비량을 측정하는 방법. ④ 중크롬산칼륨에 의해 산소 소비량을 측정하는 방법이 있음. 11121314151617181920 개인정보처리방침 영상정보 처리기기 운영방침 이용약관 오시는길 페이스북 블로그 유튜브 인스타그램 관련사이트 우리집 수돗물 안심 확인제 교육 홈페이지 단체표준인증 WATER KOREA 물산업 PM 양성과정 파이프에셋 수돗물홍보협의회 서울특별시 영등포구 대림로 244 한국상하수도협회 Tel:02-3156-7777Fax:02-3156-7778 Tel:02-3156-7777Fax:02-3156-7778 Copyright 2018 Korea Water and Wastewater Works Association All rights reserved.",
+      "confidence": 0.2857142857142857,
+      "keywords": [
+        "측정방식",
+        "관",
+        "측정",
+        "파이프",
+        "시험",
+        "COD측정",
+        "기기",
+        "cod"
+      ],
+      "all_domains": [
+        "water_quality_parameters",
+        "chemical_analysis",
+        "equipment",
+        "piping"
+      ]
+    },
+    {
+      "term": "CP",
+      "definition": "일반적으로 사용되고 있는 것으로서 이음매 없는 동관과 탈산동관을 들 수 있음. 열 및 전기의 양도체로서, 내식성이 있어서 가공하기 쉽고 마찰저항이 적은 것 등의 잇점이 있기 때문에 열교환기용관, 냉난방기용관, 압력계관, 급수관, 급탕관, 급유관 등으로 쓰이고 있음. 급수, 급탕용, 열교환기용, 화학용 등으로서 무산소동관, 이음매 없는 동관이 있음. critical path method.",
+      "confidence": 0.5,
+      "keywords": [
+        "관",
+        "압력계"
+      ],
+      "all_domains": [
+        "equipment",
+        "piping"
+      ]
+    },
+    {
+      "term": "DPD법",
+      "definition": "잔류염소의 측정법. 수질기준을 보완하는 항목에 관계되는 측정법인 과장통지로 정해지는 방법. 잔류염소와 N, N-디에틸-p-페닐렌디아민이 반응하면 용액의 색이 분홍내지 적분홍색을 띔. 이것을 C. I. Acid Red 265를 이용해서 작성한 표준비색렬과 비교해, 잔류염소치를 구함. N, N-디에틸-p-페닐렌디아민법이라고도 함. DPD를 넣은 시점에서 유리(遊離)잔류염소가 구해지고, 다시금 요오드화칼륨을 넣으면 잔류염소가 구해짐. DPD와 잔류염소가 반응해서 분홍색의 용액이 되지만, 유산제1철암모늄을 넣으면 무색이 되는 것을 이용한 적정(滴定)에 의한 측정법도 있음. drain separator.",
+      "confidence": 0.4117647058823529,
+      "keywords": [
+        "염소",
+        "잔류염소",
+        "ai",
+        "관",
+        "측정",
+        "DPD법"
+      ],
+      "all_domains": [
+        "disinfection",
+        "chemical_analysis",
+        "piping",
+        "ai_models"
+      ]
+    },
+    {
+      "term": "DRC배지",
+      "definition": "웰슈균 아포나 웰슈균의 추정시험에 이용되는 액체배지. differential reinforced clostridial. 본배지는 검수(檢水)를 접종한 후, 나사구(口)병을 배지로 채우는 것으로 혐기배양을 필요로 하지 않는 간편성이 있음. 배양 후, 본배지에 함유하는 아류산나트륨의 환원에 의한 유화철의 침전을 발생시켜 배지가 흑변한 것을 웰슈균 아포 또는 웰슈균 추정시험양성으로 함. 11121314151617181920 개인정보처리방침 영상정보 처리기기 운영방침 이용약관 오시는길 페이스북 블로그 유튜브 인스타그램 관련사이트 우리집 수돗물 안심 확인제 교육 홈페이지 단체표준인증 WATER KOREA 물산업 PM 양성과정 파이프에셋 수돗물홍보협의회 서울특별시 영등포구 대림로 244 한국상하수도협회 Tel:02-3156-7777Fax:02-3156-7778 Tel:02-3156-7777Fax:02-3156-7778 Copyright 2018 Korea Water and Wastewater Works Association All rights reserved.",
+      "confidence": 0.2857142857142857,
+      "keywords": [
+        "침전",
+        "DRC배지",
+        "관",
+        "파이프",
+        "시험",
+        "기기"
+      ],
+      "all_domains": [
+        "sedimentation",
+        "chemical_analysis",
+        "microbiological_analysis",
+        "equipment",
+        "piping"
+      ]
+    },
+    {
+      "term": "EDPS",
+      "definition": "전자정보 처리조직, 컴퓨터에 의하여 사무, 관리, 경영 등에 관한 데이터를 처리하는 체계를 말함. 특히 데이터 전송의 발달로 on-line system, time sharing system, remote-batch system, computer utility 등을 만들어내 데이터 처리방식에 혁신을 가져왔음. EDTA.",
+      "confidence": 0.5,
+      "keywords": [
+        "관",
+        "관리"
+      ],
+      "all_domains": [
+        "ems_system",
+        "piping"
+      ]
+    },
+    {
+      "term": "GIS",
+      "definition": "지리적인 위치정보를 기초로 문자나 숫자, 화상 등을 컴퓨터상에 관련시켜 시각적으로 정보를 종합관리하는 기술을 총칭. 장소 등을 좌표축으로 하여 데이터화한 지도상에 도로나 건조물, 수도관이나 전화선 등의 라이프라인 및 토지소유권정보를 축적하는 시스템이 있음. 수도에서는 지도나 관로정보를 일원화하여 관리하고 유지관리나 재해대책, 관망해석 등을 행하는 맵핑시스템이 있으며, 동의어로서 이용됨. 또 GPS 위성을 이용한 위치관측기술을 응용한 시스템도 개발되고 있음. ☞ GPS, 맵핑시스템 glucose.",
+      "confidence": 0.8,
+      "keywords": [
+        "관",
+        "관리",
+        "관로"
+      ],
+      "all_domains": [
+        "ems_system",
+        "piping"
+      ]
+    },
+    {
+      "term": "ISO 9000s",
+      "definition": "☞ 품질관리 시스템 IWA.",
+      "confidence": 0.5,
+      "keywords": [
+        "관",
+        "관리"
+      ],
+      "all_domains": [
+        "ems_system",
+        "piping"
+      ]
+    },
+    {
+      "term": "Kerby공식",
+      "definition": "계획 우수량 산정에서 유입시간의 산출에 이용되는 경험식 중 하나. 21222324252627282930 개인정보처리방침 영상정보 처리기기 운영방침 이용약관 오시는길 페이스북 블로그 유튜브 인스타그램 관련사이트 우리집 수돗물 안심 확인제 교육 홈페이지 단체표준인증 WATER KOREA 물산업 PM 양성과정 파이프에셋 수돗물홍보협의회 서울특별시 영등포구 대림로 244 한국상하수도협회 Tel:02-3156-7777Fax:02-3156-7778 Tel:02-3156-7777Fax:02-3156-7778 Copyright 2018 Korea Water and Wastewater Works Association All rights reserved.",
+      "confidence": 0.5714285714285714,
+      "keywords": [
+        "파이프",
+        "기기",
+        "관"
+      ],
+      "all_domains": [
+        "equipment",
+        "piping"
+      ]
+    },
+    {
+      "term": "M비",
+      "definition": "미생물농도와 먹이가되는 폐수 중의 기질 농도와의 비. 활성슬러지는 그의 대부분이 미생물로 하수 중의 유기물은 미생물에 관한 먹이로써 생각할 수 있으므로 그의 비가 중요한 의미를 가지고 계량할 수 없으므로 활성슬러지법에서는 BOD/SS 부하를 이용. ☞ 하수처리, BOD부하 FC/FS비.",
+      "confidence": 0.3333333333333333,
+      "keywords": [
+        "슬러지",
+        "bod",
+        "미생물",
+        "관",
+        "농도",
+        "BOD부하"
+      ],
+      "all_domains": [
+        "sedimentation",
+        "disinfection",
+        "water_quality_parameters",
+        "microbiological_analysis",
+        "piping"
+      ]
+    },
+    {
+      "term": "NEPA",
+      "definition": "국가환경정책법의 약칭. 미국의 환경정책기본법으로서, 환경문제에 대한 연방의 기본정책을 선언하여, 연방 차원의 환경 관리제도의 골격을 정하고, 그들의 수행을 위해 CEQ의 설치를 정한 획기적인 환경법. 1969년 제정됨. NEPA는 연방의 환경정책의 기본으로 인간과 환경과의 실효있는 조화를 통해, 모든 국민에게 건강적으로 안전하고 생산적인 그리고 미적으로도 문화적으로도 쾌적한 환경을 보증하는 것 등을 목표로 하고 있음. NF막.",
+      "confidence": 0.5,
+      "keywords": [
+        "관",
+        "관리"
+      ],
+      "all_domains": [
+        "ems_system",
+        "piping"
+      ]
+    },
+    {
+      "term": "OF시험",
+      "definition": "세균류를 확인하는 시험의 하나로 세균류가 포도당을 호기성 분해하는가, 혹은 혐기성 분해하는가의 성상을 판정하는 시험. 판정은 균체를 넣은 배지에 유동파라핀을 중층하지 않은 시험관이 황색으로 변한 것을 포도당산화, 또한 유동파라핀을 중층한 시험관과 중층하지 않은 시험관이 모두 변색하지 않으면, 청색인 경우는 포도당비분해상태로 이것을 비발효라 함. 두 시험관 모두 황색으로 변한 것은 발효라고 함. ☞ 동정시험 one year rule.",
+      "confidence": 0.75,
+      "keywords": [
+        "세균",
+        "OF시험",
+        "시험",
+        "관"
+      ],
+      "all_domains": [
+        "chemical_analysis",
+        "microbiological_analysis",
+        "piping"
+      ]
+    },
+    {
+      "term": "PC말뚝",
+      "definition": "미리 PC강선(鋼線)에 인장응력을 가하고, 이것으로 콘크리트에 프리스트레스를 주어, 외하중에 의한 곡선응력에 저항시키는 구조로 한 항. 항의 성형 후 프레스트레스를 주는 포스트텐션방식과 성형전에 PC강선을 긴장하고 콘크리트를 쳐서 탈형(脫型)했을 때 프리스트레스를 줄 수 있는 프레텐션방식이 있음. 21222324252627282930 개인정보처리방침 영상정보 처리기기 운영방침 이용약관 오시는길 페이스북 블로그 유튜브 인스타그램 관련사이트 우리집 수돗물 안심 확인제 교육 홈페이지 단체표준인증 WATER KOREA 물산업 PM 양성과정 파이프에셋 수돗물홍보협의회 서울특별시 영등포구 대림로 244 한국상하수도협회 Tel:02-3156-7777Fax:02-3156-7778 Tel:02-3156-7777Fax:02-3156-7778 Copyright 2018 Korea Water and Wastewater Works Association All rights reserved.",
+      "confidence": 0.5714285714285714,
+      "keywords": [
+        "파이프",
+        "기기",
+        "관"
+      ],
+      "all_domains": [
+        "equipment",
+        "piping"
+      ]
+    },
+    {
+      "term": "blowoff valve",
+      "definition": "슬러지를 포함한 오수를 압송하는 경우, 관로가 낮은 레벨에서 급격하게 상승하는 개소에 있어서, 관저에 침전한 슬러지나 모래를 관외로 배출하기 위해 설치한 밸브를 말함. blow-off (泥吐管).",
+      "confidence": 0.46153846153846156,
+      "keywords": [
+        "밸브",
+        "침전",
+        "슬러지",
+        "관로",
+        "관"
+      ],
+      "all_domains": [
+        "sedimentation",
+        "equipment",
+        "piping"
+      ]
+    },
+    {
+      "term": "critical path method",
+      "definition": "공정계획의 한 방법으로 각 작업의 소요일수와 비용의 관계를 조사하여 최적공기를 설정하는 수법. cross flow여과방식.",
+      "confidence": 0.75,
+      "keywords": [
+        "여과",
+        "관"
+      ],
+      "all_domains": [
+        "filtration",
+        "piping"
+      ]
+    },
+    {
+      "term": "cross flow여과방식",
+      "definition": "막 여과 장치의 운전조작 방법의 하나로, 막 공급수를 막 면을 따라 흘려, 막을 투과하는 물이 공급수와는 직각 방향으로 흐르도록 하는 여과방식임. 십자형 여과방식이라고 함. 막 공급수를 막면과 평행하게 흐르게 함으로써, 막 공급수중의 현탁물질이나 콜로이드 등이 막면에 퇴적, 부착하는 것을 제어하는 것을 목적으로 하고 있음. 여기에 대비되는 것으로서 Dead end 여과방식이 있음. Cross flow 여과방식에는, 농축수를 순환시키는 순환방식과 계외로 배출하는 일과방식이 있지만, 일과방식은 회수율의 관점에서 뒤떨어지기 때문에 수도에서는 채용하지 않음. 정밀여과 법에서는, Cross flow 여과방식과 dead end 여과방식의 어느 것이나 채용 할 수 있지만 한외여과 법이나 역삼투 법에서는 cross flow 여과방식으로 운전되는 것이 많음. Cryptosporidium.",
+      "confidence": 0.6,
+      "keywords": [
+        "여과",
+        "제어",
+        "관"
+      ],
+      "all_domains": [
+        "filtration",
+        "ems_system",
+        "piping"
+      ]
+    },
+    {
+      "term": "drop shaft",
+      "definition": "하수류의 자연낙하에 의해 맨홀 저부의 세굴, 하수의 비산, 유지관리환경의 악화 등의 과제를 해소하기 위해 개발된 고낙차시설. 다단자유낙하식, 와류식, 나선안내로식 등이 고안되어 있음. DS.",
+      "confidence": 0.5,
+      "keywords": [
+        "관",
+        "관리"
+      ],
+      "all_domains": [
+        "ems_system",
+        "piping"
+      ]
+    },
+    {
+      "term": "flashboard weir",
+      "definition": "널빤지를 이용해 유량을 조절하거나 수류를 차단하는 위어. 구조는 간단하지만 각재의 설치시나 철거시에는 수압이 걸리기 때문에 해당 기술이 필요하며, 널빤지와 구조물 틈으로 물이 새나가기 쉬우므로 수류의 완전차단은 어려움. 하천관리시설 등 구조령의 적용을 받는 취수문에 관해서는 널빤지 위어의 사용은 인정되지 않고, 소규모시설의 간이시설로만 인정되고 있으므로 주의를 요함. flocculator.",
+      "confidence": 0.6,
+      "keywords": [
+        "취수",
+        "관",
+        "관리"
+      ],
+      "all_domains": [
+        "intake_process",
+        "ems_system",
+        "piping"
+      ]
+    },
+    {
+      "term": "pH",
+      "definition": "수소이온의 몰농도 역수의 상용대수치. pH7은 중성, pH가 7보다 값이 작아질수록 산성이 강해지고, 값이 커질수록 알칼리성이 강해짐. 물의 기본적인 지표의 하나이고, 이화학적 수질, 생물학적 수질, 정수처리효과, 관로의 부식 등에 관계되는 중요한 인자임. 측정법은 비색법과 유리전극법이 있음. pharyngo conjunctival fever.",
+      "confidence": 0.25,
+      "keywords": [
+        "ph",
+        "정수처리",
+        "관로",
+        "관",
+        "측정",
+        "농도",
+        "pH"
+      ],
+      "all_domains": [
+        "disinfection",
+        "water_quality_parameters",
+        "chemical_analysis",
+        "facilities",
+        "piping"
+      ]
+    },
+    {
+      "term": "point source",
+      "definition": "☞ 비점오염원 21222324252627282930 개인정보처리방침 영상정보 처리기기 운영방침 이용약관 오시는길 페이스북 블로그 유튜브 인스타그램 관련사이트 우리집 수돗물 안심 확인제 교육 홈페이지 단체표준인증 WATER KOREA 물산업 PM 양성과정 파이프에셋 수돗물홍보협의회 서울특별시 영등포구 대림로 244 한국상하수도협회 Tel:02-3156-7777Fax:02-3156-7778 Tel:02-3156-7777Fax:02-3156-7778 Copyright 2018 Korea Water and Wastewater Works Association All rights reserved.",
+      "confidence": 0.5714285714285714,
+      "keywords": [
+        "파이프",
+        "기기",
+        "관"
+      ],
+      "all_domains": [
+        "equipment",
+        "piping"
+      ]
+    },
+    {
+      "term": "s식",
+      "definition": "① 여과지트러프의 상류단의 수심을 구하는 식. 여기서, : 트러프상류단의 수심, : 한계수심, : 트러프의 길이, : 트러프바닥의 경사각, 임. ② 침전지의 침전효율에 관한 식 : 상하방향으로는 혼합하지만, 전후방향으로는 비혼합이라고 하는 모델을 상정해 다음 식을 제시함. 여기서, : 입자의 침강속도, Q/A: 수표면적부하. NATM.",
+      "confidence": 0.29411764705882354,
+      "keywords": [
+        "여과지",
+        "침전",
+        "효율",
+        "침전효율",
+        "모델",
+        "관",
+        "침전지",
+        "여과"
+      ],
+      "all_domains": [
+        "sedimentation",
+        "filtration",
+        "piping",
+        "ai_models",
+        "performance_metrics"
+      ]
+    },
+    {
+      "term": "고속액체 크로마토그래피 질량분석법\n\n\n\nLD50",
+      "definition": "☞ 반수치사량 21222324252627282930 개인정보처리방침 영상정보 처리기기 운영방침 이용약관 오시는길 페이스북 블로그 유튜브 인스타그램 관련사이트 우리집 수돗물 안심 확인제 교육 홈페이지 단체표준인증 WATER KOREA 물산업 PM 양성과정 파이프에셋 수돗물홍보협의회 서울특별시 영등포구 대림로 244 한국상하수도협회 Tel:02-3156-7777Fax:02-3156-7778 Tel:02-3156-7777Fax:02-3156-7778 Copyright 2018 Korea Water and Wastewater Works Association All rights reserved.",
+      "confidence": 0.4666666666666667,
+      "keywords": [
+        "분석",
+        "질량분석",
+        "관",
+        "파이프",
+        "크로마토그래피",
+        "기기"
+      ],
+      "all_domains": [
+        "chemical_analysis",
+        "equipment",
+        "piping",
+        "ai_models"
+      ]
+    },
+    {
+      "term": "관리",
+      "definition": "정수장의 시설과 공정을 유지보수하고 최적화하는 활동이다.",
+      "confidence": 0.4444444444444444,
+      "keywords": [
+        "최적화",
+        "관",
+        "정수장",
+        "관리"
+      ],
+      "all_domains": [
+        "ems_system",
+        "facilities",
+        "piping",
+        "performance_metrics"
+      ]
+    },
+    {
+      "term": "모니터링",
+      "definition": "정수처리 공정과 수질을 지속적으로 관찰하고 측정하는 활동이다.",
+      "confidence": 0.6666666666666666,
+      "keywords": [
+        "관",
+        "정수처리",
+        "측정"
+      ],
+      "all_domains": [
+        "chemical_analysis",
+        "facilities",
+        "piping"
+      ]
+    },
+    {
+      "term": "배관",
+      "definition": "물을 운반하는 파이프라인으로, 취수관, 송수관, 배수관 등이 있다.",
+      "confidence": 0.7692307692307693,
+      "keywords": [
+        "취수관",
+        "취수",
+        "송수관",
+        "관",
+        "파이프",
+        "배수관",
+        "배관"
+      ],
+      "all_domains": [
+        "intake_process",
+        "piping"
+      ]
+    },
+    {
+      "term": "밸브",
+      "definition": "배관의 유량을 조절하거나 차단하는 기구로, 게이트밸브, 체크밸브 등이 있다.",
+      "confidence": 0.6363636363636364,
+      "keywords": [
+        "밸브",
+        "체크밸브",
+        "관",
+        "배관",
+        "게이트밸브"
+      ],
+      "all_domains": [
+        "equipment",
+        "piping"
+      ]
+    },
+    {
+      "term": "알칼리도\n\n\n\nquinone profile 법",
+      "definition": "동일의 분류군에 속하는 균종의 주요 quinone 분자종은 대체로 동일한 것을 이용한 생화학적 해석방법. 활성슬러지 중 미생물의 종류조성이나 변화를 신속하고 객관적으로 파악할 수 있음. rashing ring.",
+      "confidence": 0.36363636363636365,
+      "keywords": [
+        "알칼리도",
+        "관",
+        "슬러지",
+        "미생물"
+      ],
+      "all_domains": [
+        "sedimentation",
+        "water_quality_parameters",
+        "microbiological_analysis",
+        "piping"
+      ]
+    },
+    {
+      "term": "에틸렌디아민테트라아세트산\n\n\n\nEDTA적정법",
+      "definition": "총 경도의 측정법. 시료에 Eriochrome black T를 지시약을 가한 후 에틸렌-디아민-테트라아세트산 적정액을 사용하여 총경도를 산정. 적정의 종말점에서는 용액이 보라색에서 청색으로 변함. 11121314151617181920 개인정보처리방침 영상정보 처리기기 운영방침 이용약관 오시는길 페이스북 블로그 유튜브 인스타그램 관련사이트 우리집 수돗물 안심 확인제 교육 홈페이지 단체표준인증 WATER KOREA 물산업 PM 양성과정 파이프에셋 수돗물홍보협의회 서울특별시 영등포구 대림로 244 한국상하수도협회 Tel:02-3156-7777Fax:02-3156-7778 Tel:02-3156-7777Fax:02-3156-7778 Copyright 2018 Korea Water and Wastewater Works Association All rights reserved.",
+      "confidence": 0.5,
+      "keywords": [
+        "EDTA적정법",
+        "적정법",
+        "관",
+        "측정",
+        "파이프",
+        "기기"
+      ],
+      "all_domains": [
+        "chemical_analysis",
+        "equipment",
+        "piping"
+      ]
+    },
+    {
+      "term": "운영",
+      "definition": "정수장의 시설과 공정을 관리하여 안정적으로 정수를 생산하는 활동이다.",
+      "confidence": 0.6666666666666666,
+      "keywords": [
+        "관",
+        "정수장",
+        "관리"
+      ],
+      "all_domains": [
+        "ems_system",
+        "facilities",
+        "piping"
+      ]
+    },
+    {
+      "term": "침전지의 침전효율에 관한 식",
+      "definition": "상하방향으로는 혼합하지만, 전후방향으로는 비혼합이라고 하는 모델을 상정해 다음 식을 제시함. 여기서,.",
+      "confidence": 0.38461538461538464,
+      "keywords": [
+        "침전",
+        "효율",
+        "침전효율",
+        "모델",
+        "관",
+        "침전지"
+      ],
+      "all_domains": [
+        "sedimentation",
+        "piping",
+        "ai_models",
+        "performance_metrics"
+      ]
+    },
+    {
+      "term": "케이싱\n\n\n\nRhizosolenia",
+      "definition": "☞ 여과장해생물 ring support.",
+      "confidence": 0.6,
+      "keywords": [
+        "여과",
+        "여과장해",
+        "케이싱"
+      ],
+      "all_domains": [
+        "filtration",
+        "piping"
+      ]
+    },
+    {
+      "term": "트리클로로에탄",
+      "definition": ", 분자량 133.40. β-트리클로로에탄이라고도 함. 비중 1.44(20℃). 융점-37.0℃, 비점 113.5℃의 액체. 물에 대한 용해도는 0.45g/100g(20℃)로, 에탄올, 에테르 및 유기염소계 용제와 혼합하며, 증기압 16.7㎜Hg(20℃). 주된 용도는 유지(油脂), 왁스, 천연수지 및 알칼로이드의 용제임. 독성은 LD50 1,140㎎/㎏로, 중추신경계 억제작용 및 간기능 장애를 일으킴. 12345678910 개인정보처리방침 영상정보 처리기기 운영방침 이용약관 오시는길 페이스북 블로그 유튜브 인스타그램 관련사이트 우리집 수돗물 안심 확인제 교육 홈페이지 단체표준인증 WATER KOREA 물산업 PM 양성과정 파이프에셋 수돗물홍보협의회 서울특별시 영등포구 대림로 244 한국상하수도협회 Tel:02-3156-7777Fax:02-3156-7778 Tel:02-3156-7777Fax:02-3156-7778 Copyright 2018 Korea Water and Wastewater Works Association All rights reserved.",
+      "confidence": 0.4,
+      "keywords": [
+        "파이프",
+        "염소",
+        "관",
+        "기기"
+      ],
+      "all_domains": [
+        "disinfection",
+        "equipment",
+        "piping"
+      ]
+    },
+    {
+      "term": "품질관리 시스템\n\n\n\nIWA",
+      "definition": "국제물학회 JTU.",
+      "confidence": 0.5,
+      "keywords": [
+        "관",
+        "관리"
+      ],
+      "all_domains": [
+        "ems_system",
+        "piping"
+      ]
+    },
+    {
+      "term": "헥사클로로벤젠\n\n\n\nHollow filber 막",
+      "definition": "☞중공사막 11121314151617181920 개인정보처리방침 영상정보 처리기기 운영방침 이용약관 오시는길 페이스북 블로그 유튜브 인스타그램 관련사이트 우리집 수돗물 안심 확인제 교육 홈페이지 단체표준인증 WATER KOREA 물산업 PM 양성과정 파이프에셋 수돗물홍보협의회 서울특별시 영등포구 대림로 244 한국상하수도협회 Tel:02-3156-7777Fax:02-3156-7778 Tel:02-3156-7777Fax:02-3156-7778 Copyright 2018 Korea Water and Wastewater Works Association All rights reserved.",
+      "confidence": 0.5714285714285714,
+      "keywords": [
+        "파이프",
+        "기기",
+        "관"
+      ],
+      "all_domains": [
+        "equipment",
+        "piping"
+      ]
+    },
+    {
+      "term": "헥산추출물질",
+      "definition": "☞ 일반 헥산추출물질 21222324252627282930 개인정보처리방침 영상정보 처리기기 운영방침 이용약관 오시는길 페이스북 블로그 유튜브 인스타그램 관련사이트 우리집 수돗물 안심 확인제 교육 홈페이지 단체표준인증 WATER KOREA 물산업 PM 양성과정 파이프에셋 수돗물홍보협의회 서울특별시 영등포구 대림로 244 한국상하수도협회 Tel:02-3156-7777Fax:02-3156-7778 Tel:02-3156-7777Fax:02-3156-7778 Copyright 2018 Korea Water and Wastewater Works Association All rights reserved.",
+      "confidence": 0.5714285714285714,
+      "keywords": [
+        "파이프",
+        "기기",
+        "관"
+      ],
+      "all_domains": [
+        "equipment",
+        "piping"
+      ]
+    },
+    {
+      "term": "형이음",
+      "definition": "기설관내에 신관을 삽입하는 파이프인파이프공법에 사용하는 덕타일주철관용 푸쉬온타입의 계수. 호경(呼徑) 300～1,350㎜. 신축, 가요성에다 1.5DkN의 이탈방지성을 가지고, 내진관로나 연약지반에 포설하는 관로에 이용됨. 기설관 관경보다 1구경(100㎜)작은 신관이 삽입되도록 수구(受口) 외경(外徑)이 작게 되어 있음. 그 외에, PⅢ형, PN형이 있음. 31323334353637383940 개인정보처리방침 영상정보 처리기기 운영방침 이용약관 오시는길 페이스북 블로그 유튜브 인스타그램 관련사이트 우리집 수돗물 안심 확인제 교육 홈페이지 단체표준인증 WATER KOREA 물산업 PM 양성과정 파이프에셋 수돗물홍보협의회 서울특별시 영등포구 대림로 244 한국상하수도협회 Tel:02-3156-7777Fax:02-3156-7778 Tel:02-3156-7777Fax:02-3156-7778 Copyright 2018 Korea Water and Wastewater Works Association All rights reserved.",
+      "confidence": 0.75,
+      "keywords": [
+        "관로",
+        "관",
+        "파이프",
+        "기기",
+        "형이음"
+      ],
+      "all_domains": [
+        "equipment",
+        "piping"
+      ]
+    },
+    {
+      "term": "흡착평형\n\n\n\nGIS",
+      "definition": "가스절연개폐장치. 특고변전설비의 모선, 차단기, 단로기 등 개폐장치의 충전부를 원통상의 접지금속용기 내에 수납하고, 충전부와 접지금속용기와 사이에 공기의 약 3배의 절연성능을 가지는 SF6 가스를 채운 구조로 되어 있음. 공기절연에 의한 개폐장치에 비하여 높은 신뢰성, 안전성, 공간절감 및 유지관리 등 많은 점에서 우수한 특징이 있으며, 66kV 이상의 수변전설비에 널리 이용됨. ☞ 자가용 전기공작물, 수전설비 11121314151617181920 개인정보처리방침 영상정보 처리기기 운영방침 이용약관 오시는길 페이스북 블로그 유튜브 인스타그램 관련사이트 우리집 수돗물 안심 확인제 교육 홈페이지 단체표준인증 WATER KOREA 물산업 PM 양성과정 파이프에셋 수돗물홍보협의회 서울특별시 영등포구 대림로 244 한국상하수도협회 Tel:02-3156-7777Fax:02-3156-7778 Tel:02-3156-7777Fax:02-3156-7778 Copyright 2018 Korea Water and Wastewater Works Association All rights reserved.",
+      "confidence": 0.3333333333333333,
+      "keywords": [
+        "설비",
+        "관",
+        "파이프",
+        "성능",
+        "기기",
+        "관리"
+      ],
+      "all_domains": [
+        "ems_system",
+        "equipment",
+        "piping",
+        "performance_metrics"
+      ]
+    },
+    {
+      "term": "1인1일당급수량",
+      "definition": "LPCD은 Liter Per Capita Day 의 약자로서 한사람이 하루 소비하는 급수량을 말하는 것으로 상수 소비량 또는 상수 요구량이라고도 함.",
+      "confidence": 1.0,
+      "keywords": [
+        "급수량",
+        "1인1일당급수량"
+      ],
+      "all_domains": [
+        "intake_process"
+      ]
+    },
+    {
+      "term": "1인1일최대급수량",
+      "definition": "연간 1일 급수량의 최대값을 일최대급수량이라 하며, 이 값을 급수인구로 나눈 값을 1인1일최대급수량이라고 함. 하수도계획에 있어서 오수량의 기본인 생활오수량에서 계획1인1일최대오수량은 해당지역의 상수도 실적 또는 계획1인1일 최대급수량을 감안하여 결정함. 1인1일최대오수량.",
+      "confidence": 1.0,
+      "keywords": [
+        "급수량"
+      ],
+      "all_domains": [
+        "intake_process"
+      ]
+    },
+    {
+      "term": "1인1일평균급수량",
+      "definition": "1일 평균급수량을 인구 1인당으로 나타낸 것. 1일최대오수량.",
+      "confidence": 1.0,
+      "keywords": [
+        "1일평균급수량",
+        "급수량"
+      ],
+      "all_domains": [
+        "intake_process"
+      ]
+    },
+    {
+      "term": "1일최대취수량",
+      "definition": "1년 중 1일 취수량의 최대치. 1일평균오수량.",
+      "confidence": 1.0,
+      "keywords": [
+        "1일최대취수량",
+        "취수"
+      ],
+      "all_domains": [
+        "intake_process"
+      ]
+    },
+    {
+      "term": "Auracoseira",
+      "definition": "원통모양의 세포가 종으로 연결된 사상의 군체를 형성한 규조류 속의 일종의 하나. 호소나 저수지의 플랑크톤으로 흔히 발견되며, 대량번식하여 여과폐색을 유발하는 대표적인 여과장해 생물로서 A.italica 나 A.granualta, A.distans 등이 대표적인 종임. 동일 모양으로 원통형의 세표가 종으로 연결된 군체를 형성하는 melosira 속으로 다루어지고 있지만, 세포 껍질의 형태적 특징이나 연쇄모양의 군체를 만드는 세포 연결의 방법이 melosira 속과 다른 것으로부터 다른 속이라는 것이 이전부터 지적되었음. 또한, melosira 속으로는 m.varians가 수원의 부착조에 있는 완속여과지의 생물막의 구성생물로서 번식하고 있으며 수도와 관련이 깊음. AWWA.",
+      "confidence": 0.6666666666666666,
+      "keywords": [
+        "여과지",
+        "수원",
+        "여과폐색",
+        "관",
+        "여과장해",
+        "여과"
+      ],
+      "all_domains": [
+        "intake_process",
+        "filtration",
+        "piping"
+      ]
+    },
+    {
+      "term": "Parshall flume",
+      "definition": "개수로의 유량을 측정하는 장치. 개수로의 도중에 좁은 부분에 설치함. 좁은 부분에 한계류를 발생시켜서 수면형의 변화를 발생시키고, 좁은 부분과 그 입구의 수위차를 측정하는 것에 의해, 유량을 파악함. flume 중에서, 특히 많은 실적과 높은 정도를 가짐. PC말뚝.",
+      "confidence": 0.75,
+      "keywords": [
+        "수위",
+        "측정"
+      ],
+      "all_domains": [
+        "intake_process",
+        "chemical_analysis"
+      ]
+    },
+    {
+      "term": "flashboard weir",
+      "definition": "널빤지를 이용해 유량을 조절하거나 수류를 차단하는 위어. 구조는 간단하지만 각재의 설치시나 철거시에는 수압이 걸리기 때문에 해당 기술이 필요하며, 널빤지와 구조물 틈으로 물이 새나가기 쉬우므로 수류의 완전차단은 어려움. 하천관리시설 등 구조령의 적용을 받는 취수문에 관해서는 널빤지 위어의 사용은 인정되지 않고, 소규모시설의 간이시설로만 인정되고 있으므로 주의를 요함. flocculator.",
+      "confidence": 0.6,
+      "keywords": [
+        "취수",
+        "관",
+        "관리"
+      ],
+      "all_domains": [
+        "intake_process",
+        "ems_system",
+        "piping"
+      ]
+    },
+    {
+      "term": "계량기",
+      "definition": "물의 유량을 측정하는 기구로, 유량계, 수위계, 압력계 등이 있다.",
+      "confidence": 0.6,
+      "keywords": [
+        "수위계",
+        "압력계",
+        "유량계",
+        "측정",
+        "수위",
+        "계량기"
+      ],
+      "all_domains": [
+        "intake_process",
+        "chemical_analysis",
+        "equipment"
+      ]
+    },
+    {
+      "term": "배관",
+      "definition": "물을 운반하는 파이프라인으로, 취수관, 송수관, 배수관 등이 있다.",
+      "confidence": 0.7692307692307693,
+      "keywords": [
+        "취수관",
+        "취수",
+        "송수관",
+        "관",
+        "파이프",
+        "배수관",
+        "배관"
+      ],
+      "all_domains": [
+        "intake_process",
+        "piping"
+      ]
+    },
+    {
+      "term": "정수시설",
+      "definition": "수원에서 취수한 원수를 음용수로 처리하는 시설로, 정수처리공정을 수행하는 모든 시설을 포함한다.",
+      "confidence": 0.5714285714285714,
+      "keywords": [
+        "취수",
+        "수원",
+        "정수처리",
+        "정수시설"
+      ],
+      "all_domains": [
+        "intake_process",
+        "facilities"
+      ]
+    },
+    {
+      "term": "정수지",
+      "definition": "정수처리된 물을 저장하는 저수지로, 운전 안정성과 지진 대응을 고려하여 설계된 시설이다.",
+      "confidence": 0.7272727272727273,
+      "keywords": [
+        "정수지",
+        "정수처리"
+      ],
+      "all_domains": [
+        "intake_process",
+        "facilities"
+      ]
+    },
+    {
+      "term": "펌프",
+      "definition": "물을 이동시키는 기계장치로, 취수, 송수, 배수 등에 사용된다.",
+      "confidence": 0.42857142857142855,
+      "keywords": [
+        "펌프",
+        "취수"
+      ],
+      "all_domains": [
+        "intake_process",
+        "ems_system",
+        "equipment"
+      ]
+    },
+    {
+      "term": "1차반응",
+      "definition": "반응속도가 반응에 관여하는 물질 중 어느 하나의 농도에 비례하는 반응. 반응속도가 단지 한 가지 반응물 농도에 비례하는 것을 가리킴. 반응속도가 반응물질의 농도에 직접 비례하는 경우이며, 반응물질이 일정한 속도로 감소하거나 다른 물질로 전환되는 경우 등이 해당됨. 전자의 경우 BOD 시험을 할 때 산소요구량의 시간적 변화나 방사성물질의 자연붕괴 등이 있으며, 후자의 경우 산화질소의 분해반응 등이 있음. 일반적으로 반응속도를 좌우하는 물질을 A, B,…로 나타내면 반응속도는 이 됨. 여기서 k를 반응속도상수, n을 반응차수(反應次數)라고 하는데, 양과 음의 정수 및 분수를 취함. 1차분해.",
+      "confidence": 0.5,
+      "keywords": [
+        "농도",
+        "bod",
+        "시험",
+        "관"
+      ],
+      "all_domains": [
+        "disinfection",
+        "water_quality_parameters",
+        "chemical_analysis",
+        "piping"
+      ]
+    },
+    {
+      "term": "ALT비",
+      "definition": "응집제 중에 알루미늄과 원수 중의 탁도의 비를 표시하는 지표. ALT비＝로 표시. 이 경우 알루미늄 양은 응집제의 양이 아니라, 내부에 포함되어 있는 알루미늄 그 자체를 말함. ALT비의 의의는 두 가지가 있음. 첫째는 응집블록형성에 있어서, 응집첨가량의 수치를 제공하는 지표라는 것. 즉, 원수의 탁도와 양호한 플럭을 생성하는 ALT비는 고탁도시 작고, 저탁도시 크다는 일반적인 관계가 있음. 통상 ALT비가 0.05～0.2라고 범위에서 처리가 행해짐. 또 하나는 침전지, 투과지에서 인발된 슬러지의 농축성, 탈수성의 지표. ALT비가 작을수록 농축성, 탈수성이 양호함. 따라서 더러운 벌의 발생량을 저감하기 위해서는 가능한 저ALT의 조건을 적용하는 것이 바람직함. ☞ 응집제 주입율, 슬러지 처리 AMP.",
+      "confidence": 0.43478260869565216,
+      "keywords": [
+        "발생량",
+        "침전",
+        "응집제",
+        "슬러지",
+        "ALT비",
+        "탁도",
+        "응집",
+        "관",
+        "침전지"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation",
+        "sedimentation",
+        "water_quality_parameters",
+        "piping"
+      ]
+    },
+    {
+      "term": "BOD부하",
+      "definition": "살수여상법이나 활성슬러지법 등의 생물처리에서, 생물반응조에 대한 1일당 유기물의 공급비율을 나타냄. 반응조에 대한 부하표시에는 BOD/MLSS, BOD-용적, BOD-면적의 3종이 있음. 표준활성슬러지법에서는 0.2～0.4㎏ BOD/㎏ SSㆍ일 을 이용하고 있고, 이 경우에는 유기물의 처리효율을 90%정도 얻을 수 있음. BOO.",
+      "confidence": 0.36363636363636365,
+      "keywords": [
+        "bod",
+        "BOD부하",
+        "슬러지",
+        "효율"
+      ],
+      "all_domains": [
+        "sedimentation",
+        "water_quality_parameters",
+        "performance_metrics"
+      ]
+    },
+    {
+      "term": "CBOD",
+      "definition": "주로 종속영양세균에 의한 유기물 분해에 따른 산소소비량에 근거한 BOD. 질산화세균이 많이 포함되는 시료에 ATU 또는 TCPM[2-클로로-6 피리진]을 질산화 억제시약으로 첨가하고, 질산화 작용을 억제한 상태에서 측정함. 질산화 반응에 따른 산소소비량인 NBOD와 구별해 탄소성 BOD라고도 함. CCE.",
+      "confidence": 0.6363636363636364,
+      "keywords": [
+        "bod",
+        "측정",
+        "CBOD",
+        "세균",
+        "NBOD"
+      ],
+      "all_domains": [
+        "water_quality_parameters",
+        "chemical_analysis",
+        "microbiological_analysis"
+      ]
+    },
+    {
+      "term": "COD",
+      "definition": "화학적 산소요구량. 수중의 피산화성물질을 산화제로 화학적으로 산화할 때 소비되는 산화제의 양을 산소로 환산한 것. COD가 높은 것은 수중에 유기물이 많은 것을 의미하며, 생물화학적산소요구량와 함께 수질오탁의 나타내는 중요한 지표. 측정방법에는 과망간산칼륨법과 중크롬산칼륨법이 있음. CODCr.",
+      "confidence": 0.75,
+      "keywords": [
+        "cod",
+        "측정"
+      ],
+      "all_domains": [
+        "water_quality_parameters",
+        "chemical_analysis"
+      ]
+    },
+    {
+      "term": "COD측정방식",
+      "definition": "공장폐수 시험방법으로 ① 100℃에서 과망간산칼륨에 의해 산소 소비량을 측정하는 방법. ② 20℃에서 과망간산칼륨에 의해 산소 소비량을 측정하는 방법. ③ 알칼리성 과망간산칼륨에 의해 산소소비량을 측정하는 방법. ④ 중크롬산칼륨에 의해 산소 소비량을 측정하는 방법이 있음. 11121314151617181920 개인정보처리방침 영상정보 처리기기 운영방침 이용약관 오시는길 페이스북 블로그 유튜브 인스타그램 관련사이트 우리집 수돗물 안심 확인제 교육 홈페이지 단체표준인증 WATER KOREA 물산업 PM 양성과정 파이프에셋 수돗물홍보협의회 서울특별시 영등포구 대림로 244 한국상하수도협회 Tel:02-3156-7777Fax:02-3156-7778 Tel:02-3156-7777Fax:02-3156-7778 Copyright 2018 Korea Water and Wastewater Works Association All rights reserved.",
+      "confidence": 0.2857142857142857,
+      "keywords": [
+        "측정방식",
+        "관",
+        "측정",
+        "파이프",
+        "시험",
+        "COD측정",
+        "기기",
+        "cod"
+      ],
+      "all_domains": [
+        "water_quality_parameters",
+        "chemical_analysis",
+        "equipment",
+        "piping"
+      ]
+    },
+    {
+      "term": "DO",
+      "definition": "☞ 용존산소(溶存酸素) DOC.",
+      "confidence": 1.0,
+      "keywords": [
+        "용존산소",
+        "DO"
+      ],
+      "all_domains": [
+        "water_quality_parameters"
+      ]
+    },
+    {
+      "term": "Hydrograph",
+      "definition": "횡축에 시간, 종축에 강우량을 취하여 강우의 시간적 변동을 나타내는 그래프를 말함. 수지나 각종 저류시설의 용량 결정과 강우시 하수희석배율 등의 검토에 있어서 중요한 정보. ☞ 수문도 IAS이론.",
+      "confidence": 1.0,
+      "keywords": [
+        "ph",
+        "pH"
+      ],
+      "all_domains": [
+        "water_quality_parameters"
+      ]
+    },
+    {
+      "term": "IMVIC시험",
+      "definition": "IMVIC은 indole 생산, Methyl Red 반응, Voges-Proskauer 반응, Citrate 반응의 각 시험의 머릿글자를 사용. 이들 4항목의 시험의 양성 혹은 음성의 나열로써, 대장균군이 속하는 것이 있는지 분류하는 구별시험.[＋＋-]인 것을 E.coli이라 함. ☞ MR시험 in vitro.",
+      "confidence": 0.6363636363636364,
+      "keywords": [
+        "대장균군",
+        "시험",
+        "IMVIC시험",
+        "MR시험",
+        "DO"
+      ],
+      "all_domains": [
+        "water_quality_parameters",
+        "chemical_analysis",
+        "microbiological_analysis"
+      ]
+    },
+    {
+      "term": "M비",
+      "definition": "미생물농도와 먹이가되는 폐수 중의 기질 농도와의 비. 활성슬러지는 그의 대부분이 미생물로 하수 중의 유기물은 미생물에 관한 먹이로써 생각할 수 있으므로 그의 비가 중요한 의미를 가지고 계량할 수 없으므로 활성슬러지법에서는 BOD/SS 부하를 이용. ☞ 하수처리, BOD부하 FC/FS비.",
+      "confidence": 0.3333333333333333,
+      "keywords": [
+        "슬러지",
+        "bod",
+        "미생물",
+        "관",
+        "농도",
+        "BOD부하"
+      ],
+      "all_domains": [
+        "sedimentation",
+        "disinfection",
+        "water_quality_parameters",
+        "microbiological_analysis",
+        "piping"
+      ]
+    },
+    {
+      "term": "NBOD",
+      "definition": "BOD 측정 중에 질화반응에 의한 산소요구량. 질화반응을 억제하지 않고 측정한 BOD치와 질화반응을 억제하며, 측정한 BOD값의 차이로서 구함. 질소계 산소요구량을 말하며, 유기물을 미생물이 산화분해할 때 소비하는 산소량 중 암모니아 등의 질소화합물 산화에 필요한 산소소비량. 최초에는 탄소화합물의 산화분해에 의한 산소 소비가 행해지고, 그 다음으로 행해지는 산화분해로서 이 때문에 산소소비는 일반적으로 탄소화합물의 산소소비가 일정하게 된 뒤에 현저하게 나타남. needle valve.",
+      "confidence": 0.6,
+      "keywords": [
+        "bod",
+        "측정",
+        "미생물",
+        "NBOD"
+      ],
+      "all_domains": [
+        "water_quality_parameters",
+        "chemical_analysis",
+        "microbiological_analysis"
+      ]
+    },
+    {
+      "term": "andosol",
+      "definition": "일반적으로 풍화가 진행된 화산재 토양으로 부식물의 함유량이 많고 흑갈색내지 흑색을 띠는 양호한 물리성을 보임. ANSI.",
+      "confidence": 1.0,
+      "keywords": [
+        "DO"
+      ],
+      "all_domains": [
+        "water_quality_parameters"
+      ]
+    },
+    {
+      "term": "pH",
+      "definition": "수소이온의 몰농도 역수의 상용대수치. pH7은 중성, pH가 7보다 값이 작아질수록 산성이 강해지고, 값이 커질수록 알칼리성이 강해짐. 물의 기본적인 지표의 하나이고, 이화학적 수질, 생물학적 수질, 정수처리효과, 관로의 부식 등에 관계되는 중요한 인자임. 측정법은 비색법과 유리전극법이 있음. pharyngo conjunctival fever.",
+      "confidence": 0.25,
+      "keywords": [
+        "ph",
+        "정수처리",
+        "관로",
+        "관",
+        "측정",
+        "농도",
+        "pH"
+      ],
+      "all_domains": [
+        "disinfection",
+        "water_quality_parameters",
+        "chemical_analysis",
+        "facilities",
+        "piping"
+      ]
+    },
+    {
+      "term": "디클로로벤젠",
+      "definition": ", 분자량 147.01, p-DCB. 1,4-디클로로벤젠으로도 불림. 비중 1.46(20℃), 녹는 점 53℃, 끓는 점 174℃의 무색결정. 증기압 0.4mmHg(25℃). 물에 대한 용해도는 79mg/l(25℃). 주된 용도는 탈취제, 살충제 등. 토양 중에 방출되면 토양에 남아 천천히 지하수로 이동. 독성은 고농도 폭로의 경우에는 간장장해를 일으키는 경우도 있음. P-알칼리도.",
+      "confidence": 0.8,
+      "keywords": [
+        "농도",
+        "알칼리도"
+      ],
+      "all_domains": [
+        "disinfection",
+        "water_quality_parameters"
+      ]
+    },
+    {
+      "term": "막\n\n\n\nMX",
+      "definition": "MX-5-hydroxy-2-furanone 3-클로로-4-5-히드록시-2-퓨란. 제지업의 염소처리수중에서 비교적 강한 변이원성을 보이는 할로겐화합물로써 분리되어, MX로 명명된 것이 최초임. MX가 그림과 같이 furanone고리로 있는 것은 pH 5.3 이하의 경우이며, 중성부근에서는 열린 고리로 되어 oxobutenoic acid로써 존재하고 있음. 일반적으로 수도의 염소처리에 따라 수중의 리그닌과 후민질과 염소와의 반응에 따라 생성하는 것이 명확해지고 있음. MX는 염기대 치환형의 직접 변이원물질로 하고, 정수 내의 전변이원성에 대한 MX의 기여율은 1% 정도임. ☞ 소독부산물 m값.",
+      "confidence": 0.6,
+      "keywords": [
+        "ph",
+        "염소",
+        "pH",
+        "소독"
+      ],
+      "all_domains": [
+        "disinfection",
+        "water_quality_parameters"
+      ]
+    },
+    {
+      "term": "알칼리도",
+      "definition": "물의 산을 중화할 수 있는 능력을 나타내는 지표로, 정수처리 공정의 안정성에 영향을 준다.",
+      "confidence": 0.5,
+      "keywords": [
+        "알칼리도",
+        "정수처리"
+      ],
+      "all_domains": [
+        "water_quality_parameters",
+        "facilities"
+      ]
+    },
+    {
+      "term": "알칼리도\n\n\n\nquinone profile 법",
+      "definition": "동일의 분류군에 속하는 균종의 주요 quinone 분자종은 대체로 동일한 것을 이용한 생화학적 해석방법. 활성슬러지 중 미생물의 종류조성이나 변화를 신속하고 객관적으로 파악할 수 있음. rashing ring.",
+      "confidence": 0.36363636363636365,
+      "keywords": [
+        "알칼리도",
+        "관",
+        "슬러지",
+        "미생물"
+      ],
+      "all_domains": [
+        "sedimentation",
+        "water_quality_parameters",
+        "microbiological_analysis",
+        "piping"
+      ]
+    },
+    {
+      "term": "탁도",
+      "definition": "물의 흐림 정도를 나타내는 지표로, NTU 단위로 측정하며 0.5 NTU 이하가 음용수 기준이다.",
+      "confidence": 0.8,
+      "keywords": [
+        "탁도",
+        "측정"
+      ],
+      "all_domains": [
+        "water_quality_parameters",
+        "chemical_analysis"
+      ]
+    },
+    {
+      "term": "화학식\n\n\n\nDO미터",
+      "definition": "☞ 용존산소계(溶存酸素計) DO제어.",
+      "confidence": 0.8,
+      "keywords": [
+        "용존산소",
+        "제어",
+        "DO"
+      ],
+      "all_domains": [
+        "ems_system",
+        "water_quality_parameters"
+      ]
+    },
+    {
+      "term": "1차반응",
+      "definition": "반응속도가 반응에 관여하는 물질 중 어느 하나의 농도에 비례하는 반응. 반응속도가 단지 한 가지 반응물 농도에 비례하는 것을 가리킴. 반응속도가 반응물질의 농도에 직접 비례하는 경우이며, 반응물질이 일정한 속도로 감소하거나 다른 물질로 전환되는 경우 등이 해당됨. 전자의 경우 BOD 시험을 할 때 산소요구량의 시간적 변화나 방사성물질의 자연붕괴 등이 있으며, 후자의 경우 산화질소의 분해반응 등이 있음. 일반적으로 반응속도를 좌우하는 물질을 A, B,…로 나타내면 반응속도는 이 됨. 여기서 k를 반응속도상수, n을 반응차수(反應次數)라고 하는데, 양과 음의 정수 및 분수를 취함. 1차분해.",
+      "confidence": 0.5,
+      "keywords": [
+        "농도",
+        "bod",
+        "시험",
+        "관"
+      ],
+      "all_domains": [
+        "disinfection",
+        "water_quality_parameters",
+        "chemical_analysis",
+        "piping"
+      ]
+    },
+    {
+      "term": "AGP시험",
+      "definition": "물이 잠재적으로 가진 조류생산능력을 측정하는 시험방법의 한가지. 유럽과 미국에서는 조류배양시험이라 부름. 조류를 이용한 수질의 평가를 행하는 일종의 생물검정으로 함. 조사대상에 있는 호수·내천수·배수 등의 식수를 함께 배양액을 만들고 그 표준 종 등의 공식종류를 식종하고 일정조건 하에 배양하여 그 최대증식량을 구함. 부영양화의 정도의 현장파악, 새로운 배수의 유입을 동반하는 부영양화 예측, 증식속도 등 조류에 이용 가능한 영양염류의 추정, 조류증식에 미치는 조해물질의 유무의 특정 등에 이용되고 있음. ☞ AAP배지 ALC.",
+      "confidence": 0.6666666666666666,
+      "keywords": [
+        "예측",
+        "시험",
+        "측정"
+      ],
+      "all_domains": [
+        "chemical_analysis",
+        "ai_models"
+      ]
+    },
+    {
+      "term": "CBOD",
+      "definition": "주로 종속영양세균에 의한 유기물 분해에 따른 산소소비량에 근거한 BOD. 질산화세균이 많이 포함되는 시료에 ATU 또는 TCPM[2-클로로-6 피리진]을 질산화 억제시약으로 첨가하고, 질산화 작용을 억제한 상태에서 측정함. 질산화 반응에 따른 산소소비량인 NBOD와 구별해 탄소성 BOD라고도 함. CCE.",
+      "confidence": 0.6363636363636364,
+      "keywords": [
+        "bod",
+        "측정",
+        "CBOD",
+        "세균",
+        "NBOD"
+      ],
+      "all_domains": [
+        "water_quality_parameters",
+        "chemical_analysis",
+        "microbiological_analysis"
+      ]
+    },
+    {
+      "term": "CHN분석계",
+      "definition": "유기물의 주요성분인 탄소, 수소, 질소를 동시에 정량하는 분석기기. C, H, N은 연소, 분해되어 각각 , , 로 변환되며, 열전도도법에 의해 농도를 측정하여 정량함. 열전도도의 측정법으로서는 가스크로마토그래피방식, 자기적분방식, 테크니콘방식 3종류가 이용됨. 종래의 C, H와 N을 개별 분석계를 사용하여 측정하는 방법에 비교하여 측정시간과 시료량이 줄어듦. clinker.",
+      "confidence": 0.6666666666666666,
+      "keywords": [
+        "분석",
+        "CHN분석계",
+        "측정",
+        "농도",
+        "크로마토그래피",
+        "기기"
+      ],
+      "all_domains": [
+        "disinfection",
+        "chemical_analysis",
+        "equipment",
+        "ai_models"
+      ]
+    },
+    {
+      "term": "COD",
+      "definition": "화학적 산소요구량. 수중의 피산화성물질을 산화제로 화학적으로 산화할 때 소비되는 산화제의 양을 산소로 환산한 것. COD가 높은 것은 수중에 유기물이 많은 것을 의미하며, 생물화학적산소요구량와 함께 수질오탁의 나타내는 중요한 지표. 측정방법에는 과망간산칼륨법과 중크롬산칼륨법이 있음. CODCr.",
+      "confidence": 0.75,
+      "keywords": [
+        "cod",
+        "측정"
+      ],
+      "all_domains": [
+        "water_quality_parameters",
+        "chemical_analysis"
+      ]
+    },
+    {
+      "term": "COD측정방식",
+      "definition": "공장폐수 시험방법으로 ① 100℃에서 과망간산칼륨에 의해 산소 소비량을 측정하는 방법. ② 20℃에서 과망간산칼륨에 의해 산소 소비량을 측정하는 방법. ③ 알칼리성 과망간산칼륨에 의해 산소소비량을 측정하는 방법. ④ 중크롬산칼륨에 의해 산소 소비량을 측정하는 방법이 있음. 11121314151617181920 개인정보처리방침 영상정보 처리기기 운영방침 이용약관 오시는길 페이스북 블로그 유튜브 인스타그램 관련사이트 우리집 수돗물 안심 확인제 교육 홈페이지 단체표준인증 WATER KOREA 물산업 PM 양성과정 파이프에셋 수돗물홍보협의회 서울특별시 영등포구 대림로 244 한국상하수도협회 Tel:02-3156-7777Fax:02-3156-7778 Tel:02-3156-7777Fax:02-3156-7778 Copyright 2018 Korea Water and Wastewater Works Association All rights reserved.",
+      "confidence": 0.2857142857142857,
+      "keywords": [
+        "측정방식",
+        "관",
+        "측정",
+        "파이프",
+        "시험",
+        "COD측정",
+        "기기",
+        "cod"
+      ],
+      "all_domains": [
+        "water_quality_parameters",
+        "chemical_analysis",
+        "equipment",
+        "piping"
+      ]
+    },
+    {
+      "term": "DPD법",
+      "definition": "잔류염소의 측정법. 수질기준을 보완하는 항목에 관계되는 측정법인 과장통지로 정해지는 방법. 잔류염소와 N, N-디에틸-p-페닐렌디아민이 반응하면 용액의 색이 분홍내지 적분홍색을 띔. 이것을 C. I. Acid Red 265를 이용해서 작성한 표준비색렬과 비교해, 잔류염소치를 구함. N, N-디에틸-p-페닐렌디아민법이라고도 함. DPD를 넣은 시점에서 유리(遊離)잔류염소가 구해지고, 다시금 요오드화칼륨을 넣으면 잔류염소가 구해짐. DPD와 잔류염소가 반응해서 분홍색의 용액이 되지만, 유산제1철암모늄을 넣으면 무색이 되는 것을 이용한 적정(滴定)에 의한 측정법도 있음. drain separator.",
+      "confidence": 0.4117647058823529,
+      "keywords": [
+        "염소",
+        "잔류염소",
+        "ai",
+        "관",
+        "측정",
+        "DPD법"
+      ],
+      "all_domains": [
+        "disinfection",
+        "chemical_analysis",
+        "piping",
+        "ai_models"
+      ]
+    },
+    {
+      "term": "DRC배지",
+      "definition": "웰슈균 아포나 웰슈균의 추정시험에 이용되는 액체배지. differential reinforced clostridial. 본배지는 검수(檢水)를 접종한 후, 나사구(口)병을 배지로 채우는 것으로 혐기배양을 필요로 하지 않는 간편성이 있음. 배양 후, 본배지에 함유하는 아류산나트륨의 환원에 의한 유화철의 침전을 발생시켜 배지가 흑변한 것을 웰슈균 아포 또는 웰슈균 추정시험양성으로 함. 11121314151617181920 개인정보처리방침 영상정보 처리기기 운영방침 이용약관 오시는길 페이스북 블로그 유튜브 인스타그램 관련사이트 우리집 수돗물 안심 확인제 교육 홈페이지 단체표준인증 WATER KOREA 물산업 PM 양성과정 파이프에셋 수돗물홍보협의회 서울특별시 영등포구 대림로 244 한국상하수도협회 Tel:02-3156-7777Fax:02-3156-7778 Tel:02-3156-7777Fax:02-3156-7778 Copyright 2018 Korea Water and Wastewater Works Association All rights reserved.",
+      "confidence": 0.2857142857142857,
+      "keywords": [
+        "침전",
+        "DRC배지",
+        "관",
+        "파이프",
+        "시험",
+        "기기"
+      ],
+      "all_domains": [
+        "sedimentation",
+        "chemical_analysis",
+        "microbiological_analysis",
+        "equipment",
+        "piping"
+      ]
+    },
+    {
+      "term": "EMB배지",
+      "definition": "한천배지의 약자로서 대장균군의 완전시험의 분리배지로서 이용됨. 이 배지는 메틸렌블루의 첨가에 의해 그램음성세균의 증식을 어느 정도 제어하고, 유당분해균을 eosin Y와 methylene blue를 통해 염색하여 판별할 수 있도록 함. 본 배지에 유당분해균이 증식하면 산을 생산하기 때문에 집락이 산성화 됨. eosin은 산성색소이기 때문에 집락은 비소와 결합하여 검은 색으로 변함. 예를 들면, Escheriochia coli이 발육하면 두 약품에 의해 특유의 검은 비색으로 금속광택을 가진 집락을 형성. 이 때문에 그 이외의 대장균군과 구별되는 경우에 쓰임. EPA.",
+      "confidence": 0.75,
+      "keywords": [
+        "약품",
+        "대장균군",
+        "시험",
+        "세균",
+        "제어",
+        "EMB배지"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "ems_system",
+        "chemical_analysis",
+        "microbiological_analysis"
+      ]
+    },
+    {
+      "term": "IMVIC시험",
+      "definition": "IMVIC은 indole 생산, Methyl Red 반응, Voges-Proskauer 반응, Citrate 반응의 각 시험의 머릿글자를 사용. 이들 4항목의 시험의 양성 혹은 음성의 나열로써, 대장균군이 속하는 것이 있는지 분류하는 구별시험.[＋＋-]인 것을 E.coli이라 함. ☞ MR시험 in vitro.",
+      "confidence": 0.6363636363636364,
+      "keywords": [
+        "대장균군",
+        "시험",
+        "IMVIC시험",
+        "MR시험",
+        "DO"
+      ],
+      "all_domains": [
+        "water_quality_parameters",
+        "chemical_analysis",
+        "microbiological_analysis"
+      ]
+    },
+    {
+      "term": "MR시험",
+      "definition": "대장균군의 종별시험. 순수분이(純粹分離)한 대장균군의 균주에 따라 그 생화학적 성장을 판정하는 것으로 행하는 IMVIC시험에 일환으로 배지를 이용하고 균의 생산능력의 유무를 판정함. 판정은 배지에 적색의 발생이 일어나는 것을 양성, 황색의 것을 음성으로 함. multi-lumen막.",
+      "confidence": 0.875,
+      "keywords": [
+        "대장균군",
+        "MR시험",
+        "시험",
+        "IMVIC시험"
+      ],
+      "all_domains": [
+        "chemical_analysis",
+        "microbiological_analysis"
+      ]
+    },
+    {
+      "term": "NBOD",
+      "definition": "BOD 측정 중에 질화반응에 의한 산소요구량. 질화반응을 억제하지 않고 측정한 BOD치와 질화반응을 억제하며, 측정한 BOD값의 차이로서 구함. 질소계 산소요구량을 말하며, 유기물을 미생물이 산화분해할 때 소비하는 산소량 중 암모니아 등의 질소화합물 산화에 필요한 산소소비량. 최초에는 탄소화합물의 산화분해에 의한 산소 소비가 행해지고, 그 다음으로 행해지는 산화분해로서 이 때문에 산소소비는 일반적으로 탄소화합물의 산소소비가 일정하게 된 뒤에 현저하게 나타남. needle valve.",
+      "confidence": 0.6,
+      "keywords": [
+        "bod",
+        "측정",
+        "미생물",
+        "NBOD"
+      ],
+      "all_domains": [
+        "water_quality_parameters",
+        "chemical_analysis",
+        "microbiological_analysis"
+      ]
+    },
+    {
+      "term": "OF시험",
+      "definition": "세균류를 확인하는 시험의 하나로 세균류가 포도당을 호기성 분해하는가, 혹은 혐기성 분해하는가의 성상을 판정하는 시험. 판정은 균체를 넣은 배지에 유동파라핀을 중층하지 않은 시험관이 황색으로 변한 것을 포도당산화, 또한 유동파라핀을 중층한 시험관과 중층하지 않은 시험관이 모두 변색하지 않으면, 청색인 경우는 포도당비분해상태로 이것을 비발효라 함. 두 시험관 모두 황색으로 변한 것은 발효라고 함. ☞ 동정시험 one year rule.",
+      "confidence": 0.75,
+      "keywords": [
+        "세균",
+        "OF시험",
+        "시험",
+        "관"
+      ],
+      "all_domains": [
+        "chemical_analysis",
+        "microbiological_analysis",
+        "piping"
+      ]
+    },
+    {
+      "term": "Parshall flume",
+      "definition": "개수로의 유량을 측정하는 장치. 개수로의 도중에 좁은 부분에 설치함. 좁은 부분에 한계류를 발생시켜서 수면형의 변화를 발생시키고, 좁은 부분과 그 입구의 수위차를 측정하는 것에 의해, 유량을 파악함. flume 중에서, 특히 많은 실적과 높은 정도를 가짐. PC말뚝.",
+      "confidence": 0.75,
+      "keywords": [
+        "수위",
+        "측정"
+      ],
+      "all_domains": [
+        "intake_process",
+        "chemical_analysis"
+      ]
+    },
+    {
+      "term": "pH",
+      "definition": "수소이온의 몰농도 역수의 상용대수치. pH7은 중성, pH가 7보다 값이 작아질수록 산성이 강해지고, 값이 커질수록 알칼리성이 강해짐. 물의 기본적인 지표의 하나이고, 이화학적 수질, 생물학적 수질, 정수처리효과, 관로의 부식 등에 관계되는 중요한 인자임. 측정법은 비색법과 유리전극법이 있음. pharyngo conjunctival fever.",
+      "confidence": 0.25,
+      "keywords": [
+        "ph",
+        "정수처리",
+        "관로",
+        "관",
+        "측정",
+        "농도",
+        "pH"
+      ],
+      "all_domains": [
+        "disinfection",
+        "water_quality_parameters",
+        "chemical_analysis",
+        "facilities",
+        "piping"
+      ]
+    },
+    {
+      "term": "계량기",
+      "definition": "물의 유량을 측정하는 기구로, 유량계, 수위계, 압력계 등이 있다.",
+      "confidence": 0.6,
+      "keywords": [
+        "수위계",
+        "압력계",
+        "유량계",
+        "측정",
+        "수위",
+        "계량기"
+      ],
+      "all_domains": [
+        "intake_process",
+        "chemical_analysis",
+        "equipment"
+      ]
+    },
+    {
+      "term": "고속액체 크로마토그래피 질량분석법\n\n\n\nLD50",
+      "definition": "☞ 반수치사량 21222324252627282930 개인정보처리방침 영상정보 처리기기 운영방침 이용약관 오시는길 페이스북 블로그 유튜브 인스타그램 관련사이트 우리집 수돗물 안심 확인제 교육 홈페이지 단체표준인증 WATER KOREA 물산업 PM 양성과정 파이프에셋 수돗물홍보협의회 서울특별시 영등포구 대림로 244 한국상하수도협회 Tel:02-3156-7777Fax:02-3156-7778 Tel:02-3156-7777Fax:02-3156-7778 Copyright 2018 Korea Water and Wastewater Works Association All rights reserved.",
+      "confidence": 0.4666666666666667,
+      "keywords": [
+        "분석",
+        "질량분석",
+        "관",
+        "파이프",
+        "크로마토그래피",
+        "기기"
+      ],
+      "all_domains": [
+        "chemical_analysis",
+        "equipment",
+        "piping",
+        "ai_models"
+      ]
+    },
+    {
+      "term": "기기",
+      "definition": "정수장에서 사용되는 각종 측정 및 제어 장비를 의미한다.",
+      "confidence": 0.4,
+      "keywords": [
+        "정수장",
+        "측정",
+        "기기",
+        "장비",
+        "제어"
+      ],
+      "all_domains": [
+        "ems_system",
+        "chemical_analysis",
+        "facilities",
+        "equipment"
+      ]
+    },
+    {
+      "term": "모니터링",
+      "definition": "정수처리 공정과 수질을 지속적으로 관찰하고 측정하는 활동이다.",
+      "confidence": 0.6666666666666666,
+      "keywords": [
+        "관",
+        "정수처리",
+        "측정"
+      ],
+      "all_domains": [
+        "chemical_analysis",
+        "facilities",
+        "piping"
+      ]
+    },
+    {
+      "term": "수질항목",
+      "definition": "수질을 평가하기 위해 측정하는 각종 지표들로, 미생물, 화학적, 물리적 항목으로 구분된다.",
+      "confidence": 0.75,
+      "keywords": [
+        "미생물",
+        "측정"
+      ],
+      "all_domains": [
+        "chemical_analysis",
+        "microbiological_analysis"
+      ]
+    },
+    {
+      "term": "에틸렌디아민테트라아세트산\n\n\n\nEDTA적정법",
+      "definition": "총 경도의 측정법. 시료에 Eriochrome black T를 지시약을 가한 후 에틸렌-디아민-테트라아세트산 적정액을 사용하여 총경도를 산정. 적정의 종말점에서는 용액이 보라색에서 청색으로 변함. 11121314151617181920 개인정보처리방침 영상정보 처리기기 운영방침 이용약관 오시는길 페이스북 블로그 유튜브 인스타그램 관련사이트 우리집 수돗물 안심 확인제 교육 홈페이지 단체표준인증 WATER KOREA 물산업 PM 양성과정 파이프에셋 수돗물홍보협의회 서울특별시 영등포구 대림로 244 한국상하수도협회 Tel:02-3156-7777Fax:02-3156-7778 Tel:02-3156-7777Fax:02-3156-7778 Copyright 2018 Korea Water and Wastewater Works Association All rights reserved.",
+      "confidence": 0.5,
+      "keywords": [
+        "EDTA적정법",
+        "적정법",
+        "관",
+        "측정",
+        "파이프",
+        "기기"
+      ],
+      "all_domains": [
+        "chemical_analysis",
+        "equipment",
+        "piping"
+      ]
+    },
+    {
+      "term": "탁도",
+      "definition": "물의 흐림 정도를 나타내는 지표로, NTU 단위로 측정하며 0.5 NTU 이하가 음용수 기준이다.",
+      "confidence": 0.8,
+      "keywords": [
+        "탁도",
+        "측정"
+      ],
+      "all_domains": [
+        "water_quality_parameters",
+        "chemical_analysis"
+      ]
+    },
+    {
+      "term": "1차슬러지",
+      "definition": "하수, 폐수의 1차 처리에서 생산된 슬러지. 생슬러지라고도 함. 1차에너지.",
+      "confidence": 0.5714285714285714,
+      "keywords": [
+        "1차슬러지",
+        "에너지",
+        "슬러지"
+      ],
+      "all_domains": [
+        "sedimentation",
+        "ems_system"
+      ]
+    },
+    {
+      "term": "2차슬러지",
+      "definition": "폐수의 2차 처리에서 생성되는 슬러지. 2차오염물.",
+      "confidence": 1.0,
+      "keywords": [
+        "슬러지",
+        "2차슬러지"
+      ],
+      "all_domains": [
+        "sedimentation"
+      ]
+    },
+    {
+      "term": "2차측",
+      "definition": "☞ 1차측 2차침전.",
+      "confidence": 1.0,
+      "keywords": [
+        "침전"
+      ],
+      "all_domains": [
+        "sedimentation"
+      ]
+    },
+    {
+      "term": "2층식침전지",
+      "definition": "수직방향으로 상층과 하층에 조합한 침전지. 두 개 층의 수표면적이 있어서 처리장의 부지 면적이 협소한 경우 유리함. 침전지 형태는 평행한 흐름 방향을 원칙으로 함. ☞ 다층식 침전지 2회선수전.",
+      "confidence": 1.0,
+      "keywords": [
+        "침전지",
+        "침전",
+        "2층식침전지"
+      ],
+      "all_domains": [
+        "sedimentation"
+      ]
+    },
+    {
+      "term": "ALT비",
+      "definition": "응집제 중에 알루미늄과 원수 중의 탁도의 비를 표시하는 지표. ALT비＝로 표시. 이 경우 알루미늄 양은 응집제의 양이 아니라, 내부에 포함되어 있는 알루미늄 그 자체를 말함. ALT비의 의의는 두 가지가 있음. 첫째는 응집블록형성에 있어서, 응집첨가량의 수치를 제공하는 지표라는 것. 즉, 원수의 탁도와 양호한 플럭을 생성하는 ALT비는 고탁도시 작고, 저탁도시 크다는 일반적인 관계가 있음. 통상 ALT비가 0.05～0.2라고 범위에서 처리가 행해짐. 또 하나는 침전지, 투과지에서 인발된 슬러지의 농축성, 탈수성의 지표. ALT비가 작을수록 농축성, 탈수성이 양호함. 따라서 더러운 벌의 발생량을 저감하기 위해서는 가능한 저ALT의 조건을 적용하는 것이 바람직함. ☞ 응집제 주입율, 슬러지 처리 AMP.",
+      "confidence": 0.43478260869565216,
+      "keywords": [
+        "발생량",
+        "침전",
+        "응집제",
+        "슬러지",
+        "ALT비",
+        "탁도",
+        "응집",
+        "관",
+        "침전지"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation",
+        "sedimentation",
+        "water_quality_parameters",
+        "piping"
+      ]
+    },
+    {
+      "term": "BOD부하",
+      "definition": "살수여상법이나 활성슬러지법 등의 생물처리에서, 생물반응조에 대한 1일당 유기물의 공급비율을 나타냄. 반응조에 대한 부하표시에는 BOD/MLSS, BOD-용적, BOD-면적의 3종이 있음. 표준활성슬러지법에서는 0.2～0.4㎏ BOD/㎏ SSㆍ일 을 이용하고 있고, 이 경우에는 유기물의 처리효율을 90%정도 얻을 수 있음. BOO.",
+      "confidence": 0.36363636363636365,
+      "keywords": [
+        "bod",
+        "BOD부하",
+        "슬러지",
+        "효율"
+      ],
+      "all_domains": [
+        "sedimentation",
+        "water_quality_parameters",
+        "performance_metrics"
+      ]
+    },
+    {
+      "term": "DRC배지",
+      "definition": "웰슈균 아포나 웰슈균의 추정시험에 이용되는 액체배지. differential reinforced clostridial. 본배지는 검수(檢水)를 접종한 후, 나사구(口)병을 배지로 채우는 것으로 혐기배양을 필요로 하지 않는 간편성이 있음. 배양 후, 본배지에 함유하는 아류산나트륨의 환원에 의한 유화철의 침전을 발생시켜 배지가 흑변한 것을 웰슈균 아포 또는 웰슈균 추정시험양성으로 함. 11121314151617181920 개인정보처리방침 영상정보 처리기기 운영방침 이용약관 오시는길 페이스북 블로그 유튜브 인스타그램 관련사이트 우리집 수돗물 안심 확인제 교육 홈페이지 단체표준인증 WATER KOREA 물산업 PM 양성과정 파이프에셋 수돗물홍보협의회 서울특별시 영등포구 대림로 244 한국상하수도협회 Tel:02-3156-7777Fax:02-3156-7778 Tel:02-3156-7777Fax:02-3156-7778 Copyright 2018 Korea Water and Wastewater Works Association All rights reserved.",
+      "confidence": 0.2857142857142857,
+      "keywords": [
+        "침전",
+        "DRC배지",
+        "관",
+        "파이프",
+        "시험",
+        "기기"
+      ],
+      "all_domains": [
+        "sedimentation",
+        "chemical_analysis",
+        "microbiological_analysis",
+        "equipment",
+        "piping"
+      ]
+    },
+    {
+      "term": "MIB",
+      "definition": "방선균 또는 남조류에 의해서 생산되고 이취미(異臭味)물질로 알려져 있음. 보통은 곰팡이냄새를 내지만, 흙냄새, 먹물냄새를 내는 것도 있음. 응집침전 급속여과시설로 제거되지 않는 경우는 분말활성탄처리, 입상활성탄처리, 오존처리 등으로 제거함. 3차 처리.",
+      "confidence": 0.2727272727272727,
+      "keywords": [
+        "여과",
+        "침전",
+        "응집",
+        "오존"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation",
+        "sedimentation",
+        "filtration",
+        "disinfection"
+      ]
+    },
+    {
+      "term": "M비",
+      "definition": "미생물농도와 먹이가되는 폐수 중의 기질 농도와의 비. 활성슬러지는 그의 대부분이 미생물로 하수 중의 유기물은 미생물에 관한 먹이로써 생각할 수 있으므로 그의 비가 중요한 의미를 가지고 계량할 수 없으므로 활성슬러지법에서는 BOD/SS 부하를 이용. ☞ 하수처리, BOD부하 FC/FS비.",
+      "confidence": 0.3333333333333333,
+      "keywords": [
+        "슬러지",
+        "bod",
+        "미생물",
+        "관",
+        "농도",
+        "BOD부하"
+      ],
+      "all_domains": [
+        "sedimentation",
+        "disinfection",
+        "water_quality_parameters",
+        "microbiological_analysis",
+        "piping"
+      ]
+    },
+    {
+      "term": "blowoff valve",
+      "definition": "슬러지를 포함한 오수를 압송하는 경우, 관로가 낮은 레벨에서 급격하게 상승하는 개소에 있어서, 관저에 침전한 슬러지나 모래를 관외로 배출하기 위해 설치한 밸브를 말함. blow-off (泥吐管).",
+      "confidence": 0.46153846153846156,
+      "keywords": [
+        "밸브",
+        "침전",
+        "슬러지",
+        "관로",
+        "관"
+      ],
+      "all_domains": [
+        "sedimentation",
+        "equipment",
+        "piping"
+      ]
+    },
+    {
+      "term": "carryover",
+      "definition": "벌킹시에 나타나는 침전지나 농축조 등에서의 월류수 중의 슬러지 유출. Casing수납방식.",
+      "confidence": 1.0,
+      "keywords": [
+        "침전지",
+        "침전",
+        "슬러지"
+      ],
+      "all_domains": [
+        "sedimentation"
+      ]
+    },
+    {
+      "term": "notch",
+      "definition": "침전지의 월류 설비로, 일정간격으로 설치된 입구 부분. 일반형으로 V자형이 이용되고 있음. NOx.",
+      "confidence": 0.5714285714285714,
+      "keywords": [
+        "침전지",
+        "설비",
+        "침전"
+      ],
+      "all_domains": [
+        "sedimentation",
+        "equipment"
+      ]
+    },
+    {
+      "term": "s식",
+      "definition": "① 여과지트러프의 상류단의 수심을 구하는 식. 여기서, : 트러프상류단의 수심, : 한계수심, : 트러프의 길이, : 트러프바닥의 경사각, 임. ② 침전지의 침전효율에 관한 식 : 상하방향으로는 혼합하지만, 전후방향으로는 비혼합이라고 하는 모델을 상정해 다음 식을 제시함. 여기서, : 입자의 침강속도, Q/A: 수표면적부하. NATM.",
+      "confidence": 0.29411764705882354,
+      "keywords": [
+        "여과지",
+        "침전",
+        "효율",
+        "침전효율",
+        "모델",
+        "관",
+        "침전지",
+        "여과"
+      ],
+      "all_domains": [
+        "sedimentation",
+        "filtration",
+        "piping",
+        "ai_models",
+        "performance_metrics"
+      ]
+    },
+    {
+      "term": "알칼리도\n\n\n\nquinone profile 법",
+      "definition": "동일의 분류군에 속하는 균종의 주요 quinone 분자종은 대체로 동일한 것을 이용한 생화학적 해석방법. 활성슬러지 중 미생물의 종류조성이나 변화를 신속하고 객관적으로 파악할 수 있음. rashing ring.",
+      "confidence": 0.36363636363636365,
+      "keywords": [
+        "알칼리도",
+        "관",
+        "슬러지",
+        "미생물"
+      ],
+      "all_domains": [
+        "sedimentation",
+        "water_quality_parameters",
+        "microbiological_analysis",
+        "piping"
+      ]
+    },
+    {
+      "term": "여과지",
+      "definition": "침전지에서 나온 물을 모래층을 통과시켜 미세한 불순물을 제거하는 시설이다.",
+      "confidence": 0.5,
+      "keywords": [
+        "여과",
+        "침전지",
+        "여과지",
+        "침전"
+      ],
+      "all_domains": [
+        "sedimentation",
+        "filtration"
+      ]
+    },
+    {
+      "term": "정수장",
+      "definition": "원수를 정수처리하여 음용수로 만드는 시설로, 응집, 침전, 여과, 소독 등의 공정을 거쳐 안전한 상수를 생산한다.",
+      "confidence": 0.42105263157894735,
+      "keywords": [
+        "침전",
+        "정수처리",
+        "정수장",
+        "응집",
+        "소독",
+        "여과"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation",
+        "sedimentation",
+        "filtration",
+        "disinfection",
+        "facilities"
+      ]
+    },
+    {
+      "term": "정수처리",
+      "definition": "원수를 음용수로 만들기 위해 수행하는 일련의 처리과정으로, 응집, 침전, 여과, 소독 등의 공정을 포함한다.",
+      "confidence": 0.26666666666666666,
+      "keywords": [
+        "침전",
+        "정수처리",
+        "응집",
+        "소독",
+        "여과"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation",
+        "sedimentation",
+        "filtration",
+        "disinfection",
+        "facilities"
+      ]
+    },
+    {
+      "term": "침전공정",
+      "definition": "응집된 불순물이 중력에 의해 가라앉아 제거되는 처리과정이다.",
+      "confidence": 0.6666666666666666,
+      "keywords": [
+        "침전",
+        "침전공정",
+        "응집"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation",
+        "sedimentation"
+      ]
+    },
+    {
+      "term": "침전지",
+      "definition": "응집된 불순물이 가라앉아 제거되는 시설로, 응집지에서 나온 물이 머무르는 곳이다.",
+      "confidence": 0.4444444444444444,
+      "keywords": [
+        "침전",
+        "응집지",
+        "응집",
+        "침전지"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation",
+        "sedimentation"
+      ]
+    },
+    {
+      "term": "침전지의 침전효율에 관한 식",
+      "definition": "상하방향으로는 혼합하지만, 전후방향으로는 비혼합이라고 하는 모델을 상정해 다음 식을 제시함. 여기서,.",
+      "confidence": 0.38461538461538464,
+      "keywords": [
+        "침전",
+        "효율",
+        "침전효율",
+        "모델",
+        "관",
+        "침전지"
+      ],
+      "all_domains": [
+        "sedimentation",
+        "piping",
+        "ai_models",
+        "performance_metrics"
+      ]
+    },
+    {
+      "term": "1차슬러지",
+      "definition": "하수, 폐수의 1차 처리에서 생산된 슬러지. 생슬러지라고도 함. 1차에너지.",
+      "confidence": 0.5714285714285714,
+      "keywords": [
+        "1차슬러지",
+        "에너지",
+        "슬러지"
+      ],
+      "all_domains": [
+        "sedimentation",
+        "ems_system"
+      ]
+    },
+    {
+      "term": "BHC",
+      "definition": "빛을 쪼여 염소와 벤젠을 반응시켜 만든 유기화합물로 농약의 일종으로 농약 관리법에 의해 작물 잔류성 농약으로 지정되어 있음. BHC에는 ,,, 등 7종류의 이성질체가 있음. 이중의 한 이성질체가 린덴 또는 가멕산이라는 상품명으로 시판되는 살충제. 1825년 처음으로 만들어졌으며, 1944년에는 γ-이성질체가 이 반응에서 생기는 다른 이성질체보다 약 1,000배나 더 독성이 강한 살충효과가 있다고 확인됨. 각 이성질체는 탄소원자로 이루어진 고리에 염소원자가 어떤 방향으로 붙어 있느냐에 따라 구조적으로 구분됨. 벤젠을 염소와 첨가반응을 시키면 BHC의 가능한 8개 이성질체 중 6개 이상의 이성질체가 포함되어 있는 혼합물이 만들어지며, 그중 γ-이성질체가 20～25％를 차지하는데, γ-이성질체는 특정 용매에 다른 이성질체보다 더 잘 녹아 농축된 형태로 추출될 수 있음. BHC는 DDT보다 휘발성이 크고 곤충에 살충효과가 더 빠르게 작용하지만, 지속성은 떨어지며, BHC는 다른 살충제들이 경쟁적으로 생산되고 물 속에 단 1ppm 정도만 있어도 물고기를 죽이기 때문에 사용이 점점 줄어들고 있으며, 1960년대 이후에는 사용이 제한되고 있음. bio-assay.",
+      "confidence": 0.6,
+      "keywords": [
+        "염소",
+        "관",
+        "관리"
+      ],
+      "all_domains": [
+        "disinfection",
+        "ems_system",
+        "piping"
+      ]
+    },
+    {
+      "term": "DDC",
+      "definition": "계산기의 연산기능을 이용하여 아날로그 조절계나 연산기로 행해지는 기능을 계산기로 행하는 것으로, 계산기의 프로그램 처리결과의 출력에 따라 직접 제어를 함. 1대의 계산기로 다수의 조절이나 연산의 기능을 하는 것이 가능함. ☞ 정치제어 DDT.",
+      "confidence": 1.0,
+      "keywords": [
+        "제어"
+      ],
+      "all_domains": [
+        "ems_system"
+      ]
+    },
+    {
+      "term": "EDPS",
+      "definition": "전자정보 처리조직, 컴퓨터에 의하여 사무, 관리, 경영 등에 관한 데이터를 처리하는 체계를 말함. 특히 데이터 전송의 발달로 on-line system, time sharing system, remote-batch system, computer utility 등을 만들어내 데이터 처리방식에 혁신을 가져왔음. EDTA.",
+      "confidence": 0.5,
+      "keywords": [
+        "관",
+        "관리"
+      ],
+      "all_domains": [
+        "ems_system",
+        "piping"
+      ]
+    },
+    {
+      "term": "EMB배지",
+      "definition": "한천배지의 약자로서 대장균군의 완전시험의 분리배지로서 이용됨. 이 배지는 메틸렌블루의 첨가에 의해 그램음성세균의 증식을 어느 정도 제어하고, 유당분해균을 eosin Y와 methylene blue를 통해 염색하여 판별할 수 있도록 함. 본 배지에 유당분해균이 증식하면 산을 생산하기 때문에 집락이 산성화 됨. eosin은 산성색소이기 때문에 집락은 비소와 결합하여 검은 색으로 변함. 예를 들면, Escheriochia coli이 발육하면 두 약품에 의해 특유의 검은 비색으로 금속광택을 가진 집락을 형성. 이 때문에 그 이외의 대장균군과 구별되는 경우에 쓰임. EPA.",
+      "confidence": 0.75,
+      "keywords": [
+        "약품",
+        "대장균군",
+        "시험",
+        "세균",
+        "제어",
+        "EMB배지"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "ems_system",
+        "chemical_analysis",
+        "microbiological_analysis"
+      ]
+    },
+    {
+      "term": "GIS",
+      "definition": "지리적인 위치정보를 기초로 문자나 숫자, 화상 등을 컴퓨터상에 관련시켜 시각적으로 정보를 종합관리하는 기술을 총칭. 장소 등을 좌표축으로 하여 데이터화한 지도상에 도로나 건조물, 수도관이나 전화선 등의 라이프라인 및 토지소유권정보를 축적하는 시스템이 있음. 수도에서는 지도나 관로정보를 일원화하여 관리하고 유지관리나 재해대책, 관망해석 등을 행하는 맵핑시스템이 있으며, 동의어로서 이용됨. 또 GPS 위성을 이용한 위치관측기술을 응용한 시스템도 개발되고 있음. ☞ GPS, 맵핑시스템 glucose.",
+      "confidence": 0.8,
+      "keywords": [
+        "관",
+        "관리",
+        "관로"
+      ],
+      "all_domains": [
+        "ems_system",
+        "piping"
+      ]
+    },
+    {
+      "term": "ISO 9000s",
+      "definition": "☞ 품질관리 시스템 IWA.",
+      "confidence": 0.5,
+      "keywords": [
+        "관",
+        "관리"
+      ],
+      "all_domains": [
+        "ems_system",
+        "piping"
+      ]
+    },
+    {
+      "term": "NEPA",
+      "definition": "국가환경정책법의 약칭. 미국의 환경정책기본법으로서, 환경문제에 대한 연방의 기본정책을 선언하여, 연방 차원의 환경 관리제도의 골격을 정하고, 그들의 수행을 위해 CEQ의 설치를 정한 획기적인 환경법. 1969년 제정됨. NEPA는 연방의 환경정책의 기본으로 인간과 환경과의 실효있는 조화를 통해, 모든 국민에게 건강적으로 안전하고 생산적인 그리고 미적으로도 문화적으로도 쾌적한 환경을 보증하는 것 등을 목표로 하고 있음. NF막.",
+      "confidence": 0.5,
+      "keywords": [
+        "관",
+        "관리"
+      ],
+      "all_domains": [
+        "ems_system",
+        "piping"
+      ]
+    },
+    {
+      "term": "PC탱크",
+      "definition": "주로 지상에 건설되는 프레스트레스트콘크리트구조의 원형상(圓形狀)의 탱크로, 일반적으로 옥근(屋根), 측벽 및 저판(底版)으로 이루어져 있음. 옥근은 돔형식이 많고, 측벽은 원통형으로, 평평한 원판상(圓板狀)의 저판으로 물을 비축하는 용기. 이 원판상의 측벽은 연직방향 및 원주방향으로 PC강선 등을 배치하고, 콘크리트에 압축응력을 도입하는 것이 일반적이지만, 일부에는 원주방향만 압축응력을 주는 구조인 것도 있음. 이 콘크리트의 특징은 ① 탄성이 많다. ② 수밀성이 크다. ③ 강재(鋼材)의 사용량이 적다. ④ 콘크리트의 단면이 작아진다 등의 장점이 있다. 한편 단점에는 ①시공에 숙련을 필요로 하고, ② 제작비가 비싸다는 점 등이 있다. ☞ 배수지(配水池) perlite.",
+      "confidence": 1.0,
+      "keywords": [
+        "사용량"
+      ],
+      "all_domains": [
+        "ems_system"
+      ]
+    },
+    {
+      "term": "bar screen",
+      "definition": "평평한 철을 격자상에 조립하고 수로 안에 장치한 것으로, 수중의 협잡물을 제거하고, 펌프에 막혀 있는 것을 없애는 목적이 있음. 협잡물의 끌어올리기 방법으로서는 수동식, 기계연속식 등이 있음. BAT.",
+      "confidence": 0.75,
+      "keywords": [
+        "펌프"
+      ],
+      "all_domains": [
+        "ems_system",
+        "equipment"
+      ]
+    },
+    {
+      "term": "clogging 날개",
+      "definition": "원심 및 사류펌프에서 양액안의 섬유, 고형물 등이 내부에 막히지 않는 통로형상을 한 회전자로 오물펌프에 사용됨. non-ionic계 응집제.",
+      "confidence": 0.4444444444444444,
+      "keywords": [
+        "펌프",
+        "응집",
+        "응집제"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation",
+        "ems_system",
+        "equipment"
+      ]
+    },
+    {
+      "term": "cross flow여과방식",
+      "definition": "막 여과 장치의 운전조작 방법의 하나로, 막 공급수를 막 면을 따라 흘려, 막을 투과하는 물이 공급수와는 직각 방향으로 흐르도록 하는 여과방식임. 십자형 여과방식이라고 함. 막 공급수를 막면과 평행하게 흐르게 함으로써, 막 공급수중의 현탁물질이나 콜로이드 등이 막면에 퇴적, 부착하는 것을 제어하는 것을 목적으로 하고 있음. 여기에 대비되는 것으로서 Dead end 여과방식이 있음. Cross flow 여과방식에는, 농축수를 순환시키는 순환방식과 계외로 배출하는 일과방식이 있지만, 일과방식은 회수율의 관점에서 뒤떨어지기 때문에 수도에서는 채용하지 않음. 정밀여과 법에서는, Cross flow 여과방식과 dead end 여과방식의 어느 것이나 채용 할 수 있지만 한외여과 법이나 역삼투 법에서는 cross flow 여과방식으로 운전되는 것이 많음. Cryptosporidium.",
+      "confidence": 0.6,
+      "keywords": [
+        "여과",
+        "제어",
+        "관"
+      ],
+      "all_domains": [
+        "filtration",
+        "ems_system",
+        "piping"
+      ]
+    },
+    {
+      "term": "drop shaft",
+      "definition": "하수류의 자연낙하에 의해 맨홀 저부의 세굴, 하수의 비산, 유지관리환경의 악화 등의 과제를 해소하기 위해 개발된 고낙차시설. 다단자유낙하식, 와류식, 나선안내로식 등이 고안되어 있음. DS.",
+      "confidence": 0.5,
+      "keywords": [
+        "관",
+        "관리"
+      ],
+      "all_domains": [
+        "ems_system",
+        "piping"
+      ]
+    },
+    {
+      "term": "flashboard weir",
+      "definition": "널빤지를 이용해 유량을 조절하거나 수류를 차단하는 위어. 구조는 간단하지만 각재의 설치시나 철거시에는 수압이 걸리기 때문에 해당 기술이 필요하며, 널빤지와 구조물 틈으로 물이 새나가기 쉬우므로 수류의 완전차단은 어려움. 하천관리시설 등 구조령의 적용을 받는 취수문에 관해서는 널빤지 위어의 사용은 인정되지 않고, 소규모시설의 간이시설로만 인정되고 있으므로 주의를 요함. flocculator.",
+      "confidence": 0.6,
+      "keywords": [
+        "취수",
+        "관",
+        "관리"
+      ],
+      "all_domains": [
+        "intake_process",
+        "ems_system",
+        "piping"
+      ]
+    },
+    {
+      "term": "공정보수방식\n\n\n\nRC말뚝",
+      "definition": "원심력을 응용하여 제조된 철근콘크리트 말뚝으로, 축방향 하중에 대한 것, 수평하중에 대해서도 고려한 것의 2종류로 나뉨. 본격적으로 사용된 것은 1950년대 전반부터 1970년대 후반이었음. 말뚝을 박을 때에 충격으로 말뚝의 머리부분이 파손되거나 부주의한 취급으로 항체의 갈라짐이 발생함. 이에 항체의 강도가 뛰어난 PC말뚝이 개발됨에 따라 최근에는 그 사용량이 감소하는 경향임. remolding.",
+      "confidence": 1.0,
+      "keywords": [
+        "사용량"
+      ],
+      "all_domains": [
+        "ems_system"
+      ]
+    },
+    {
+      "term": "관리",
+      "definition": "정수장의 시설과 공정을 유지보수하고 최적화하는 활동이다.",
+      "confidence": 0.4444444444444444,
+      "keywords": [
+        "최적화",
+        "관",
+        "정수장",
+        "관리"
+      ],
+      "all_domains": [
+        "ems_system",
+        "facilities",
+        "piping",
+        "performance_metrics"
+      ]
+    },
+    {
+      "term": "기기",
+      "definition": "정수장에서 사용되는 각종 측정 및 제어 장비를 의미한다.",
+      "confidence": 0.4,
+      "keywords": [
+        "정수장",
+        "측정",
+        "기기",
+        "장비",
+        "제어"
+      ],
+      "all_domains": [
+        "ems_system",
+        "chemical_analysis",
+        "facilities",
+        "equipment"
+      ]
+    },
+    {
+      "term": "나노 여과막\n\n\n\nNIP",
+      "definition": "인축에 대한 독성이 약하므로 극독물로 지정되어 있지 않음. 동계열의 제초제로 있는 CNP가 개발되어 본제의 제조시에 부산물로써 polychlorinate-ddibenzo-p-dioxin가 생성하는 것이 확인되었으므로 사용량이 격감. Nocardia.",
+      "confidence": 0.75,
+      "keywords": [
+        "여과",
+        "사용량"
+      ],
+      "all_domains": [
+        "filtration",
+        "ems_system"
+      ]
+    },
+    {
+      "term": "운영",
+      "definition": "정수장의 시설과 공정을 관리하여 안정적으로 정수를 생산하는 활동이다.",
+      "confidence": 0.6666666666666666,
+      "keywords": [
+        "관",
+        "정수장",
+        "관리"
+      ],
+      "all_domains": [
+        "ems_system",
+        "facilities",
+        "piping"
+      ]
+    },
+    {
+      "term": "제어",
+      "definition": "정수처리 공정의 각종 변수를 조절하여 최적의 처리효과를 얻는 활동이다.",
+      "confidence": 0.8,
+      "keywords": [
+        "제어",
+        "정수처리"
+      ],
+      "all_domains": [
+        "ems_system",
+        "facilities"
+      ]
+    },
+    {
+      "term": "펌프",
+      "definition": "물을 이동시키는 기계장치로, 취수, 송수, 배수 등에 사용된다.",
+      "confidence": 0.42857142857142855,
+      "keywords": [
+        "펌프",
+        "취수"
+      ],
+      "all_domains": [
+        "intake_process",
+        "ems_system",
+        "equipment"
+      ]
+    },
+    {
+      "term": "품질관리 시스템\n\n\n\nIWA",
+      "definition": "국제물학회 JTU.",
+      "confidence": 0.5,
+      "keywords": [
+        "관",
+        "관리"
+      ],
+      "all_domains": [
+        "ems_system",
+        "piping"
+      ]
+    },
+    {
+      "term": "화학식\n\n\n\nDO미터",
+      "definition": "☞ 용존산소계(溶存酸素計) DO제어.",
+      "confidence": 0.8,
+      "keywords": [
+        "용존산소",
+        "제어",
+        "DO"
+      ],
+      "all_domains": [
+        "ems_system",
+        "water_quality_parameters"
+      ]
+    },
+    {
+      "term": "흡착평형\n\n\n\nGIS",
+      "definition": "가스절연개폐장치. 특고변전설비의 모선, 차단기, 단로기 등 개폐장치의 충전부를 원통상의 접지금속용기 내에 수납하고, 충전부와 접지금속용기와 사이에 공기의 약 3배의 절연성능을 가지는 SF6 가스를 채운 구조로 되어 있음. 공기절연에 의한 개폐장치에 비하여 높은 신뢰성, 안전성, 공간절감 및 유지관리 등 많은 점에서 우수한 특징이 있으며, 66kV 이상의 수변전설비에 널리 이용됨. ☞ 자가용 전기공작물, 수전설비 11121314151617181920 개인정보처리방침 영상정보 처리기기 운영방침 이용약관 오시는길 페이스북 블로그 유튜브 인스타그램 관련사이트 우리집 수돗물 안심 확인제 교육 홈페이지 단체표준인증 WATER KOREA 물산업 PM 양성과정 파이프에셋 수돗물홍보협의회 서울특별시 영등포구 대림로 244 한국상하수도협회 Tel:02-3156-7777Fax:02-3156-7778 Tel:02-3156-7777Fax:02-3156-7778 Copyright 2018 Korea Water and Wastewater Works Association All rights reserved.",
+      "confidence": 0.3333333333333333,
+      "keywords": [
+        "설비",
+        "관",
+        "파이프",
+        "성능",
+        "기기",
+        "관리"
+      ],
+      "all_domains": [
+        "ems_system",
+        "equipment",
+        "piping",
+        "performance_metrics"
+      ]
+    },
+    {
+      "term": "1차여과지",
+      "definition": "2중 여과법에서 최초의 여과지. 1차오염물.",
+      "confidence": 1.0,
+      "keywords": [
+        "여과",
+        "여과지",
+        "1차여과지"
+      ],
+      "all_domains": [
+        "filtration"
+      ]
+    },
+    {
+      "term": "Aulacoseira\n\n\n\nMF막",
+      "definition": "☞ 정밀여과막 21222324252627282930 개인정보처리방침 영상정보 처리기기 운영방침 이용약관 오시는길 페이스북 블로그 유튜브 인스타그램 관련사이트 우리집 수돗물 안심 확인제 교육 홈페이지 단체표준인증 WATER KOREA 물산업 PM 양성과정 파이프에셋 수돗물홍보협의회 서울특별시 영등포구 대림로 244 한국상하수도협회 Tel:02-3156-7777Fax:02-3156-7778 Tel:02-3156-7777Fax:02-3156-7778 Copyright 2018 Korea Water and Wastewater Works Association All rights reserved.",
+      "confidence": 0.4,
+      "keywords": [
+        "여과",
+        "기기",
+        "관",
+        "파이프"
+      ],
+      "all_domains": [
+        "filtration",
+        "equipment",
+        "piping"
+      ]
+    },
+    {
+      "term": "Auracoseira",
+      "definition": "원통모양의 세포가 종으로 연결된 사상의 군체를 형성한 규조류 속의 일종의 하나. 호소나 저수지의 플랑크톤으로 흔히 발견되며, 대량번식하여 여과폐색을 유발하는 대표적인 여과장해 생물로서 A.italica 나 A.granualta, A.distans 등이 대표적인 종임. 동일 모양으로 원통형의 세표가 종으로 연결된 군체를 형성하는 melosira 속으로 다루어지고 있지만, 세포 껍질의 형태적 특징이나 연쇄모양의 군체를 만드는 세포 연결의 방법이 melosira 속과 다른 것으로부터 다른 속이라는 것이 이전부터 지적되었음. 또한, melosira 속으로는 m.varians가 수원의 부착조에 있는 완속여과지의 생물막의 구성생물로서 번식하고 있으며 수도와 관련이 깊음. AWWA.",
+      "confidence": 0.6666666666666666,
+      "keywords": [
+        "여과지",
+        "수원",
+        "여과폐색",
+        "관",
+        "여과장해",
+        "여과"
+      ],
+      "all_domains": [
+        "intake_process",
+        "filtration",
+        "piping"
+      ]
+    },
+    {
+      "term": "Casing수납방식",
+      "definition": "엘리멘트를 수납기에 수납한 막 모듈을 이용하여 막 여과장치를 운전하는 방식으로, 내압식과 외압식이 있음. 이것과 대비되는 것으로서 조 침적 방식이 있음. castable 내화물.",
+      "confidence": 1.0,
+      "keywords": [
+        "여과"
+      ],
+      "all_domains": [
+        "filtration"
+      ]
+    },
+    {
+      "term": "MIB",
+      "definition": "방선균 또는 남조류에 의해서 생산되고 이취미(異臭味)물질로 알려져 있음. 보통은 곰팡이냄새를 내지만, 흙냄새, 먹물냄새를 내는 것도 있음. 응집침전 급속여과시설로 제거되지 않는 경우는 분말활성탄처리, 입상활성탄처리, 오존처리 등으로 제거함. 3차 처리.",
+      "confidence": 0.2727272727272727,
+      "keywords": [
+        "여과",
+        "침전",
+        "응집",
+        "오존"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation",
+        "sedimentation",
+        "filtration",
+        "disinfection"
+      ]
+    },
+    {
+      "term": "critical path method",
+      "definition": "공정계획의 한 방법으로 각 작업의 소요일수와 비용의 관계를 조사하여 최적공기를 설정하는 수법. cross flow여과방식.",
+      "confidence": 0.75,
+      "keywords": [
+        "여과",
+        "관"
+      ],
+      "all_domains": [
+        "filtration",
+        "piping"
+      ]
+    },
+    {
+      "term": "cross flow여과방식",
+      "definition": "막 여과 장치의 운전조작 방법의 하나로, 막 공급수를 막 면을 따라 흘려, 막을 투과하는 물이 공급수와는 직각 방향으로 흐르도록 하는 여과방식임. 십자형 여과방식이라고 함. 막 공급수를 막면과 평행하게 흐르게 함으로써, 막 공급수중의 현탁물질이나 콜로이드 등이 막면에 퇴적, 부착하는 것을 제어하는 것을 목적으로 하고 있음. 여기에 대비되는 것으로서 Dead end 여과방식이 있음. Cross flow 여과방식에는, 농축수를 순환시키는 순환방식과 계외로 배출하는 일과방식이 있지만, 일과방식은 회수율의 관점에서 뒤떨어지기 때문에 수도에서는 채용하지 않음. 정밀여과 법에서는, Cross flow 여과방식과 dead end 여과방식의 어느 것이나 채용 할 수 있지만 한외여과 법이나 역삼투 법에서는 cross flow 여과방식으로 운전되는 것이 많음. Cryptosporidium.",
+      "confidence": 0.6,
+      "keywords": [
+        "여과",
+        "제어",
+        "관"
+      ],
+      "all_domains": [
+        "filtration",
+        "ems_system",
+        "piping"
+      ]
+    },
+    {
+      "term": "end 여과방식",
+      "definition": "막여과장치의 운전조작방식의 하나로, 막공급수를 순환시키는 일 없이 그 전량을 여과하는 방식으로 전량여과방식이라고도 함. 이에 대비하는 방식은 크로스플로우방식으로 최근에는 막(膜)모듈내부에 교반(攪拌)구조를 설치하고, 막면(膜面)에 대해서 물의 흐름이 평행하게 되도록 해서 그 전량을 여과하는 방법 등, 종래의 정의로는 분류하기 어려운 운전조작방법도 고안되고 있음. desoxychlorate.",
+      "confidence": 0.5,
+      "keywords": [
+        "여과",
+        "교반"
+      ],
+      "all_domains": [
+        "mixing_coagulation",
+        "filtration"
+      ]
+    },
+    {
+      "term": "pretreatment filter",
+      "definition": "막여과의 전처리시설의 하나로 막공급수 중의 이물질이나 탁질분을 사전에 제거하고, 막의 손상 및 폐색을 감소시키는 목적으로 사용. 프레피르타의 여과경(徑)은 여과막의 종류에 따라서 달라지며 보통 정밀여과막, 한외.",
+      "confidence": 1.0,
+      "keywords": [
+        "여과"
+      ],
+      "all_domains": [
+        "filtration"
+      ]
+    },
+    {
+      "term": "s식",
+      "definition": "① 여과지트러프의 상류단의 수심을 구하는 식. 여기서, : 트러프상류단의 수심, : 한계수심, : 트러프의 길이, : 트러프바닥의 경사각, 임. ② 침전지의 침전효율에 관한 식 : 상하방향으로는 혼합하지만, 전후방향으로는 비혼합이라고 하는 모델을 상정해 다음 식을 제시함. 여기서, : 입자의 침강속도, Q/A: 수표면적부하. NATM.",
+      "confidence": 0.29411764705882354,
+      "keywords": [
+        "여과지",
+        "침전",
+        "효율",
+        "침전효율",
+        "모델",
+        "관",
+        "침전지",
+        "여과"
+      ],
+      "all_domains": [
+        "sedimentation",
+        "filtration",
+        "piping",
+        "ai_models",
+        "performance_metrics"
+      ]
+    },
+    {
+      "term": "나노 여과막\n\n\n\nNIP",
+      "definition": "인축에 대한 독성이 약하므로 극독물로 지정되어 있지 않음. 동계열의 제초제로 있는 CNP가 개발되어 본제의 제조시에 부산물로써 polychlorinate-ddibenzo-p-dioxin가 생성하는 것이 확인되었으므로 사용량이 격감. Nocardia.",
+      "confidence": 0.75,
+      "keywords": [
+        "여과",
+        "사용량"
+      ],
+      "all_domains": [
+        "filtration",
+        "ems_system"
+      ]
+    },
+    {
+      "term": "여과공정",
+      "definition": "모래층을 통과시켜 미세한 불순물을 제거하는 처리과정이다.",
+      "confidence": 1.0,
+      "keywords": [
+        "여과",
+        "여과공정"
+      ],
+      "all_domains": [
+        "filtration"
+      ]
+    },
+    {
+      "term": "여과지",
+      "definition": "침전지에서 나온 물을 모래층을 통과시켜 미세한 불순물을 제거하는 시설이다.",
+      "confidence": 0.5,
+      "keywords": [
+        "여과",
+        "침전지",
+        "여과지",
+        "침전"
+      ],
+      "all_domains": [
+        "sedimentation",
+        "filtration"
+      ]
+    },
+    {
+      "term": "정수장",
+      "definition": "원수를 정수처리하여 음용수로 만드는 시설로, 응집, 침전, 여과, 소독 등의 공정을 거쳐 안전한 상수를 생산한다.",
+      "confidence": 0.42105263157894735,
+      "keywords": [
+        "침전",
+        "정수처리",
+        "정수장",
+        "응집",
+        "소독",
+        "여과"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation",
+        "sedimentation",
+        "filtration",
+        "disinfection",
+        "facilities"
+      ]
+    },
+    {
+      "term": "정수처리",
+      "definition": "원수를 음용수로 만들기 위해 수행하는 일련의 처리과정으로, 응집, 침전, 여과, 소독 등의 공정을 포함한다.",
+      "confidence": 0.26666666666666666,
+      "keywords": [
+        "침전",
+        "정수처리",
+        "응집",
+        "소독",
+        "여과"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation",
+        "sedimentation",
+        "filtration",
+        "disinfection",
+        "facilities"
+      ]
+    },
+    {
+      "term": "조절지",
+      "definition": "여과량 등을 조절하기 위해 설치된 시설로, 정수장의 안정적인 운영을 위한 조절 기능을 수행한다.",
+      "confidence": 0.7272727272727273,
+      "keywords": [
+        "여과",
+        "조절지",
+        "정수장"
+      ],
+      "all_domains": [
+        "filtration",
+        "facilities"
+      ]
+    },
+    {
+      "term": "케이싱\n\n\n\nRhizosolenia",
+      "definition": "☞ 여과장해생물 ring support.",
+      "confidence": 0.6,
+      "keywords": [
+        "여과",
+        "여과장해",
+        "케이싱"
+      ],
+      "all_domains": [
+        "filtration",
+        "piping"
+      ]
+    },
+    {
+      "term": "AGP시험",
+      "definition": "물이 잠재적으로 가진 조류생산능력을 측정하는 시험방법의 한가지. 유럽과 미국에서는 조류배양시험이라 부름. 조류를 이용한 수질의 평가를 행하는 일종의 생물검정으로 함. 조사대상에 있는 호수·내천수·배수 등의 식수를 함께 배양액을 만들고 그 표준 종 등의 공식종류를 식종하고 일정조건 하에 배양하여 그 최대증식량을 구함. 부영양화의 정도의 현장파악, 새로운 배수의 유입을 동반하는 부영양화 예측, 증식속도 등 조류에 이용 가능한 영양염류의 추정, 조류증식에 미치는 조해물질의 유무의 특정 등에 이용되고 있음. ☞ AAP배지 ALC.",
+      "confidence": 0.6666666666666666,
+      "keywords": [
+        "예측",
+        "시험",
+        "측정"
+      ],
+      "all_domains": [
+        "chemical_analysis",
+        "ai_models"
+      ]
+    },
+    {
+      "term": "CAD",
+      "definition": "computer aided design 의 약자. 컴퓨터에 의한 설계지원. 기계설계나 건축설계, 회로설계 등에서, 설계도 등의 작성 작업을 컴퓨터를 이용하여 실행하는 것. CAD 소프트웨어에 덧붙여, 그래픽기능이 좋은 워크스테이션, 고해상도의 그래픽 및 디스플레이나, 도면을 출력하기 위한 플로터 등의 하드웨어도 필요로 함. 컴퓨터를 이용하여 모든 공정을 설계하는 것으로 데이터베이스의 정보를 화상을 보고 합성하면서 설계하기 때문에 효율적인 작업이 가능함. CAM.",
+      "confidence": 0.5714285714285714,
+      "keywords": [
+        "효율",
+        "ai"
+      ],
+      "all_domains": [
+        "ai_models",
+        "performance_metrics"
+      ]
+    },
+    {
+      "term": "CHN분석계",
+      "definition": "유기물의 주요성분인 탄소, 수소, 질소를 동시에 정량하는 분석기기. C, H, N은 연소, 분해되어 각각 , , 로 변환되며, 열전도도법에 의해 농도를 측정하여 정량함. 열전도도의 측정법으로서는 가스크로마토그래피방식, 자기적분방식, 테크니콘방식 3종류가 이용됨. 종래의 C, H와 N을 개별 분석계를 사용하여 측정하는 방법에 비교하여 측정시간과 시료량이 줄어듦. clinker.",
+      "confidence": 0.6666666666666666,
+      "keywords": [
+        "분석",
+        "CHN분석계",
+        "측정",
+        "농도",
+        "크로마토그래피",
+        "기기"
+      ],
+      "all_domains": [
+        "disinfection",
+        "chemical_analysis",
+        "equipment",
+        "ai_models"
+      ]
+    },
+    {
+      "term": "DPD법",
+      "definition": "잔류염소의 측정법. 수질기준을 보완하는 항목에 관계되는 측정법인 과장통지로 정해지는 방법. 잔류염소와 N, N-디에틸-p-페닐렌디아민이 반응하면 용액의 색이 분홍내지 적분홍색을 띔. 이것을 C. I. Acid Red 265를 이용해서 작성한 표준비색렬과 비교해, 잔류염소치를 구함. N, N-디에틸-p-페닐렌디아민법이라고도 함. DPD를 넣은 시점에서 유리(遊離)잔류염소가 구해지고, 다시금 요오드화칼륨을 넣으면 잔류염소가 구해짐. DPD와 잔류염소가 반응해서 분홍색의 용액이 되지만, 유산제1철암모늄을 넣으면 무색이 되는 것을 이용한 적정(滴定)에 의한 측정법도 있음. drain separator.",
+      "confidence": 0.4117647058823529,
+      "keywords": [
+        "염소",
+        "잔류염소",
+        "ai",
+        "관",
+        "측정",
+        "DPD법"
+      ],
+      "all_domains": [
+        "disinfection",
+        "chemical_analysis",
+        "piping",
+        "ai_models"
+      ]
+    },
+    {
+      "term": "s식",
+      "definition": "① 여과지트러프의 상류단의 수심을 구하는 식. 여기서, : 트러프상류단의 수심, : 한계수심, : 트러프의 길이, : 트러프바닥의 경사각, 임. ② 침전지의 침전효율에 관한 식 : 상하방향으로는 혼합하지만, 전후방향으로는 비혼합이라고 하는 모델을 상정해 다음 식을 제시함. 여기서, : 입자의 침강속도, Q/A: 수표면적부하. NATM.",
+      "confidence": 0.29411764705882354,
+      "keywords": [
+        "여과지",
+        "침전",
+        "효율",
+        "침전효율",
+        "모델",
+        "관",
+        "침전지",
+        "여과"
+      ],
+      "all_domains": [
+        "sedimentation",
+        "filtration",
+        "piping",
+        "ai_models",
+        "performance_metrics"
+      ]
+    },
+    {
+      "term": "고속액체 크로마토그래피 질량분석법\n\n\n\nLD50",
+      "definition": "☞ 반수치사량 21222324252627282930 개인정보처리방침 영상정보 처리기기 운영방침 이용약관 오시는길 페이스북 블로그 유튜브 인스타그램 관련사이트 우리집 수돗물 안심 확인제 교육 홈페이지 단체표준인증 WATER KOREA 물산업 PM 양성과정 파이프에셋 수돗물홍보협의회 서울특별시 영등포구 대림로 244 한국상하수도협회 Tel:02-3156-7777Fax:02-3156-7778 Tel:02-3156-7777Fax:02-3156-7778 Copyright 2018 Korea Water and Wastewater Works Association All rights reserved.",
+      "confidence": 0.4666666666666667,
+      "keywords": [
+        "분석",
+        "질량분석",
+        "관",
+        "파이프",
+        "크로마토그래피",
+        "기기"
+      ],
+      "all_domains": [
+        "chemical_analysis",
+        "equipment",
+        "piping",
+        "ai_models"
+      ]
+    },
+    {
+      "term": "침전지의 침전효율에 관한 식",
+      "definition": "상하방향으로는 혼합하지만, 전후방향으로는 비혼합이라고 하는 모델을 상정해 다음 식을 제시함. 여기서,.",
+      "confidence": 0.38461538461538464,
+      "keywords": [
+        "침전",
+        "효율",
+        "침전효율",
+        "모델",
+        "관",
+        "침전지"
+      ],
+      "all_domains": [
+        "sedimentation",
+        "piping",
+        "ai_models",
+        "performance_metrics"
+      ]
+    },
+    {
+      "term": "ALT비",
+      "definition": "응집제 중에 알루미늄과 원수 중의 탁도의 비를 표시하는 지표. ALT비＝로 표시. 이 경우 알루미늄 양은 응집제의 양이 아니라, 내부에 포함되어 있는 알루미늄 그 자체를 말함. ALT비의 의의는 두 가지가 있음. 첫째는 응집블록형성에 있어서, 응집첨가량의 수치를 제공하는 지표라는 것. 즉, 원수의 탁도와 양호한 플럭을 생성하는 ALT비는 고탁도시 작고, 저탁도시 크다는 일반적인 관계가 있음. 통상 ALT비가 0.05～0.2라고 범위에서 처리가 행해짐. 또 하나는 침전지, 투과지에서 인발된 슬러지의 농축성, 탈수성의 지표. ALT비가 작을수록 농축성, 탈수성이 양호함. 따라서 더러운 벌의 발생량을 저감하기 위해서는 가능한 저ALT의 조건을 적용하는 것이 바람직함. ☞ 응집제 주입율, 슬러지 처리 AMP.",
+      "confidence": 0.43478260869565216,
+      "keywords": [
+        "발생량",
+        "침전",
+        "응집제",
+        "슬러지",
+        "ALT비",
+        "탁도",
+        "응집",
+        "관",
+        "침전지"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation",
+        "sedimentation",
+        "water_quality_parameters",
+        "piping"
+      ]
+    },
+    {
+      "term": "CMC",
+      "definition": "셀룰로오스에서 얻어지는 수용성 물질. 분자량은 수만에서 수십만의 범위에 있으며, 음이온계 고분자 응집제로 이용됨. CNP.",
+      "confidence": 0.8,
+      "keywords": [
+        "응집",
+        "응집제"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation"
+      ]
+    },
+    {
+      "term": "EMB배지",
+      "definition": "한천배지의 약자로서 대장균군의 완전시험의 분리배지로서 이용됨. 이 배지는 메틸렌블루의 첨가에 의해 그램음성세균의 증식을 어느 정도 제어하고, 유당분해균을 eosin Y와 methylene blue를 통해 염색하여 판별할 수 있도록 함. 본 배지에 유당분해균이 증식하면 산을 생산하기 때문에 집락이 산성화 됨. eosin은 산성색소이기 때문에 집락은 비소와 결합하여 검은 색으로 변함. 예를 들면, Escheriochia coli이 발육하면 두 약품에 의해 특유의 검은 비색으로 금속광택을 가진 집락을 형성. 이 때문에 그 이외의 대장균군과 구별되는 경우에 쓰임. EPA.",
+      "confidence": 0.75,
+      "keywords": [
+        "약품",
+        "대장균군",
+        "시험",
+        "세균",
+        "제어",
+        "EMB배지"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "ems_system",
+        "chemical_analysis",
+        "microbiological_analysis"
+      ]
+    },
+    {
+      "term": "MIB",
+      "definition": "방선균 또는 남조류에 의해서 생산되고 이취미(異臭味)물질로 알려져 있음. 보통은 곰팡이냄새를 내지만, 흙냄새, 먹물냄새를 내는 것도 있음. 응집침전 급속여과시설로 제거되지 않는 경우는 분말활성탄처리, 입상활성탄처리, 오존처리 등으로 제거함. 3차 처리.",
+      "confidence": 0.2727272727272727,
+      "keywords": [
+        "여과",
+        "침전",
+        "응집",
+        "오존"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation",
+        "sedimentation",
+        "filtration",
+        "disinfection"
+      ]
+    },
+    {
+      "term": "clogging 날개",
+      "definition": "원심 및 사류펌프에서 양액안의 섬유, 고형물 등이 내부에 막히지 않는 통로형상을 한 회전자로 오물펌프에 사용됨. non-ionic계 응집제.",
+      "confidence": 0.4444444444444444,
+      "keywords": [
+        "펌프",
+        "응집",
+        "응집제"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation",
+        "ems_system",
+        "equipment"
+      ]
+    },
+    {
+      "term": "무기응집제\n\n\n\nPAH",
+      "definition": "☞ 다환방향족탄화수소(多環芳香族炭化水素) Parshall flume.",
+      "confidence": 0.8333333333333334,
+      "keywords": [
+        "무기응집제",
+        "응집",
+        "응집제"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation"
+      ]
+    },
+    {
+      "term": "소독제",
+      "definition": "병원균을 제거하는 약품으로, 염소, 오존, 자외선 등이 사용된다.",
+      "confidence": 0.9166666666666666,
+      "keywords": [
+        "염소",
+        "약품",
+        "자외선",
+        "소독",
+        "오존",
+        "소독제"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "disinfection"
+      ]
+    },
+    {
+      "term": "응집공정",
+      "definition": "응집제를 주입하여 미세한 불순물을 큰 덩어리로 만드는 처리과정이다.",
+      "confidence": 0.875,
+      "keywords": [
+        "응집공정",
+        "응집",
+        "응집제"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation"
+      ]
+    },
+    {
+      "term": "응집보조제",
+      "definition": "응집효과를 향상시키기 위해 사용하는 보조 약품으로, 폴리머나 활성실리카 등이 사용된다.",
+      "confidence": 0.9,
+      "keywords": [
+        "약품",
+        "응집보조제",
+        "응집",
+        "폴리머",
+        "활성실리카"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation"
+      ]
+    },
+    {
+      "term": "응집제",
+      "definition": "미세한 불순물을 큰 덩어리로 만드는 약품으로, 주로 황산알루미늄이나 염화철 등을 사용한다.",
+      "confidence": 0.9,
+      "keywords": [
+        "황산알루미늄",
+        "약품",
+        "응집제",
+        "응집",
+        "염화철"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation"
+      ]
+    },
+    {
+      "term": "응집지",
+      "definition": "응집제를 주입하여 미세한 불순물을 큰 덩어리로 만드는 시설이다.",
+      "confidence": 0.875,
+      "keywords": [
+        "응집지",
+        "응집",
+        "응집제"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation"
+      ]
+    },
+    {
+      "term": "정수장",
+      "definition": "원수를 정수처리하여 음용수로 만드는 시설로, 응집, 침전, 여과, 소독 등의 공정을 거쳐 안전한 상수를 생산한다.",
+      "confidence": 0.42105263157894735,
+      "keywords": [
+        "침전",
+        "정수처리",
+        "정수장",
+        "응집",
+        "소독",
+        "여과"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation",
+        "sedimentation",
+        "filtration",
+        "disinfection",
+        "facilities"
+      ]
+    },
+    {
+      "term": "정수처리",
+      "definition": "원수를 음용수로 만들기 위해 수행하는 일련의 처리과정으로, 응집, 침전, 여과, 소독 등의 공정을 포함한다.",
+      "confidence": 0.26666666666666666,
+      "keywords": [
+        "침전",
+        "정수처리",
+        "응집",
+        "소독",
+        "여과"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation",
+        "sedimentation",
+        "filtration",
+        "disinfection",
+        "facilities"
+      ]
+    },
+    {
+      "term": "침전공정",
+      "definition": "응집된 불순물이 중력에 의해 가라앉아 제거되는 처리과정이다.",
+      "confidence": 0.6666666666666666,
+      "keywords": [
+        "침전",
+        "침전공정",
+        "응집"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation",
+        "sedimentation"
+      ]
+    },
+    {
+      "term": "침전지",
+      "definition": "응집된 불순물이 가라앉아 제거되는 시설로, 응집지에서 나온 물이 머무르는 곳이다.",
+      "confidence": 0.4444444444444444,
+      "keywords": [
+        "침전",
+        "응집지",
+        "응집",
+        "침전지"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation",
+        "sedimentation"
+      ]
+    },
+    {
+      "term": "ALT비",
+      "definition": "응집제 중에 알루미늄과 원수 중의 탁도의 비를 표시하는 지표. ALT비＝로 표시. 이 경우 알루미늄 양은 응집제의 양이 아니라, 내부에 포함되어 있는 알루미늄 그 자체를 말함. ALT비의 의의는 두 가지가 있음. 첫째는 응집블록형성에 있어서, 응집첨가량의 수치를 제공하는 지표라는 것. 즉, 원수의 탁도와 양호한 플럭을 생성하는 ALT비는 고탁도시 작고, 저탁도시 크다는 일반적인 관계가 있음. 통상 ALT비가 0.05～0.2라고 범위에서 처리가 행해짐. 또 하나는 침전지, 투과지에서 인발된 슬러지의 농축성, 탈수성의 지표. ALT비가 작을수록 농축성, 탈수성이 양호함. 따라서 더러운 벌의 발생량을 저감하기 위해서는 가능한 저ALT의 조건을 적용하는 것이 바람직함. ☞ 응집제 주입율, 슬러지 처리 AMP.",
+      "confidence": 0.43478260869565216,
+      "keywords": [
+        "발생량",
+        "침전",
+        "응집제",
+        "슬러지",
+        "ALT비",
+        "탁도",
+        "응집",
+        "관",
+        "침전지"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation",
+        "sedimentation",
+        "water_quality_parameters",
+        "piping"
+      ]
+    },
+    {
+      "term": "CMC",
+      "definition": "셀룰로오스에서 얻어지는 수용성 물질. 분자량은 수만에서 수십만의 범위에 있으며, 음이온계 고분자 응집제로 이용됨. CNP.",
+      "confidence": 0.8,
+      "keywords": [
+        "응집",
+        "응집제"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation"
+      ]
+    },
+    {
+      "term": "MIB",
+      "definition": "방선균 또는 남조류에 의해서 생산되고 이취미(異臭味)물질로 알려져 있음. 보통은 곰팡이냄새를 내지만, 흙냄새, 먹물냄새를 내는 것도 있음. 응집침전 급속여과시설로 제거되지 않는 경우는 분말활성탄처리, 입상활성탄처리, 오존처리 등으로 제거함. 3차 처리.",
+      "confidence": 0.2727272727272727,
+      "keywords": [
+        "여과",
+        "침전",
+        "응집",
+        "오존"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation",
+        "sedimentation",
+        "filtration",
+        "disinfection"
+      ]
+    },
+    {
+      "term": "clogging 날개",
+      "definition": "원심 및 사류펌프에서 양액안의 섬유, 고형물 등이 내부에 막히지 않는 통로형상을 한 회전자로 오물펌프에 사용됨. non-ionic계 응집제.",
+      "confidence": 0.4444444444444444,
+      "keywords": [
+        "펌프",
+        "응집",
+        "응집제"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation",
+        "ems_system",
+        "equipment"
+      ]
+    },
+    {
+      "term": "end 여과방식",
+      "definition": "막여과장치의 운전조작방식의 하나로, 막공급수를 순환시키는 일 없이 그 전량을 여과하는 방식으로 전량여과방식이라고도 함. 이에 대비하는 방식은 크로스플로우방식으로 최근에는 막(膜)모듈내부에 교반(攪拌)구조를 설치하고, 막면(膜面)에 대해서 물의 흐름이 평행하게 되도록 해서 그 전량을 여과하는 방법 등, 종래의 정의로는 분류하기 어려운 운전조작방법도 고안되고 있음. desoxychlorate.",
+      "confidence": 0.5,
+      "keywords": [
+        "여과",
+        "교반"
+      ],
+      "all_domains": [
+        "mixing_coagulation",
+        "filtration"
+      ]
+    },
+    {
+      "term": "무기응집제\n\n\n\nPAH",
+      "definition": "☞ 다환방향족탄화수소(多環芳香族炭化水素) Parshall flume.",
+      "confidence": 0.8333333333333334,
+      "keywords": [
+        "무기응집제",
+        "응집",
+        "응집제"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation"
+      ]
+    },
+    {
+      "term": "응집공정",
+      "definition": "응집제를 주입하여 미세한 불순물을 큰 덩어리로 만드는 처리과정이다.",
+      "confidence": 0.875,
+      "keywords": [
+        "응집공정",
+        "응집",
+        "응집제"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation"
+      ]
+    },
+    {
+      "term": "응집보조제",
+      "definition": "응집효과를 향상시키기 위해 사용하는 보조 약품으로, 폴리머나 활성실리카 등이 사용된다.",
+      "confidence": 0.9,
+      "keywords": [
+        "약품",
+        "응집보조제",
+        "응집",
+        "폴리머",
+        "활성실리카"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation"
+      ]
+    },
+    {
+      "term": "응집제",
+      "definition": "미세한 불순물을 큰 덩어리로 만드는 약품으로, 주로 황산알루미늄이나 염화철 등을 사용한다.",
+      "confidence": 0.9,
+      "keywords": [
+        "황산알루미늄",
+        "약품",
+        "응집제",
+        "응집",
+        "염화철"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation"
+      ]
+    },
+    {
+      "term": "응집지",
+      "definition": "응집제를 주입하여 미세한 불순물을 큰 덩어리로 만드는 시설이다.",
+      "confidence": 0.875,
+      "keywords": [
+        "응집지",
+        "응집",
+        "응집제"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation"
+      ]
+    },
+    {
+      "term": "정수장",
+      "definition": "원수를 정수처리하여 음용수로 만드는 시설로, 응집, 침전, 여과, 소독 등의 공정을 거쳐 안전한 상수를 생산한다.",
+      "confidence": 0.42105263157894735,
+      "keywords": [
+        "침전",
+        "정수처리",
+        "정수장",
+        "응집",
+        "소독",
+        "여과"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation",
+        "sedimentation",
+        "filtration",
+        "disinfection",
+        "facilities"
+      ]
+    },
+    {
+      "term": "정수처리",
+      "definition": "원수를 음용수로 만들기 위해 수행하는 일련의 처리과정으로, 응집, 침전, 여과, 소독 등의 공정을 포함한다.",
+      "confidence": 0.26666666666666666,
+      "keywords": [
+        "침전",
+        "정수처리",
+        "응집",
+        "소독",
+        "여과"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation",
+        "sedimentation",
+        "filtration",
+        "disinfection",
+        "facilities"
+      ]
+    },
+    {
+      "term": "침전공정",
+      "definition": "응집된 불순물이 중력에 의해 가라앉아 제거되는 처리과정이다.",
+      "confidence": 0.6666666666666666,
+      "keywords": [
+        "침전",
+        "침전공정",
+        "응집"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation",
+        "sedimentation"
+      ]
+    },
+    {
+      "term": "침전지",
+      "definition": "응집된 불순물이 가라앉아 제거되는 시설로, 응집지에서 나온 물이 머무르는 곳이다.",
+      "confidence": 0.4444444444444444,
+      "keywords": [
+        "침전",
+        "응집지",
+        "응집",
+        "침전지"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation",
+        "sedimentation"
+      ]
+    },
+    {
+      "term": "AWWA",
+      "definition": "미국수도협회 A형간염바이러스.",
+      "confidence": 1.0,
+      "keywords": [
+        "바이러스"
+      ],
+      "all_domains": [
+        "microbiological_analysis"
+      ]
+    },
+    {
+      "term": "CBOD",
+      "definition": "주로 종속영양세균에 의한 유기물 분해에 따른 산소소비량에 근거한 BOD. 질산화세균이 많이 포함되는 시료에 ATU 또는 TCPM[2-클로로-6 피리진]을 질산화 억제시약으로 첨가하고, 질산화 작용을 억제한 상태에서 측정함. 질산화 반응에 따른 산소소비량인 NBOD와 구별해 탄소성 BOD라고도 함. CCE.",
+      "confidence": 0.6363636363636364,
+      "keywords": [
+        "bod",
+        "측정",
+        "CBOD",
+        "세균",
+        "NBOD"
+      ],
+      "all_domains": [
+        "water_quality_parameters",
+        "chemical_analysis",
+        "microbiological_analysis"
+      ]
+    },
+    {
+      "term": "CFU",
+      "definition": "고형배지에 형성된 콜로니를 계수해서 얻어지는 균수의 단위. 하수분야에서는 일반적으로 미생물의 단위를 개/mL로 표시하는 일이 많음. character display.",
+      "confidence": 1.0,
+      "keywords": [
+        "CFU",
+        "미생물"
+      ],
+      "all_domains": [
+        "microbiological_analysis"
+      ]
+    },
+    {
+      "term": "CT값",
+      "definition": "병원성미생물 등과 소독제와의 접촉량에 대한 지표로 소독제의 농도와 소독제가 잔류하여 있는 시간을 곱한 것. 단위는 일반적으로 이 쓰임. 일정량의 병원미생물(90%, 99%, 99.9%)을 불활성화시키기 위하여 필요한 CT값은 각각의 세균, 원생동물 등에 대하여 소독제별로 구함. Darcy’s법칙.",
+      "confidence": 0.6666666666666666,
+      "keywords": [
+        "CT값",
+        "미생물",
+        "농도",
+        "소독",
+        "소독제",
+        "세균"
+      ],
+      "all_domains": [
+        "disinfection",
+        "microbiological_analysis"
+      ]
+    },
+    {
+      "term": "DNA바이러스",
+      "definition": "바이러스 입자의 핵산은 데옥시리보핵산 또는 리보핵산의 중 하나로 구성되어 있으며, DNA바이러스는 핵산으로서 DNA를 가지는 바이러스의 총칭. DNA바이러스에는 폭스바이러스, 헤르페스바이러스, 아데노바이러스, 파포바바이러스 및 파르보바이러스가 있음. DNA바이러스에 의한 대표적인 수계(水系)감염증으로서는 수영장을 통해 감염될 기회가 많은 물사마귀와 풀열이 있음. ☞ RNA바이러스 DNA손상.",
+      "confidence": 1.0,
+      "keywords": [
+        "DNA바이러스",
+        "바이러스"
+      ],
+      "all_domains": [
+        "microbiological_analysis"
+      ]
+    },
+    {
+      "term": "DRC배지",
+      "definition": "웰슈균 아포나 웰슈균의 추정시험에 이용되는 액체배지. differential reinforced clostridial. 본배지는 검수(檢水)를 접종한 후, 나사구(口)병을 배지로 채우는 것으로 혐기배양을 필요로 하지 않는 간편성이 있음. 배양 후, 본배지에 함유하는 아류산나트륨의 환원에 의한 유화철의 침전을 발생시켜 배지가 흑변한 것을 웰슈균 아포 또는 웰슈균 추정시험양성으로 함. 11121314151617181920 개인정보처리방침 영상정보 처리기기 운영방침 이용약관 오시는길 페이스북 블로그 유튜브 인스타그램 관련사이트 우리집 수돗물 안심 확인제 교육 홈페이지 단체표준인증 WATER KOREA 물산업 PM 양성과정 파이프에셋 수돗물홍보협의회 서울특별시 영등포구 대림로 244 한국상하수도협회 Tel:02-3156-7777Fax:02-3156-7778 Tel:02-3156-7777Fax:02-3156-7778 Copyright 2018 Korea Water and Wastewater Works Association All rights reserved.",
+      "confidence": 0.2857142857142857,
+      "keywords": [
+        "침전",
+        "DRC배지",
+        "관",
+        "파이프",
+        "시험",
+        "기기"
+      ],
+      "all_domains": [
+        "sedimentation",
+        "chemical_analysis",
+        "microbiological_analysis",
+        "equipment",
+        "piping"
+      ]
+    },
+    {
+      "term": "EMB배지",
+      "definition": "한천배지의 약자로서 대장균군의 완전시험의 분리배지로서 이용됨. 이 배지는 메틸렌블루의 첨가에 의해 그램음성세균의 증식을 어느 정도 제어하고, 유당분해균을 eosin Y와 methylene blue를 통해 염색하여 판별할 수 있도록 함. 본 배지에 유당분해균이 증식하면 산을 생산하기 때문에 집락이 산성화 됨. eosin은 산성색소이기 때문에 집락은 비소와 결합하여 검은 색으로 변함. 예를 들면, Escheriochia coli이 발육하면 두 약품에 의해 특유의 검은 비색으로 금속광택을 가진 집락을 형성. 이 때문에 그 이외의 대장균군과 구별되는 경우에 쓰임. EPA.",
+      "confidence": 0.75,
+      "keywords": [
+        "약품",
+        "대장균군",
+        "시험",
+        "세균",
+        "제어",
+        "EMB배지"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "ems_system",
+        "chemical_analysis",
+        "microbiological_analysis"
+      ]
+    },
+    {
+      "term": "IMVIC시험",
+      "definition": "IMVIC은 indole 생산, Methyl Red 반응, Voges-Proskauer 반응, Citrate 반응의 각 시험의 머릿글자를 사용. 이들 4항목의 시험의 양성 혹은 음성의 나열로써, 대장균군이 속하는 것이 있는지 분류하는 구별시험.[＋＋-]인 것을 E.coli이라 함. ☞ MR시험 in vitro.",
+      "confidence": 0.6363636363636364,
+      "keywords": [
+        "대장균군",
+        "시험",
+        "IMVIC시험",
+        "MR시험",
+        "DO"
+      ],
+      "all_domains": [
+        "water_quality_parameters",
+        "chemical_analysis",
+        "microbiological_analysis"
+      ]
+    },
+    {
+      "term": "MLVSS",
+      "definition": "MLSS 중의 강열감량을 mg/L로 표시한 것으로 주로 미생물 양을 나타냄. MMO-MUG배지.",
+      "confidence": 1.0,
+      "keywords": [
+        "미생물"
+      ],
+      "all_domains": [
+        "microbiological_analysis"
+      ]
+    },
+    {
+      "term": "MR시험",
+      "definition": "대장균군의 종별시험. 순수분이(純粹分離)한 대장균군의 균주에 따라 그 생화학적 성장을 판정하는 것으로 행하는 IMVIC시험에 일환으로 배지를 이용하고 균의 생산능력의 유무를 판정함. 판정은 배지에 적색의 발생이 일어나는 것을 양성, 황색의 것을 음성으로 함. multi-lumen막.",
+      "confidence": 0.875,
+      "keywords": [
+        "대장균군",
+        "MR시험",
+        "시험",
+        "IMVIC시험"
+      ],
+      "all_domains": [
+        "chemical_analysis",
+        "microbiological_analysis"
+      ]
+    },
+    {
+      "term": "M비",
+      "definition": "미생물농도와 먹이가되는 폐수 중의 기질 농도와의 비. 활성슬러지는 그의 대부분이 미생물로 하수 중의 유기물은 미생물에 관한 먹이로써 생각할 수 있으므로 그의 비가 중요한 의미를 가지고 계량할 수 없으므로 활성슬러지법에서는 BOD/SS 부하를 이용. ☞ 하수처리, BOD부하 FC/FS비.",
+      "confidence": 0.3333333333333333,
+      "keywords": [
+        "슬러지",
+        "bod",
+        "미생물",
+        "관",
+        "농도",
+        "BOD부하"
+      ],
+      "all_domains": [
+        "sedimentation",
+        "disinfection",
+        "water_quality_parameters",
+        "microbiological_analysis",
+        "piping"
+      ]
+    },
+    {
+      "term": "NBOD",
+      "definition": "BOD 측정 중에 질화반응에 의한 산소요구량. 질화반응을 억제하지 않고 측정한 BOD치와 질화반응을 억제하며, 측정한 BOD값의 차이로서 구함. 질소계 산소요구량을 말하며, 유기물을 미생물이 산화분해할 때 소비하는 산소량 중 암모니아 등의 질소화합물 산화에 필요한 산소소비량. 최초에는 탄소화합물의 산화분해에 의한 산소 소비가 행해지고, 그 다음으로 행해지는 산화분해로서 이 때문에 산소소비는 일반적으로 탄소화합물의 산소소비가 일정하게 된 뒤에 현저하게 나타남. needle valve.",
+      "confidence": 0.6,
+      "keywords": [
+        "bod",
+        "측정",
+        "미생물",
+        "NBOD"
+      ],
+      "all_domains": [
+        "water_quality_parameters",
+        "chemical_analysis",
+        "microbiological_analysis"
+      ]
+    },
+    {
+      "term": "N비",
+      "definition": "물질 중의 탄소와 질소와의 비. C/N비가 15～20 이상인 비료 등을 농지에 사용하면 토양 중의 미생물이 유기물을 분해하여 증식할 때에 질소가 부족해서 토양 중의 질소를 섭취하므로 작물이 질소기아를 일으킴. 따라서 퇴비를 적용시 C/N비 체크가 필요함. 또한 하수의 생물학적 질산화탈질처리에서는 하수 중의 C/N비가 중요함. C/P비 및 C/N비.",
+      "confidence": 1.0,
+      "keywords": [
+        "미생물"
+      ],
+      "all_domains": [
+        "microbiological_analysis"
+      ]
+    },
+    {
+      "term": "OF시험",
+      "definition": "세균류를 확인하는 시험의 하나로 세균류가 포도당을 호기성 분해하는가, 혹은 혐기성 분해하는가의 성상을 판정하는 시험. 판정은 균체를 넣은 배지에 유동파라핀을 중층하지 않은 시험관이 황색으로 변한 것을 포도당산화, 또한 유동파라핀을 중층한 시험관과 중층하지 않은 시험관이 모두 변색하지 않으면, 청색인 경우는 포도당비분해상태로 이것을 비발효라 함. 두 시험관 모두 황색으로 변한 것은 발효라고 함. ☞ 동정시험 one year rule.",
+      "confidence": 0.75,
+      "keywords": [
+        "세균",
+        "OF시험",
+        "시험",
+        "관"
+      ],
+      "all_domains": [
+        "chemical_analysis",
+        "microbiological_analysis",
+        "piping"
+      ]
+    },
+    {
+      "term": "수질항목",
+      "definition": "수질을 평가하기 위해 측정하는 각종 지표들로, 미생물, 화학적, 물리적 항목으로 구분된다.",
+      "confidence": 0.75,
+      "keywords": [
+        "미생물",
+        "측정"
+      ],
+      "all_domains": [
+        "chemical_analysis",
+        "microbiological_analysis"
+      ]
+    },
+    {
+      "term": "알칼리도\n\n\n\nquinone profile 법",
+      "definition": "동일의 분류군에 속하는 균종의 주요 quinone 분자종은 대체로 동일한 것을 이용한 생화학적 해석방법. 활성슬러지 중 미생물의 종류조성이나 변화를 신속하고 객관적으로 파악할 수 있음. rashing ring.",
+      "confidence": 0.36363636363636365,
+      "keywords": [
+        "알칼리도",
+        "관",
+        "슬러지",
+        "미생물"
+      ],
+      "all_domains": [
+        "sedimentation",
+        "water_quality_parameters",
+        "microbiological_analysis",
+        "piping"
+      ]
+    },
+    {
+      "term": "Aulacoseira\n\n\n\nMF막",
+      "definition": "☞ 정밀여과막 21222324252627282930 개인정보처리방침 영상정보 처리기기 운영방침 이용약관 오시는길 페이스북 블로그 유튜브 인스타그램 관련사이트 우리집 수돗물 안심 확인제 교육 홈페이지 단체표준인증 WATER KOREA 물산업 PM 양성과정 파이프에셋 수돗물홍보협의회 서울특별시 영등포구 대림로 244 한국상하수도협회 Tel:02-3156-7777Fax:02-3156-7778 Tel:02-3156-7777Fax:02-3156-7778 Copyright 2018 Korea Water and Wastewater Works Association All rights reserved.",
+      "confidence": 0.4,
+      "keywords": [
+        "여과",
+        "기기",
+        "관",
+        "파이프"
+      ],
+      "all_domains": [
+        "filtration",
+        "equipment",
+        "piping"
+      ]
+    },
+    {
+      "term": "CHN분석계",
+      "definition": "유기물의 주요성분인 탄소, 수소, 질소를 동시에 정량하는 분석기기. C, H, N은 연소, 분해되어 각각 , , 로 변환되며, 열전도도법에 의해 농도를 측정하여 정량함. 열전도도의 측정법으로서는 가스크로마토그래피방식, 자기적분방식, 테크니콘방식 3종류가 이용됨. 종래의 C, H와 N을 개별 분석계를 사용하여 측정하는 방법에 비교하여 측정시간과 시료량이 줄어듦. clinker.",
+      "confidence": 0.6666666666666666,
+      "keywords": [
+        "분석",
+        "CHN분석계",
+        "측정",
+        "농도",
+        "크로마토그래피",
+        "기기"
+      ],
+      "all_domains": [
+        "disinfection",
+        "chemical_analysis",
+        "equipment",
+        "ai_models"
+      ]
+    },
+    {
+      "term": "COD측정방식",
+      "definition": "공장폐수 시험방법으로 ① 100℃에서 과망간산칼륨에 의해 산소 소비량을 측정하는 방법. ② 20℃에서 과망간산칼륨에 의해 산소 소비량을 측정하는 방법. ③ 알칼리성 과망간산칼륨에 의해 산소소비량을 측정하는 방법. ④ 중크롬산칼륨에 의해 산소 소비량을 측정하는 방법이 있음. 11121314151617181920 개인정보처리방침 영상정보 처리기기 운영방침 이용약관 오시는길 페이스북 블로그 유튜브 인스타그램 관련사이트 우리집 수돗물 안심 확인제 교육 홈페이지 단체표준인증 WATER KOREA 물산업 PM 양성과정 파이프에셋 수돗물홍보협의회 서울특별시 영등포구 대림로 244 한국상하수도협회 Tel:02-3156-7777Fax:02-3156-7778 Tel:02-3156-7777Fax:02-3156-7778 Copyright 2018 Korea Water and Wastewater Works Association All rights reserved.",
+      "confidence": 0.2857142857142857,
+      "keywords": [
+        "측정방식",
+        "관",
+        "측정",
+        "파이프",
+        "시험",
+        "COD측정",
+        "기기",
+        "cod"
+      ],
+      "all_domains": [
+        "water_quality_parameters",
+        "chemical_analysis",
+        "equipment",
+        "piping"
+      ]
+    },
+    {
+      "term": "CP",
+      "definition": "일반적으로 사용되고 있는 것으로서 이음매 없는 동관과 탈산동관을 들 수 있음. 열 및 전기의 양도체로서, 내식성이 있어서 가공하기 쉽고 마찰저항이 적은 것 등의 잇점이 있기 때문에 열교환기용관, 냉난방기용관, 압력계관, 급수관, 급탕관, 급유관 등으로 쓰이고 있음. 급수, 급탕용, 열교환기용, 화학용 등으로서 무산소동관, 이음매 없는 동관이 있음. critical path method.",
+      "confidence": 0.5,
+      "keywords": [
+        "관",
+        "압력계"
+      ],
+      "all_domains": [
+        "equipment",
+        "piping"
+      ]
+    },
+    {
+      "term": "DRC배지",
+      "definition": "웰슈균 아포나 웰슈균의 추정시험에 이용되는 액체배지. differential reinforced clostridial. 본배지는 검수(檢水)를 접종한 후, 나사구(口)병을 배지로 채우는 것으로 혐기배양을 필요로 하지 않는 간편성이 있음. 배양 후, 본배지에 함유하는 아류산나트륨의 환원에 의한 유화철의 침전을 발생시켜 배지가 흑변한 것을 웰슈균 아포 또는 웰슈균 추정시험양성으로 함. 11121314151617181920 개인정보처리방침 영상정보 처리기기 운영방침 이용약관 오시는길 페이스북 블로그 유튜브 인스타그램 관련사이트 우리집 수돗물 안심 확인제 교육 홈페이지 단체표준인증 WATER KOREA 물산업 PM 양성과정 파이프에셋 수돗물홍보협의회 서울특별시 영등포구 대림로 244 한국상하수도협회 Tel:02-3156-7777Fax:02-3156-7778 Tel:02-3156-7777Fax:02-3156-7778 Copyright 2018 Korea Water and Wastewater Works Association All rights reserved.",
+      "confidence": 0.2857142857142857,
+      "keywords": [
+        "침전",
+        "DRC배지",
+        "관",
+        "파이프",
+        "시험",
+        "기기"
+      ],
+      "all_domains": [
+        "sedimentation",
+        "chemical_analysis",
+        "microbiological_analysis",
+        "equipment",
+        "piping"
+      ]
+    },
+    {
+      "term": "Kerby공식",
+      "definition": "계획 우수량 산정에서 유입시간의 산출에 이용되는 경험식 중 하나. 21222324252627282930 개인정보처리방침 영상정보 처리기기 운영방침 이용약관 오시는길 페이스북 블로그 유튜브 인스타그램 관련사이트 우리집 수돗물 안심 확인제 교육 홈페이지 단체표준인증 WATER KOREA 물산업 PM 양성과정 파이프에셋 수돗물홍보협의회 서울특별시 영등포구 대림로 244 한국상하수도협회 Tel:02-3156-7777Fax:02-3156-7778 Tel:02-3156-7777Fax:02-3156-7778 Copyright 2018 Korea Water and Wastewater Works Association All rights reserved.",
+      "confidence": 0.5714285714285714,
+      "keywords": [
+        "파이프",
+        "기기",
+        "관"
+      ],
+      "all_domains": [
+        "equipment",
+        "piping"
+      ]
+    },
+    {
+      "term": "PC말뚝",
+      "definition": "미리 PC강선(鋼線)에 인장응력을 가하고, 이것으로 콘크리트에 프리스트레스를 주어, 외하중에 의한 곡선응력에 저항시키는 구조로 한 항. 항의 성형 후 프레스트레스를 주는 포스트텐션방식과 성형전에 PC강선을 긴장하고 콘크리트를 쳐서 탈형(脫型)했을 때 프리스트레스를 줄 수 있는 프레텐션방식이 있음. 21222324252627282930 개인정보처리방침 영상정보 처리기기 운영방침 이용약관 오시는길 페이스북 블로그 유튜브 인스타그램 관련사이트 우리집 수돗물 안심 확인제 교육 홈페이지 단체표준인증 WATER KOREA 물산업 PM 양성과정 파이프에셋 수돗물홍보협의회 서울특별시 영등포구 대림로 244 한국상하수도협회 Tel:02-3156-7777Fax:02-3156-7778 Tel:02-3156-7777Fax:02-3156-7778 Copyright 2018 Korea Water and Wastewater Works Association All rights reserved.",
+      "confidence": 0.5714285714285714,
+      "keywords": [
+        "파이프",
+        "기기",
+        "관"
+      ],
+      "all_domains": [
+        "equipment",
+        "piping"
+      ]
+    },
+    {
+      "term": "bar screen",
+      "definition": "평평한 철을 격자상에 조립하고 수로 안에 장치한 것으로, 수중의 협잡물을 제거하고, 펌프에 막혀 있는 것을 없애는 목적이 있음. 협잡물의 끌어올리기 방법으로서는 수동식, 기계연속식 등이 있음. BAT.",
+      "confidence": 0.75,
+      "keywords": [
+        "펌프"
+      ],
+      "all_domains": [
+        "ems_system",
+        "equipment"
+      ]
+    },
+    {
+      "term": "blowoff valve",
+      "definition": "슬러지를 포함한 오수를 압송하는 경우, 관로가 낮은 레벨에서 급격하게 상승하는 개소에 있어서, 관저에 침전한 슬러지나 모래를 관외로 배출하기 위해 설치한 밸브를 말함. blow-off (泥吐管).",
+      "confidence": 0.46153846153846156,
+      "keywords": [
+        "밸브",
+        "침전",
+        "슬러지",
+        "관로",
+        "관"
+      ],
+      "all_domains": [
+        "sedimentation",
+        "equipment",
+        "piping"
+      ]
+    },
+    {
+      "term": "clogging 날개",
+      "definition": "원심 및 사류펌프에서 양액안의 섬유, 고형물 등이 내부에 막히지 않는 통로형상을 한 회전자로 오물펌프에 사용됨. non-ionic계 응집제.",
+      "confidence": 0.4444444444444444,
+      "keywords": [
+        "펌프",
+        "응집",
+        "응집제"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation",
+        "ems_system",
+        "equipment"
+      ]
+    },
+    {
+      "term": "notch",
+      "definition": "침전지의 월류 설비로, 일정간격으로 설치된 입구 부분. 일반형으로 V자형이 이용되고 있음. NOx.",
+      "confidence": 0.5714285714285714,
+      "keywords": [
+        "침전지",
+        "설비",
+        "침전"
+      ],
+      "all_domains": [
+        "sedimentation",
+        "equipment"
+      ]
+    },
+    {
+      "term": "point source",
+      "definition": "☞ 비점오염원 21222324252627282930 개인정보처리방침 영상정보 처리기기 운영방침 이용약관 오시는길 페이스북 블로그 유튜브 인스타그램 관련사이트 우리집 수돗물 안심 확인제 교육 홈페이지 단체표준인증 WATER KOREA 물산업 PM 양성과정 파이프에셋 수돗물홍보협의회 서울특별시 영등포구 대림로 244 한국상하수도협회 Tel:02-3156-7777Fax:02-3156-7778 Tel:02-3156-7777Fax:02-3156-7778 Copyright 2018 Korea Water and Wastewater Works Association All rights reserved.",
+      "confidence": 0.5714285714285714,
+      "keywords": [
+        "파이프",
+        "기기",
+        "관"
+      ],
+      "all_domains": [
+        "equipment",
+        "piping"
+      ]
+    },
+    {
+      "term": "potentiometer",
+      "definition": "3개의 단자를 갖고 그 중 2개를 저항소자의 양 종단에 접속해서 다른 단자를 저항소자를 따라 기계적으로 이동하는 취동접점에 접속하고, 주로 분압기로서 이용하는 저항기. 수도시설에는 서보기구로서 기계작동방식의 기록계나 콘트롤 밸브 등에 사용되고 있음. ppb per billion).",
+      "confidence": 1.0,
+      "keywords": [
+        "밸브"
+      ],
+      "all_domains": [
+        "equipment"
+      ]
+    },
+    {
+      "term": "계량기",
+      "definition": "물의 유량을 측정하는 기구로, 유량계, 수위계, 압력계 등이 있다.",
+      "confidence": 0.6,
+      "keywords": [
+        "수위계",
+        "압력계",
+        "유량계",
+        "측정",
+        "수위",
+        "계량기"
+      ],
+      "all_domains": [
+        "intake_process",
+        "chemical_analysis",
+        "equipment"
+      ]
+    },
+    {
+      "term": "고속액체 크로마토그래피 질량분석법\n\n\n\nLD50",
+      "definition": "☞ 반수치사량 21222324252627282930 개인정보처리방침 영상정보 처리기기 운영방침 이용약관 오시는길 페이스북 블로그 유튜브 인스타그램 관련사이트 우리집 수돗물 안심 확인제 교육 홈페이지 단체표준인증 WATER KOREA 물산업 PM 양성과정 파이프에셋 수돗물홍보협의회 서울특별시 영등포구 대림로 244 한국상하수도협회 Tel:02-3156-7777Fax:02-3156-7778 Tel:02-3156-7777Fax:02-3156-7778 Copyright 2018 Korea Water and Wastewater Works Association All rights reserved.",
+      "confidence": 0.4666666666666667,
+      "keywords": [
+        "분석",
+        "질량분석",
+        "관",
+        "파이프",
+        "크로마토그래피",
+        "기기"
+      ],
+      "all_domains": [
+        "chemical_analysis",
+        "equipment",
+        "piping",
+        "ai_models"
+      ]
+    },
+    {
+      "term": "기기",
+      "definition": "정수장에서 사용되는 각종 측정 및 제어 장비를 의미한다.",
+      "confidence": 0.4,
+      "keywords": [
+        "정수장",
+        "측정",
+        "기기",
+        "장비",
+        "제어"
+      ],
+      "all_domains": [
+        "ems_system",
+        "chemical_analysis",
+        "facilities",
+        "equipment"
+      ]
+    },
+    {
+      "term": "밸브",
+      "definition": "배관의 유량을 조절하거나 차단하는 기구로, 게이트밸브, 체크밸브 등이 있다.",
+      "confidence": 0.6363636363636364,
+      "keywords": [
+        "밸브",
+        "체크밸브",
+        "관",
+        "배관",
+        "게이트밸브"
+      ],
+      "all_domains": [
+        "equipment",
+        "piping"
+      ]
+    },
+    {
+      "term": "설비",
+      "definition": "정수장에서 사용되는 모든 기계장치와 기구를 통칭한다.",
+      "confidence": 0.5714285714285714,
+      "keywords": [
+        "설비",
+        "정수장"
+      ],
+      "all_domains": [
+        "facilities",
+        "equipment"
+      ]
+    },
+    {
+      "term": "에틸렌디아민테트라아세트산\n\n\n\nEDTA적정법",
+      "definition": "총 경도의 측정법. 시료에 Eriochrome black T를 지시약을 가한 후 에틸렌-디아민-테트라아세트산 적정액을 사용하여 총경도를 산정. 적정의 종말점에서는 용액이 보라색에서 청색으로 변함. 11121314151617181920 개인정보처리방침 영상정보 처리기기 운영방침 이용약관 오시는길 페이스북 블로그 유튜브 인스타그램 관련사이트 우리집 수돗물 안심 확인제 교육 홈페이지 단체표준인증 WATER KOREA 물산업 PM 양성과정 파이프에셋 수돗물홍보협의회 서울특별시 영등포구 대림로 244 한국상하수도협회 Tel:02-3156-7777Fax:02-3156-7778 Tel:02-3156-7777Fax:02-3156-7778 Copyright 2018 Korea Water and Wastewater Works Association All rights reserved.",
+      "confidence": 0.5,
+      "keywords": [
+        "EDTA적정법",
+        "적정법",
+        "관",
+        "측정",
+        "파이프",
+        "기기"
+      ],
+      "all_domains": [
+        "chemical_analysis",
+        "equipment",
+        "piping"
+      ]
+    },
+    {
+      "term": "트리클로로에탄",
+      "definition": ", 분자량 133.40. β-트리클로로에탄이라고도 함. 비중 1.44(20℃). 융점-37.0℃, 비점 113.5℃의 액체. 물에 대한 용해도는 0.45g/100g(20℃)로, 에탄올, 에테르 및 유기염소계 용제와 혼합하며, 증기압 16.7㎜Hg(20℃). 주된 용도는 유지(油脂), 왁스, 천연수지 및 알칼로이드의 용제임. 독성은 LD50 1,140㎎/㎏로, 중추신경계 억제작용 및 간기능 장애를 일으킴. 12345678910 개인정보처리방침 영상정보 처리기기 운영방침 이용약관 오시는길 페이스북 블로그 유튜브 인스타그램 관련사이트 우리집 수돗물 안심 확인제 교육 홈페이지 단체표준인증 WATER KOREA 물산업 PM 양성과정 파이프에셋 수돗물홍보협의회 서울특별시 영등포구 대림로 244 한국상하수도협회 Tel:02-3156-7777Fax:02-3156-7778 Tel:02-3156-7777Fax:02-3156-7778 Copyright 2018 Korea Water and Wastewater Works Association All rights reserved.",
+      "confidence": 0.4,
+      "keywords": [
+        "파이프",
+        "염소",
+        "관",
+        "기기"
+      ],
+      "all_domains": [
+        "disinfection",
+        "equipment",
+        "piping"
+      ]
+    },
+    {
+      "term": "펌프",
+      "definition": "물을 이동시키는 기계장치로, 취수, 송수, 배수 등에 사용된다.",
+      "confidence": 0.42857142857142855,
+      "keywords": [
+        "펌프",
+        "취수"
+      ],
+      "all_domains": [
+        "intake_process",
+        "ems_system",
+        "equipment"
+      ]
+    },
+    {
+      "term": "헥사클로로벤젠\n\n\n\nHollow filber 막",
+      "definition": "☞중공사막 11121314151617181920 개인정보처리방침 영상정보 처리기기 운영방침 이용약관 오시는길 페이스북 블로그 유튜브 인스타그램 관련사이트 우리집 수돗물 안심 확인제 교육 홈페이지 단체표준인증 WATER KOREA 물산업 PM 양성과정 파이프에셋 수돗물홍보협의회 서울특별시 영등포구 대림로 244 한국상하수도협회 Tel:02-3156-7777Fax:02-3156-7778 Tel:02-3156-7777Fax:02-3156-7778 Copyright 2018 Korea Water and Wastewater Works Association All rights reserved.",
+      "confidence": 0.5714285714285714,
+      "keywords": [
+        "파이프",
+        "기기",
+        "관"
+      ],
+      "all_domains": [
+        "equipment",
+        "piping"
+      ]
+    },
+    {
+      "term": "헥산추출물질",
+      "definition": "☞ 일반 헥산추출물질 21222324252627282930 개인정보처리방침 영상정보 처리기기 운영방침 이용약관 오시는길 페이스북 블로그 유튜브 인스타그램 관련사이트 우리집 수돗물 안심 확인제 교육 홈페이지 단체표준인증 WATER KOREA 물산업 PM 양성과정 파이프에셋 수돗물홍보협의회 서울특별시 영등포구 대림로 244 한국상하수도협회 Tel:02-3156-7777Fax:02-3156-7778 Tel:02-3156-7777Fax:02-3156-7778 Copyright 2018 Korea Water and Wastewater Works Association All rights reserved.",
+      "confidence": 0.5714285714285714,
+      "keywords": [
+        "파이프",
+        "기기",
+        "관"
+      ],
+      "all_domains": [
+        "equipment",
+        "piping"
+      ]
+    },
+    {
+      "term": "형이음",
+      "definition": "기설관내에 신관을 삽입하는 파이프인파이프공법에 사용하는 덕타일주철관용 푸쉬온타입의 계수. 호경(呼徑) 300～1,350㎜. 신축, 가요성에다 1.5DkN의 이탈방지성을 가지고, 내진관로나 연약지반에 포설하는 관로에 이용됨. 기설관 관경보다 1구경(100㎜)작은 신관이 삽입되도록 수구(受口) 외경(外徑)이 작게 되어 있음. 그 외에, PⅢ형, PN형이 있음. 31323334353637383940 개인정보처리방침 영상정보 처리기기 운영방침 이용약관 오시는길 페이스북 블로그 유튜브 인스타그램 관련사이트 우리집 수돗물 안심 확인제 교육 홈페이지 단체표준인증 WATER KOREA 물산업 PM 양성과정 파이프에셋 수돗물홍보협의회 서울특별시 영등포구 대림로 244 한국상하수도협회 Tel:02-3156-7777Fax:02-3156-7778 Tel:02-3156-7777Fax:02-3156-7778 Copyright 2018 Korea Water and Wastewater Works Association All rights reserved.",
+      "confidence": 0.75,
+      "keywords": [
+        "관로",
+        "관",
+        "파이프",
+        "기기",
+        "형이음"
+      ],
+      "all_domains": [
+        "equipment",
+        "piping"
+      ]
+    },
+    {
+      "term": "흡착평형\n\n\n\nGIS",
+      "definition": "가스절연개폐장치. 특고변전설비의 모선, 차단기, 단로기 등 개폐장치의 충전부를 원통상의 접지금속용기 내에 수납하고, 충전부와 접지금속용기와 사이에 공기의 약 3배의 절연성능을 가지는 SF6 가스를 채운 구조로 되어 있음. 공기절연에 의한 개폐장치에 비하여 높은 신뢰성, 안전성, 공간절감 및 유지관리 등 많은 점에서 우수한 특징이 있으며, 66kV 이상의 수변전설비에 널리 이용됨. ☞ 자가용 전기공작물, 수전설비 11121314151617181920 개인정보처리방침 영상정보 처리기기 운영방침 이용약관 오시는길 페이스북 블로그 유튜브 인스타그램 관련사이트 우리집 수돗물 안심 확인제 교육 홈페이지 단체표준인증 WATER KOREA 물산업 PM 양성과정 파이프에셋 수돗물홍보협의회 서울특별시 영등포구 대림로 244 한국상하수도협회 Tel:02-3156-7777Fax:02-3156-7778 Tel:02-3156-7777Fax:02-3156-7778 Copyright 2018 Korea Water and Wastewater Works Association All rights reserved.",
+      "confidence": 0.3333333333333333,
+      "keywords": [
+        "설비",
+        "관",
+        "파이프",
+        "성능",
+        "기기",
+        "관리"
+      ],
+      "all_domains": [
+        "ems_system",
+        "equipment",
+        "piping",
+        "performance_metrics"
+      ]
+    },
+    {
+      "term": "BOD부하",
+      "definition": "살수여상법이나 활성슬러지법 등의 생물처리에서, 생물반응조에 대한 1일당 유기물의 공급비율을 나타냄. 반응조에 대한 부하표시에는 BOD/MLSS, BOD-용적, BOD-면적의 3종이 있음. 표준활성슬러지법에서는 0.2～0.4㎏ BOD/㎏ SSㆍ일 을 이용하고 있고, 이 경우에는 유기물의 처리효율을 90%정도 얻을 수 있음. BOO.",
+      "confidence": 0.36363636363636365,
+      "keywords": [
+        "bod",
+        "BOD부하",
+        "슬러지",
+        "효율"
+      ],
+      "all_domains": [
+        "sedimentation",
+        "water_quality_parameters",
+        "performance_metrics"
+      ]
+    },
+    {
+      "term": "CAD",
+      "definition": "computer aided design 의 약자. 컴퓨터에 의한 설계지원. 기계설계나 건축설계, 회로설계 등에서, 설계도 등의 작성 작업을 컴퓨터를 이용하여 실행하는 것. CAD 소프트웨어에 덧붙여, 그래픽기능이 좋은 워크스테이션, 고해상도의 그래픽 및 디스플레이나, 도면을 출력하기 위한 플로터 등의 하드웨어도 필요로 함. 컴퓨터를 이용하여 모든 공정을 설계하는 것으로 데이터베이스의 정보를 화상을 보고 합성하면서 설계하기 때문에 효율적인 작업이 가능함. CAM.",
+      "confidence": 0.5714285714285714,
+      "keywords": [
+        "효율",
+        "ai"
+      ],
+      "all_domains": [
+        "ai_models",
+        "performance_metrics"
+      ]
+    },
+    {
+      "term": "s식",
+      "definition": "① 여과지트러프의 상류단의 수심을 구하는 식. 여기서, : 트러프상류단의 수심, : 한계수심, : 트러프의 길이, : 트러프바닥의 경사각, 임. ② 침전지의 침전효율에 관한 식 : 상하방향으로는 혼합하지만, 전후방향으로는 비혼합이라고 하는 모델을 상정해 다음 식을 제시함. 여기서, : 입자의 침강속도, Q/A: 수표면적부하. NATM.",
+      "confidence": 0.29411764705882354,
+      "keywords": [
+        "여과지",
+        "침전",
+        "효율",
+        "침전효율",
+        "모델",
+        "관",
+        "침전지",
+        "여과"
+      ],
+      "all_domains": [
+        "sedimentation",
+        "filtration",
+        "piping",
+        "ai_models",
+        "performance_metrics"
+      ]
+    },
+    {
+      "term": "관리",
+      "definition": "정수장의 시설과 공정을 유지보수하고 최적화하는 활동이다.",
+      "confidence": 0.4444444444444444,
+      "keywords": [
+        "최적화",
+        "관",
+        "정수장",
+        "관리"
+      ],
+      "all_domains": [
+        "ems_system",
+        "facilities",
+        "piping",
+        "performance_metrics"
+      ]
+    },
+    {
+      "term": "침전지의 침전효율에 관한 식",
+      "definition": "상하방향으로는 혼합하지만, 전후방향으로는 비혼합이라고 하는 모델을 상정해 다음 식을 제시함. 여기서,.",
+      "confidence": 0.38461538461538464,
+      "keywords": [
+        "침전",
+        "효율",
+        "침전효율",
+        "모델",
+        "관",
+        "침전지"
+      ],
+      "all_domains": [
+        "sedimentation",
+        "piping",
+        "ai_models",
+        "performance_metrics"
+      ]
+    },
+    {
+      "term": "흡착평형\n\n\n\nGIS",
+      "definition": "가스절연개폐장치. 특고변전설비의 모선, 차단기, 단로기 등 개폐장치의 충전부를 원통상의 접지금속용기 내에 수납하고, 충전부와 접지금속용기와 사이에 공기의 약 3배의 절연성능을 가지는 SF6 가스를 채운 구조로 되어 있음. 공기절연에 의한 개폐장치에 비하여 높은 신뢰성, 안전성, 공간절감 및 유지관리 등 많은 점에서 우수한 특징이 있으며, 66kV 이상의 수변전설비에 널리 이용됨. ☞ 자가용 전기공작물, 수전설비 11121314151617181920 개인정보처리방침 영상정보 처리기기 운영방침 이용약관 오시는길 페이스북 블로그 유튜브 인스타그램 관련사이트 우리집 수돗물 안심 확인제 교육 홈페이지 단체표준인증 WATER KOREA 물산업 PM 양성과정 파이프에셋 수돗물홍보협의회 서울특별시 영등포구 대림로 244 한국상하수도협회 Tel:02-3156-7777Fax:02-3156-7778 Tel:02-3156-7777Fax:02-3156-7778 Copyright 2018 Korea Water and Wastewater Works Association All rights reserved.",
+      "confidence": 0.3333333333333333,
+      "keywords": [
+        "설비",
+        "관",
+        "파이프",
+        "성능",
+        "기기",
+        "관리"
+      ],
+      "all_domains": [
+        "ems_system",
+        "equipment",
+        "piping",
+        "performance_metrics"
+      ]
+    },
+    {
+      "term": "pH",
+      "definition": "수소이온의 몰농도 역수의 상용대수치. pH7은 중성, pH가 7보다 값이 작아질수록 산성이 강해지고, 값이 커질수록 알칼리성이 강해짐. 물의 기본적인 지표의 하나이고, 이화학적 수질, 생물학적 수질, 정수처리효과, 관로의 부식 등에 관계되는 중요한 인자임. 측정법은 비색법과 유리전극법이 있음. pharyngo conjunctival fever.",
+      "confidence": 0.25,
+      "keywords": [
+        "ph",
+        "정수처리",
+        "관로",
+        "관",
+        "측정",
+        "농도",
+        "pH"
+      ],
+      "all_domains": [
+        "disinfection",
+        "water_quality_parameters",
+        "chemical_analysis",
+        "facilities",
+        "piping"
+      ]
+    },
+    {
+      "term": "관리",
+      "definition": "정수장의 시설과 공정을 유지보수하고 최적화하는 활동이다.",
+      "confidence": 0.4444444444444444,
+      "keywords": [
+        "최적화",
+        "관",
+        "정수장",
+        "관리"
+      ],
+      "all_domains": [
+        "ems_system",
+        "facilities",
+        "piping",
+        "performance_metrics"
+      ]
+    },
+    {
+      "term": "기기",
+      "definition": "정수장에서 사용되는 각종 측정 및 제어 장비를 의미한다.",
+      "confidence": 0.4,
+      "keywords": [
+        "정수장",
+        "측정",
+        "기기",
+        "장비",
+        "제어"
+      ],
+      "all_domains": [
+        "ems_system",
+        "chemical_analysis",
+        "facilities",
+        "equipment"
+      ]
+    },
+    {
+      "term": "모니터링",
+      "definition": "정수처리 공정과 수질을 지속적으로 관찰하고 측정하는 활동이다.",
+      "confidence": 0.6666666666666666,
+      "keywords": [
+        "관",
+        "정수처리",
+        "측정"
+      ],
+      "all_domains": [
+        "chemical_analysis",
+        "facilities",
+        "piping"
+      ]
+    },
+    {
+      "term": "설비",
+      "definition": "정수장에서 사용되는 모든 기계장치와 기구를 통칭한다.",
+      "confidence": 0.5714285714285714,
+      "keywords": [
+        "설비",
+        "정수장"
+      ],
+      "all_domains": [
+        "facilities",
+        "equipment"
+      ]
+    },
+    {
+      "term": "소독지",
+      "definition": "정수처리된 물에 소독제를 주입하여 병원균을 제거하는 시설이다.",
+      "confidence": 0.5555555555555556,
+      "keywords": [
+        "소독제",
+        "정수처리",
+        "소독지",
+        "소독"
+      ],
+      "all_domains": [
+        "disinfection",
+        "facilities"
+      ]
+    },
+    {
+      "term": "알칼리도",
+      "definition": "물의 산을 중화할 수 있는 능력을 나타내는 지표로, 정수처리 공정의 안정성에 영향을 준다.",
+      "confidence": 0.5,
+      "keywords": [
+        "알칼리도",
+        "정수처리"
+      ],
+      "all_domains": [
+        "water_quality_parameters",
+        "facilities"
+      ]
+    },
+    {
+      "term": "염소",
+      "definition": "정수처리에서 가장 널리 사용되는 소독제로, 병원균을 제거하고 잔류염소를 유지하여 재오염을 방지한다.",
+      "confidence": 0.6666666666666666,
+      "keywords": [
+        "염소",
+        "잔류염소",
+        "정수처리",
+        "소독",
+        "소독제"
+      ],
+      "all_domains": [
+        "disinfection",
+        "facilities"
+      ]
+    },
+    {
+      "term": "운영",
+      "definition": "정수장의 시설과 공정을 관리하여 안정적으로 정수를 생산하는 활동이다.",
+      "confidence": 0.6666666666666666,
+      "keywords": [
+        "관",
+        "정수장",
+        "관리"
+      ],
+      "all_domains": [
+        "ems_system",
+        "facilities",
+        "piping"
+      ]
+    },
+    {
+      "term": "운전",
+      "definition": "정수장의 각종 시설을 조작하여 정수처리 공정을 수행하는 활동이다.",
+      "confidence": 1.0,
+      "keywords": [
+        "정수장",
+        "정수처리"
+      ],
+      "all_domains": [
+        "facilities"
+      ]
+    },
+    {
+      "term": "정수시설",
+      "definition": "수원에서 취수한 원수를 음용수로 처리하는 시설로, 정수처리공정을 수행하는 모든 시설을 포함한다.",
+      "confidence": 0.5714285714285714,
+      "keywords": [
+        "취수",
+        "수원",
+        "정수처리",
+        "정수시설"
+      ],
+      "all_domains": [
+        "intake_process",
+        "facilities"
+      ]
+    },
+    {
+      "term": "정수장",
+      "definition": "원수를 정수처리하여 음용수로 만드는 시설로, 응집, 침전, 여과, 소독 등의 공정을 거쳐 안전한 상수를 생산한다.",
+      "confidence": 0.42105263157894735,
+      "keywords": [
+        "침전",
+        "정수처리",
+        "정수장",
+        "응집",
+        "소독",
+        "여과"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation",
+        "sedimentation",
+        "filtration",
+        "disinfection",
+        "facilities"
+      ]
+    },
+    {
+      "term": "정수지",
+      "definition": "정수처리된 물을 저장하는 저수지로, 운전 안정성과 지진 대응을 고려하여 설계된 시설이다.",
+      "confidence": 0.7272727272727273,
+      "keywords": [
+        "정수지",
+        "정수처리"
+      ],
+      "all_domains": [
+        "intake_process",
+        "facilities"
+      ]
+    },
+    {
+      "term": "정수처리",
+      "definition": "원수를 음용수로 만들기 위해 수행하는 일련의 처리과정으로, 응집, 침전, 여과, 소독 등의 공정을 포함한다.",
+      "confidence": 0.26666666666666666,
+      "keywords": [
+        "침전",
+        "정수처리",
+        "응집",
+        "소독",
+        "여과"
+      ],
+      "all_domains": [
+        "chemical_process",
+        "mixing_coagulation",
+        "sedimentation",
+        "filtration",
+        "disinfection",
+        "facilities"
+      ]
+    },
+    {
+      "term": "제어",
+      "definition": "정수처리 공정의 각종 변수를 조절하여 최적의 처리효과를 얻는 활동이다.",
+      "confidence": 0.8,
+      "keywords": [
+        "제어",
+        "정수처리"
+      ],
+      "all_domains": [
+        "ems_system",
+        "facilities"
+      ]
+    },
+    {
+      "term": "조절지",
+      "definition": "여과량 등을 조절하기 위해 설치된 시설로, 정수장의 안정적인 운영을 위한 조절 기능을 수행한다.",
+      "confidence": 0.7272727272727273,
+      "keywords": [
+        "여과",
+        "조절지",
+        "정수장"
+      ],
+      "all_domains": [
+        "filtration",
+        "facilities"
+      ]
+    }
+  ]
+}
