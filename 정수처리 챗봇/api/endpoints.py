@@ -82,6 +82,25 @@ _rolling_events_1h = {
     "errors": deque(maxlen=5000),
 }
 
+# 라우팅 결정 전문 로그 파일 경로(별도 저장)
+_ROUTING_LOG_PATH = str((Path(__file__).parent.parent / "logs" / "routing_decisions.log").resolve())
+
+def _append_routing_log(question: str, route_value: str, reasoning: str):
+    """질문/라우팅/사유를 별도 로그 파일에 한 줄로 저장."""
+    try:
+        # 디렉터리 보장
+        log_dir = Path(_ROUTING_LOG_PATH).parent
+        log_dir.mkdir(parents=True, exist_ok=True)
+        # 단일 라인 형식으로 저장
+        line = f"질문 : {question} | 라우팅 내용 : {route_value} | 사유 : {reasoning}\n"
+        with open(_ROUTING_LOG_PATH, "a", encoding="utf-8") as f:
+            f.write(line)
+    except Exception as _e:
+        try:
+            logger.warning(f"라우팅 전문 로그 기록 실패: {_e}")
+        except Exception:
+            pass
+
 # Pydantic 모델들 (단순화)
 class QuestionRequest(BaseModel):
     """질문 요청 모델"""
@@ -104,6 +123,11 @@ class QuestionResponse(BaseModel):
     llm_model_name: str = Field(..., description="사용된 모델 이름")
     pipeline_type: str = Field("basic", description="사용된 파이프라인 타입")
     sql_query: Optional[str] = Field(None, description="생성된 SQL 쿼리")
+    # Answer Target 정보 추가
+    answer_target: str = Field("", description="추출된 답변 목표")
+    target_type: str = Field("", description="목표 유형 (quantitative_value, qualitative_definition, etc.)")
+    value_intent: str = Field("", description="값의 의도 (value, definition, process, comparison)")
+    extraction_confidence: float = Field(0.0, description="Answer Target 추출 신뢰도")
 
 class PDFUploadResponse(BaseModel):
     """PDF 업로드 응답 모델"""
@@ -1218,9 +1242,35 @@ async def ask_question(
         # 타이밍 수집용 기록자
         timings = {"start": start_time}
         
-        # SBERT 기반 쿼리 라우팅
+        # 후속/독립 판별(Preprocessor) → 라우팅에 앞서 결정 플래그 수집
+        follow_decision = None
+        try:
+            follow_decision = question_analyzer.detect_follow_up(request.question)
+        except Exception:
+            follow_decision = {"is_follow_up": False, "confidence": 0.0, "reason": "error"}
+
+        # SBERT 기반 쿼리 라우팅 (필요 시 이전 라우트 유지)
         routing_start = time.time()
         route_result = query_router.route_query(request.question)
+        # 라우팅 전문 로그 저장 (질문 | 라우팅 | 사유)
+        try:
+            _append_routing_log(request.question, route_result.route.value, route_result.reasoning)
+        except Exception:
+            pass
+        # 후속으로 강하게 판단되면: 직전 라우트를 유지하여 라우팅 스위치 방지
+        try:
+            if follow_decision and follow_decision.get("is_follow_up"):
+                last_route = question_analyzer.get_last_route()
+                if last_route:
+                    # route_result의 route를 덮어써 동일 파이프라인 유지
+                    from core.query.query_router import QueryRoute
+                    try:
+                        route_result.route = QueryRoute(last_route)
+                        route_result.reasoning = (route_result.reasoning or "") + " | follow_up: keep_last_route"
+                    except Exception:
+                        pass
+        except Exception:
+            pass
         routing_time = time.time() - routing_start
         timings["routing_ms"] = routing_time * 1000.0
         
@@ -1232,7 +1282,7 @@ async def ask_question(
                 f"라우팅결과: {route_result.route.value} (신뢰도: {route_result.confidence:.3f})"
             )
         
-        logger.info(f"📍 라우팅 결과: {route_result.route.value} (신뢰도: {route_result.confidence:.3f})")
+        logger.info(f"📍 라우팅 결과: {route_result.route.value} (신뢰도: {route_result.confidence:.3f}) | follow_up={follow_decision}")
         try:
             unified_logger.info(
                 "routing_decision",
@@ -1366,9 +1416,15 @@ async def ask_question(
         original_query = request.question
         processed_query = analyzed_question.processed_question or original_query
         extracted_keywords = analyzed_question.keywords or []
-        # 필수/보조 키워드 단순 분리: 선두 2개를 필수, 이후 3개를 보조로 간주
-        required_keywords = extracted_keywords[:2]
-        optional_keywords = extracted_keywords[2:5]
+        # 키워드쌍(주체/속성) 우선 사용 → 없으면 기존 로직으로 폴백
+        kp = (analyzed_question.metadata or {}).get("keyword_pair") if isinstance(analyzed_question.metadata, dict) else None
+        subject = (kp or {}).get("subject") if isinstance(kp, dict) else ""
+        attribute = (kp or {}).get("attribute") if isinstance(kp, dict) else ""
+        # 필수/보조 키워드 산정
+        required_keywords = [k for k in [subject, attribute] if k]
+        if not required_keywords:
+            required_keywords = extracted_keywords[:2]
+        optional_keywords = [k for k in extracted_keywords if k not in required_keywords][:3]
         # Q1: 키워드 중심 축약 쿼리
         keyword_query = " ".join(required_keywords + optional_keywords) if (required_keywords or optional_keywords) else processed_query
         # Q2: 정확 구절 강조 (가능 시 인용부호로 감싸기)
@@ -1408,14 +1464,26 @@ async def ask_question(
             _metrics["search_timeouts"] += 1
             raise HTTPException(status_code=504, detail={"code": "SEARCH_TIMEOUT", "message": "벡터 검색 시간이 초과되었습니다."})
         
-        # 결과 가중 결합
+        # 결과 가중 결합 (+ 필수 키워드 포함 청크 보정)
         combined_scores = {}
         combined_chunks = {}
         for idx, results in enumerate(multi_results):
             w = weights[idx]
             for chunk, score in results:
                 cid = chunk.chunk_id
-                combined_scores[cid] = combined_scores.get(cid, 0.0) + (score * w)
+                base = (score * w)
+                # 필수 키워드 보정: 청크 내용에 주체/속성이 모두 포함되면 +α, 하나만 포함되면 +β
+                try:
+                    content_lower = (getattr(chunk, 'content', '') or '').lower()
+                    rk_lower = [rk.lower() for rk in required_keywords]
+                    contains = [rk for rk in rk_lower if rk and rk in content_lower]
+                    if len(contains) >= 2:
+                        base += 0.06  # 강한 보정
+                    elif len(contains) == 1:
+                        base += 0.03  # 약한 보정
+                except Exception:
+                    pass
+                combined_scores[cid] = combined_scores.get(cid, 0.0) + base
                 if cid not in combined_chunks:
                     combined_chunks[cid] = chunk
         
@@ -1446,29 +1514,20 @@ async def ask_question(
         
         # 3. 컨텍스트 검증 및 답변 생성
         if not relevant_chunks:
-            logger.warning("🔍 검색된 관련 청크가 없어 LLM 직접 답변으로 전환합니다.")
-            answer_gen_start = time.time()
-            try:
-                # 라우트/모드별 LLM 정책 주입(LOW 비용 모드)
-                llm_policy = get_llm_policy(route_result.route.value, mode="LOW")
-                if hasattr(answer_generator, 'llm') and hasattr(answer_generator.llm, 'config'):
-                    answer_generator.llm.config.temperature = llm_policy["temperature"]
-                    answer_generator.llm.config.max_length = llm_policy["max_new_tokens"]
-                answer = await asyncio.wait_for(
-                    asyncio.get_running_loop().run_in_executor(
-                        _executor, lambda: answer_generator.generate_direct_answer(request.question)
-                    ),
-                    timeout=min(LLM_TIMEOUT_S, max(3.0, llm_budget_ms / 1000.0))
-                )
-            except asyncio.TimeoutError:
-                _metrics["llm_failures"] += 1
-                _metrics["llm_timeouts"] += 1
-                raise HTTPException(status_code=504, detail={"code": "LLM_TIMEOUT", "message": "LLM 응답 시간이 초과되었습니다."})
-            answer_gen_time = time.time() - answer_gen_start
-            timings["llm_ms"] = answer_gen_time * 1000.0
-            
+            # DF(문서 검색) 실패 시 즉시 고정 문구 반환, 다른 파이프라인으로 폴백하지 않음
+            logger.warning("🔍 검색된 관련 청크가 없습니다. 고정 문구를 반환합니다.")
             if chatbot_logger and session_id:
-                chatbot_logger.log_step(session_id, ProcessingStep.ANSWER_GENERATION, answer_gen_time, "직접답변생성 (청크없음)")
+                chatbot_logger.log_step(session_id, ProcessingStep.ANSWER_GENERATION, 0.0, "DF 실패 - 고정 문구 반환")
+            return QuestionResponse(
+                answer="주어진 자료에서 답변을 찾을 수 없습니다.",
+                confidence_score=0.0,
+                used_chunks=[],
+                generation_time=(time.time() - start_time),
+                question_type="no_context",
+                llm_model_name="none",
+                pipeline_type=route_result.route.value,
+                sql_query=None
+            )
         else:
             # 컨텍스트 내용 로깅
             context_content = "\n".join([chunk.content[:100] + "..." for chunk, _ in relevant_chunks[:3]])
@@ -1497,6 +1556,10 @@ async def ask_question(
                 if hasattr(answer_generator, 'llm') and hasattr(answer_generator.llm, 'config'):
                     answer_generator.llm.config.temperature = llm_policy["temperature"]
                     answer_generator.llm.config.max_length = llm_policy["max_new_tokens"]
+                # 후속이면: 동일 컨텍스트 확장 답변 모드(검색 결과 유지, 재검색 없음)
+                is_follow = bool(follow_decision and follow_decision.get("is_follow_up"))
+                if is_follow:
+                    unified_logger.info("follow_up_mode", LogCategory.SYSTEM, module="policy", metadata={"mode": "context_expand"})
                 answer = await asyncio.wait_for(
                     asyncio.get_running_loop().run_in_executor(
                         _executor, lambda: _llm_cb.call(
@@ -1504,7 +1567,8 @@ async def ask_question(
                             analyzed_question,
                             relevant_chunks if rerank_enabled else relevant_chunks,
                             conversation_history=None,
-                            pdf_id=request.pdf_id
+                            pdf_id=request.pdf_id,
+                            session_id=session_id
                         )
                     ),
                     timeout=min(LLM_TIMEOUT_S, max(3.0, llm_budget_ms / 1000.0))
@@ -1547,7 +1611,8 @@ async def ask_question(
                                     analyzed_question,
                                     filtered,
                                     conversation_history=None,
-                                    pdf_id=request.pdf_id
+                                    pdf_id=request.pdf_id,
+                                    session_id=session_id
                                 )
                             ),
                             timeout=LLM_TIMEOUT_S
@@ -1586,16 +1651,43 @@ async def ask_question(
                 pass
         
                 # 4. 대화 히스토리에 추가
+        # 대화 히스토리에 라우트/후속 판정 메타데이터 포함 저장
+        try:
+            meta = {"route": route_result.route.value}
+            if follow_decision:
+                meta.update({
+                    "follow_up": bool(follow_decision.get("is_follow_up")),
+                    "follow_conf": float(follow_decision.get("confidence", 0.0)),
+                    "follow_reason": str(follow_decision.get("reason", ""))
+                })
+        except Exception:
+            meta = {"route": route_result.route.value}
         question_analyzer.add_conversation_item(
             question=request.question,
             answer=answer.content,
-            used_chunks=answer.used_chunks,
-            confidence_score=answer.confidence_score
+            confidence_score=float(getattr(answer, 'confidence', 0.0)),
+            metadata=meta
         )
         
         # 5. API 로깅 + SLA 메타데이터
         try:
             if chatbot_logger:
+                # 질문 분석 정보 추출
+                question_analysis = {
+                    "question_type": analyzed_question.question_type.value,
+                    "processed_question": analyzed_question.processed_question,
+                    "keywords": analyzed_question.keywords,
+                    "entities": analyzed_question.entities,
+                    "intent": analyzed_question.intent,
+                    "context_keywords": analyzed_question.context_keywords,
+                    "answer_target": analyzed_question.answer_target,
+                    "target_type": analyzed_question.target_type,
+                    "value_intent": analyzed_question.value_intent,
+                    "confidence_score": analyzed_question.confidence_score,
+                    "enhanced_question": analyzed_question.enhanced_question,
+                    "metadata": analyzed_question.metadata
+                }
+                
                 # 질문 의도 및 키워드 추출 (간단한 버전)
                 intent = "PDF_QUERY"
                 keywords = request.question.split()[:5]  # 첫 5개 단어를 키워드로 사용
@@ -1626,7 +1718,8 @@ async def ask_question(
                                 "sim_threshold": dynamic_similarity
                             }
                         }
-                    }
+                    },
+                    question_analysis=question_analysis
                 )
         except Exception as log_error:
             logger.warning(f"API 로깅 중 오류 발생: {log_error}")
@@ -1644,13 +1737,18 @@ async def ask_question(
         
         resp = QuestionResponse(
             answer=answer.content,
-            confidence_score=answer.confidence_score,
-            used_chunks=answer.used_chunks,
+            confidence_score=float(getattr(answer, 'confidence', 0.0)),
+            used_chunks=[getattr(c, 'chunk_id', None) for c, _s in (relevant_chunks or []) if getattr(c, 'chunk_id', None)],
             generation_time=answer.generation_time,
             question_type=analyzed_question.question_type.value,
             llm_model_name=answer.model_name,
             pipeline_type=route_result.route.value,
-            sql_query=None
+            sql_query=None,
+            # Answer Target 정보 추가
+            answer_target=analyzed_question.answer_target,
+            target_type=analyzed_question.target_type,
+            value_intent=analyzed_question.value_intent,
+            extraction_confidence=analyzed_question.confidence_score
         )
         # 온라인 품질 샘플링(1-5%) 큐잉(간략 로깅 기반)
         try:

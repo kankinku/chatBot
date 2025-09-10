@@ -9,6 +9,7 @@ PDF 전용 하이브리드 검색 모듈
 
 import numpy as np
 import time
+import re
 from typing import List, Dict, Optional, Tuple, Any
 from dataclasses import dataclass
 from sentence_transformers import SentenceTransformer
@@ -17,6 +18,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 from .pdf_processor import TextChunk
 from .vector_store import HybridVectorStore
+from .units import normalize_unit
 
 import logging
 logger = logging.getLogger(__name__)
@@ -24,13 +26,13 @@ logger = logging.getLogger(__name__)
 @dataclass
 class PDFSearchConfig:
     """PDF 검색 설정"""
-    dense_k: int = 120          # 벡터 검색 후보 수
-    bm25_k: int = 120           # BM25 검색 후보 수
-    rrf_k: int = 120            # RRF 병합 후 후보 수
+    dense_k: int = 200          # 벡터 검색 후보 수 확대
+    bm25_k: int = 200           # BM25 검색 후보 수 확대
+    rrf_k: int = 200            # RRF 병합 후 후보 수 확대
     mmr_k: int = 0              # MMR 비활성화 (정확도 우선)
     rrf_constant: int = 60      # RRF 상수
     multiview_enabled: bool = True  # 멀티뷰 검색 사용
-    similarity_threshold: float = 0.3  # 유사도 임계값
+    similarity_threshold: float = 0.25  # 유사도 임계값 상향(정밀도 우선)
 
 @dataclass
 class PDFSearchResult:
@@ -66,8 +68,8 @@ class PDFRetriever:
         self.bm25_vectorizer = TfidfVectorizer(
             max_features=10000,
             stop_words=None,
-            ngram_range=(1, 3),  # PDF 용어 특성 고려
-            analyzer='char',     # 한국어 최적화
+            ngram_range=(3, 5),   # 짧은 단위 노이즈 감소, 헤더/라벨 매칭 강화
+            analyzer='char_wb',    # 단어 경계 내 문자 ngram (한국어/영문 혼용 텍스트에 유리)
             min_df=2,
             max_df=0.95
         )
@@ -172,7 +174,7 @@ class PDFRetriever:
         content_embeddings = self.embedding_model.encode(
             content_texts, 
             batch_size=batch_size,
-            show_progress_bar=True,
+            show_progress_bar=False,
             normalize_embeddings=True
         )
         
@@ -180,7 +182,7 @@ class PDFRetriever:
         title_embeddings = self.embedding_model.encode(
             title_texts,
             batch_size=batch_size,
-            show_progress_bar=True,
+            show_progress_bar=False,
             normalize_embeddings=True
         )
         
@@ -188,7 +190,7 @@ class PDFRetriever:
         keyword_embeddings = self.embedding_model.encode(
             keyword_texts,
             batch_size=batch_size,
-            show_progress_bar=True,
+            show_progress_bar=False,
             normalize_embeddings=True
         )
         
@@ -196,7 +198,7 @@ class PDFRetriever:
         structure_embeddings = self.embedding_model.encode(
             structure_texts,
             batch_size=batch_size,
-            show_progress_bar=True,
+            show_progress_bar=False,
             normalize_embeddings=True
         )
         
@@ -278,19 +280,27 @@ class PDFRetriever:
         """하이브리드 검색 (벡터 + BM25 + RRF)"""
         search_start = time.time()
         
+        # 복합명사 쿼리 확장
+        expanded_queries = self._expand_compound_noun_queries(query)
+        
         # 1. 벡터 검색
         if self.config.multiview_enabled:
             vector_results = self._multiview_search(query, self.config.dense_k)
         else:
             vector_results = self._single_view_vector_search(query, self.config.dense_k)
         
-        # 2. BM25 검색
-        bm25_results = self._bm25_search_internal(query, self.config.bm25_k)
+        # 2. BM25 검색 (복합명사 쿼리 확장 적용)
+        bm25_results = self._bm25_search_with_expansion(query, self.config.bm25_k, expanded_queries)
         
         # 3. RRF로 결과 병합
         rrf_results = self._reciprocal_rank_fusion(
             vector_results, bm25_results, self.config.rrf_k
         )
+
+        # 3.5 숫자 질의 감지 시 measurements 기반 재랭킹 보정
+        query_numbers = self._parse_numeric_query(query)
+        if query_numbers:
+            rrf_results = self._rerank_with_measurements(rrf_results, query_numbers)
         
         # 4. 유사도 임계값 필터링
         filtered_results = [
@@ -317,6 +327,70 @@ class PDFRetriever:
         logger.info(f"하이브리드 검색 완료: {search_time:.3f}초")
         
         return search_results
+
+    # ==== 숫자 질의 파싱 및 재랭킹 ====
+    _QUERY_NUM_RE = __import__('re').compile(r"(\d+(?:[\.,]\d+)?)(?:\s*(?:~|\-|–|to)\s*(\d+(?:[\.,]\d+)?))?\s*(%|mg\s*/\s*L|mg/L|m³/h|m3/h|㎥/h|분|시간|초)?")
+
+    def _parse_numeric_query(self, query: str):
+        m = self._QUERY_NUM_RE.search(query)
+        if not m:
+            return None
+        def _norm(x):
+            if not x:
+                return None
+            try:
+                return float(x.replace(',', ''))
+            except Exception:
+                return None
+        v1, v2, unit_raw = m.group(1), m.group(2), m.group(3)
+        unit = normalize_unit(unit_raw) if unit_raw else None
+        if v2:
+            return {"type": "range", "value": (_norm(v1), _norm(v2)), "unit": unit}
+        return {"type": "exact", "value": _norm(v1), "unit": unit}
+
+    def _rerank_with_measurements(self, results: List[Tuple[TextChunk, float]], qnum) -> List[Tuple[TextChunk, float]]:
+        # 간단 보정: measurements가 있고 일치도 높은 항목에 가산점
+        boosted: List[Tuple[TextChunk, float]] = []
+        for chunk, score in results:
+            bonus = 0.0
+            ms_list = []
+            try:
+                ms_list = (chunk.metadata or {}).get("measurements", [])
+            except Exception:
+                ms_list = []
+            if ms_list:
+                for ms in ms_list:
+                    unit_match = (qnum.get("unit") is None) or (ms.get("unit") == qnum.get("unit"))
+                    if not unit_match:
+                        continue
+                    if qnum["type"] == "exact" and ms.get("type") == "exact":
+                        try:
+                            if abs(float(ms.get("value")) - float(qnum.get("value"))) < 1e-6:
+                                bonus = max(bonus, 0.2)
+                            else:
+                                # 근접값에도 소폭 보너스(거리 기반)
+                                dist = abs(float(ms.get("value")) - float(qnum.get("value")))
+                                bonus = max(bonus, max(0.0, 0.15 / (1.0 + dist)))
+                        except Exception:
+                            pass
+                    elif qnum["type"] == "range":
+                        try:
+                            ql, qr = qnum.get("value")
+                            if ms.get("type") == "range":
+                                ml, mr = ms.get("value")
+                                # 구간 겹침 여부
+                                if ml is not None and mr is not None and not (mr < ql or ml > qr):
+                                    bonus = max(bonus, 0.25)
+                            elif ms.get("type") == "exact":
+                                mv = float(ms.get("value"))
+                                if ql is not None and qr is not None and ql <= mv <= qr:
+                                    bonus = max(bonus, 0.25)
+                        except Exception:
+                            pass
+            boosted.append((chunk, score + bonus))
+        # 보정 점수로 재정렬
+        boosted.sort(key=lambda x: x[1], reverse=True)
+        return boosted
     
     def _multiview_search(self, query: str, top_k: int) -> List[Tuple[TextChunk, float]]:
         """멀티뷰 검색"""
@@ -378,8 +452,32 @@ class PDFRetriever:
         if self.bm25_matrix is None:
             return []
         
-        # 쿼리 벡터화
-        query_vec = self.bm25_vectorizer.transform([query])
+        # 간단 질의 동의어/정규화 확장 (ID/비밀번호/로그인 등)
+        def _expand_query(q: str) -> List[str]:
+            qnorm = q.strip()
+            expansions = [qnorm]
+            # ID/아이디, PW/비밀번호, login/로그인 등
+            pairs = [
+                ("id", ["아이디", "ID", "Id", "id", "계정"]),
+                ("pw", ["비밀번호", "비번", "password", "PW", "pw"]),
+                ("login", ["로그인", "접속", "login"]),
+                ("logout", ["로그아웃", "logout"]),
+                ("dashboard", ["대시보드", "메뉴", "화면"]),
+                ("vip", ["VIP", "vip", "waio-portal-vip"]),
+            ]
+            for key, syns in pairs:
+                if any(s.lower() in qnorm.lower() for s in [key] + syns):
+                    expansions.extend(syns)
+            # 중복 제거
+            uniq = []
+            for e in expansions:
+                if e not in uniq:
+                    uniq.append(e)
+            return uniq
+
+        expanded = _expand_query(query)
+        # 쿼리 확장어들을 공백으로 이어 붙여 특징량을 넓힘
+        query_vec = self.bm25_vectorizer.transform([' '.join(expanded)])
         
         # 코사인 유사도 계산
         scores = (self.bm25_matrix * query_vec.T).toarray().flatten()
@@ -499,4 +597,77 @@ class PDFRetriever:
                 for view_name, index in self.multiview_indices.items()
             }
         }
+    
+    def _expand_compound_noun_queries(self, query: str) -> List[str]:
+        """복합명사 쿼리 확장"""
+        expanded_queries = [query]  # 원본 쿼리 포함
+        
+        # 정수처리 도메인 특화 복합명사 매핑
+        compound_noun_mappings = {
+            # 공정 관련
+            r'착수\s*공정': ['착수공정', '착수 공정'],
+            r'약품\s*공정': ['약품공정', '약품 공정'],
+            r'혼화\s*응집\s*공정': ['혼화응집공정', '혼화 응집 공정', '혼화공정', '응집공정'],
+            r'혼화\s*공정': ['혼화공정', '혼화 공정'],
+            r'응집\s*공정': ['응집공정', '응집 공정'],
+            r'침전\s*공정': ['침전공정', '침전 공정'],
+            r'여과\s*공정': ['여과공정', '여과 공정'],
+            r'소독\s*공정': ['소독공정', '소독 공정'],
+            r'슬러지\s*처리\s*공정': ['슬러지처리공정', '슬러지 처리 공정', '슬러지공정'],
+            r'슬러지\s*공정': ['슬러지공정', '슬러지 공정'],
+            
+            # 시스템 관련
+            r'ems\s*시스템': ['ems시스템', 'ems 시스템'],
+            r'pms\s*시스템': ['pms시스템', 'pms 시스템'],
+            r'스마트\s*정수장': ['스마트정수장', '스마트 정수장'],
+            r'ai\s*모델': ['ai모델', 'ai 모델'],
+            r'머신러닝\s*모델': ['머신러닝모델', '머신러닝 모델'],
+            r'딥러닝\s*모델': ['딥러닝모델', '딥러닝 모델'],
+            
+            # 장비/설비 관련
+            r'교반기\s*회전속도': ['교반기회전속도', '교반기 회전속도'],
+            r'펌프\s*세부\s*현황': ['펌프세부현황', '펌프 세부 현황'],
+            r'밸브\s*개도율': ['밸브개도율', '밸브 개도율'],
+            r'수위\s*목표값': ['수위목표값', '수위 목표값'],
+            r'잔류염소\s*농도': ['잔류염소농도', '잔류염소 농도'],
+            r'원수\s*탁도': ['원수탁도', '원수 탁도'],
+            r'응집제\s*주입률': ['응집제주입률', '응집제 주입률'],
+            r'슬러지\s*발생량': ['슬러지발생량', '슬러지 발생량'],
+            
+            # 성능 지표 관련
+            r'성능\s*지표': ['성능지표', '성능 지표'],
+            r'정확도\s*지표': ['정확도지표', '정확도 지표'],
+            r'효율\s*지표': ['효율지표', '효율 지표'],
+        }
+        
+        # 각 매핑에 대해 쿼리 확장
+        for pattern, variations in compound_noun_mappings.items():
+            if re.search(pattern, query, re.IGNORECASE):
+                for variation in variations:
+                    expanded_query = re.sub(pattern, variation, query, flags=re.IGNORECASE)
+                    if expanded_query not in expanded_queries:
+                        expanded_queries.append(expanded_query)
+        
+        logger.debug(f"복합명사 쿼리 확장: {len(expanded_queries)}개 쿼리 생성")
+        return expanded_queries
+    
+    def _bm25_search_with_expansion(self, query: str, top_k: int, expanded_queries: List[str]) -> List[PDFSearchResult]:
+        """복합명사 쿼리 확장을 적용한 BM25 검색"""
+        all_results = []
+        
+        # 각 확장된 쿼리에 대해 BM25 검색 수행
+        for expanded_query in expanded_queries:
+            results = self._bm25_search_internal(expanded_query, top_k)
+            all_results.extend(results)
+        
+        # 중복 제거 및 점수 정규화
+        unique_results = {}
+        for result in all_results:
+            chunk_id = result.chunk.chunk_id
+            if chunk_id not in unique_results or result.score > unique_results[chunk_id].score:
+                unique_results[chunk_id] = result
+        
+        # 점수 순으로 정렬하여 상위 k개 반환
+        sorted_results = sorted(unique_results.values(), key=lambda x: x.score, reverse=True)
+        return sorted_results[:top_k]
 

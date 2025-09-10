@@ -158,7 +158,7 @@ class LegalIndexer:
         content_embeddings = self.embedding_model.encode(
             content_texts, 
             batch_size=32,
-            show_progress_bar=True,
+            show_progress_bar=False,
             normalize_embeddings=True
         )
         
@@ -166,7 +166,7 @@ class LegalIndexer:
         structure_embeddings = self.embedding_model.encode(
             structure_texts,
             batch_size=32,
-            show_progress_bar=True,
+            show_progress_bar=False,
             normalize_embeddings=True
         )
         
@@ -174,7 +174,7 @@ class LegalIndexer:
         keyword_embeddings = self.embedding_model.encode(
             keyword_texts,
             batch_size=32,
-            show_progress_bar=True,
+            show_progress_bar=False,
             normalize_embeddings=True
         )
         

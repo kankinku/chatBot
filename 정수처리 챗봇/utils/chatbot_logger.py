@@ -10,11 +10,30 @@ import logging
 import json
 import os
 import sys
+import time
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any, Optional, List
 from dataclasses import dataclass, asdict
 from enum import Enum
+
+# 로깅 에러 무시를 위한 전역 설정
+logging.raiseExceptions = False
+
+# 에러 로거 import
+try:
+    from .error_logger import log_error, log_system_error
+except ImportError:
+    # 상대 import 실패 시 절대 import 시도
+    try:
+        from utils.error_logger import log_error, log_system_error
+    except ImportError:
+        # 폴백 함수들
+        def log_error(error, context=None, additional_info=None):
+            print(f"에러 로그 기록 실패: {error}", file=sys.stderr)
+        
+        def log_system_error(message, module="unknown", additional_info=None):
+            print(f"시스템 에러: {message}", file=sys.stderr)
 
 class QuestionType(Enum):
     """질문 유형"""
@@ -71,24 +90,73 @@ class StepLogEntry:
 class ChatbotLogger:
     """챗봇 전용 로거"""
     
-    def __init__(self, log_dir: str = "logs"):
+    def __init__(self, log_dir: str = "logs", reset_qa_log: bool = True):
         """
         로거 초기화
         
         Args:
             log_dir: 로그 파일 저장 디렉토리
+            reset_qa_log: qa_log 파일을 초기화할지 여부
         """
         try:
             self.log_dir = Path(log_dir)
             self.log_dir.mkdir(exist_ok=True, parents=True)
             
-            # 로그 파일 경로들
-            self.detailed_log_path = self.log_dir / "chatbot_detailed.log"
-            self.summary_log_path = self.log_dir / "chatbot_summary.log"
-            self.sql_log_path = self.log_dir / "sql_queries.log"
-            self.pdf_log_path = self.log_dir / "pdf_queries.log"
-            self.step_log_path = self.log_dir / "step_processing.log"
-            self.module_mode_log_path = self.log_dir / "module_mode.log"
+            # qa_log만 유지
+            self.qa_log_path = self.log_dir / "qa_log.jsonl"
+            
+            # qa_log 초기화 (새로 시작할 때마다) - 효율적인 초기화 방식
+            if reset_qa_log and self.qa_log_path.exists():
+                try:
+                    # 1단계: 먼저 내용만 초기화 시도 (가장 안전하고 빠름)
+                    try:
+                        with open(self.qa_log_path, 'w', encoding='utf-8') as f:
+                            f.write('')
+                        try:
+                            logging.getLogger("chatbot_summary").info("qa_log 파일 내용이 초기화되었습니다.")
+                        except (ValueError, OSError):
+                            # 로깅 에러 무시
+                            pass
+                    except (OSError, IOError, PermissionError) as e:
+                        # 2단계: 내용 초기화 실패 시 파일 삭제 시도
+                        error_code = getattr(e, 'winerror', None) if hasattr(e, 'winerror') else None
+                        if error_code == 32 or isinstance(e, PermissionError):
+                            # 파일이 잠겨있으면 삭제 시도
+                            max_retries = 3
+                            base_delay = 0.2
+                            
+                            for attempt in range(max_retries):
+                                try:
+                                    self.qa_log_path.unlink()
+                                    try:
+                                        logging.getLogger("chatbot_summary").info("qa_log 파일이 삭제되었습니다.")
+                                    except (ValueError, OSError):
+                                        # 로깅 에러 무시
+                                        pass
+                                    break
+                                except (OSError, IOError, PermissionError) as delete_e:
+                                    if attempt < max_retries - 1:
+                                        delay = base_delay * (2 ** attempt)
+                                        time.sleep(delay)
+                                        continue
+                                    else:
+                                        try:
+                                            logging.getLogger("chatbot_summary").warning("qa_log 초기화 실패 (파일 잠금), 계속 진행")
+                                        except (ValueError, OSError):
+                                            # 로깅 에러 무시
+                                            pass
+                        else:
+                            try:
+                                logging.getLogger("chatbot_summary").warning(f"qa_log 초기화 실패, 계속 진행: {e}")
+                            except (ValueError, OSError):
+                                # 로깅 에러 무시
+                                pass
+                except Exception as e:
+                    try:
+                        logging.getLogger("chatbot_summary").warning(f"qa_log 초기화 실패, 계속 진행: {e}")
+                    except (ValueError, OSError):
+                        # 로깅 에러 무시
+                        pass
             
             # 로거 설정
             self._setup_loggers()
@@ -97,119 +165,87 @@ class ChatbotLogger:
             self.session_counter = 0
             
             # 콘솔 출력 대신 파일 로그에만 기록
-            logging.getLogger("chatbot_summary").info(f"챗봇 로거 초기화 완료: {self.log_dir}")
+            try:
+                logging.getLogger("chatbot_summary").info(f"챗봇 로거 초기화 완료: {self.log_dir}")
+            except (ValueError, OSError):
+                # 로깅 에러 무시
+                pass
             
         except Exception as e:
-            logging.getLogger("chatbot_summary").error(f"챗봇 로거 초기화 실패: {e}")
+            try:
+                logging.getLogger("chatbot_summary").error(f"챗봇 로거 초기화 실패: {e}")
+            except (ValueError, OSError):
+                # 로깅 에러 무시
+                pass
+            # 에러 로그에 기록
+            log_error(e, "ChatbotLogger.__init__", {"log_dir": log_dir})
             # 폴백 로거 설정
             self._setup_fallback_logger()
         
     def _setup_fallback_logger(self):
         """폴백 로거 설정 (기본 로깅)"""
-        self.detailed_logger = logging.getLogger("chatbot_fallback")
         self.summary_logger = logging.getLogger("chatbot_fallback")
-        self.sql_logger = logging.getLogger("chatbot_fallback")
-        self.pdf_logger = logging.getLogger("chatbot_fallback")
         self.step_logger = logging.getLogger("chatbot_fallback")
         
-        # 콘솔 핸들러 대신 파일 핸들러만 사용 (폴백 모드에서도)
-        file_handler = logging.FileHandler(self.log_dir / "fallback.log", encoding='utf-8')
-        file_formatter = logging.Formatter(
-            '%(asctime)s - %(levelname)s - %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S'
-        )
-        file_handler.setFormatter(file_formatter)
+        # 로그 출력 비활성화 (폴백 모드에서도)
+        null_handler = logging.NullHandler()
         
-        for logger in [self.detailed_logger, self.summary_logger, self.sql_logger, self.pdf_logger, self.step_logger]:
-            logger.setLevel(logging.INFO)
+        for logger in [self.summary_logger, self.step_logger]:
+            logger.setLevel(logging.CRITICAL)
             logger.handlers.clear()
-            logger.addHandler(file_handler)
+            logger.addHandler(null_handler)
         
         self.session_counter = 0
         
     def _setup_loggers(self):
-        """로거 설정"""
+        """로거 설정 - 콘솔 출력만"""
         try:
-            # 상세 로그 (모든 정보)
-            self.detailed_logger = logging.getLogger("chatbot_detailed")
-            self.detailed_logger.setLevel(logging.INFO)
-            self.detailed_logger.handlers.clear()
-            
-            detailed_handler = logging.FileHandler(self.detailed_log_path, encoding='utf-8', mode='a')
-            detailed_formatter = logging.Formatter(
-                '%(asctime)s - %(levelname)s - %(message)s',
-                datefmt='%Y-%m-%d %H:%M:%S'
-            )
-            detailed_handler.setFormatter(detailed_formatter)
-            self.detailed_logger.addHandler(detailed_handler)
-            
-            # 요약 로그 (핵심 정보만)
+            # 요약 로그 (핵심 정보만) - 콘솔 출력
             self.summary_logger = logging.getLogger("chatbot_summary")
             self.summary_logger.setLevel(logging.INFO)
             self.summary_logger.handlers.clear()
             
-            summary_handler = logging.FileHandler(self.summary_log_path, encoding='utf-8', mode='a')
-            summary_formatter = logging.Formatter(
-                '%(asctime)s | %(message)s',
-                datefmt='%Y-%m-%d %H:%M:%S'
-            )
-            summary_handler.setFormatter(summary_formatter)
-            self.summary_logger.addHandler(summary_handler)
+            # 콘솔 핸들러 추가 (핵심 정보만) - 안전한 스트림 처리
+            console_handler = logging.StreamHandler(sys.stdout)
+            console_handler.setLevel(logging.INFO)
+            formatter = logging.Formatter('%(asctime)s | %(levelname)-8s | %(name)-20s | %(message)s')
+            console_handler.setFormatter(formatter)
             
-            # SQL 전용 로그
-            self.sql_logger = logging.getLogger("chatbot_sql")
-            self.sql_logger.setLevel(logging.INFO)
-            self.sql_logger.handlers.clear()
+            # 스트림 에러 무시를 위한 필터 추가
+            class StreamErrorFilter(logging.Filter):
+                def filter(self, record):
+                    try:
+                        return True
+                    except (ValueError, OSError):
+                        # 스트림 에러 무시
+                        return False
             
-            sql_handler = logging.FileHandler(self.sql_log_path, encoding='utf-8', mode='a')
-            sql_formatter = logging.Formatter(
-                '%(asctime)s | %(message)s',
-                datefmt='%Y-%m-%d %H:%M:%S'
-            )
-            sql_handler.setFormatter(sql_formatter)
-            self.sql_logger.addHandler(sql_handler)
+            console_handler.addFilter(StreamErrorFilter())
+            self.summary_logger.addHandler(console_handler)
             
-            # PDF 전용 로그
-            self.pdf_logger = logging.getLogger("chatbot_pdf")
-            self.pdf_logger.setLevel(logging.INFO)
-            self.pdf_logger.handlers.clear()
-            
-            pdf_handler = logging.FileHandler(self.pdf_log_path, encoding='utf-8', mode='a')
-            pdf_formatter = logging.Formatter(
-                '%(asctime)s | %(message)s',
-                datefmt='%Y-%m-%d %H:%M:%S'
-            )
-            pdf_handler.setFormatter(pdf_formatter)
-            self.pdf_logger.addHandler(pdf_handler)
-            
-            # 단계별 처리 로그
+            # 단계별 처리 로그 - 콘솔 출력
             self.step_logger = logging.getLogger("chatbot_step")
             self.step_logger.setLevel(logging.INFO)
             self.step_logger.handlers.clear()
             
-            step_handler = logging.FileHandler(self.step_log_path, encoding='utf-8', mode='a')
-            step_formatter = logging.Formatter(
-                '%(asctime)s | %(message)s',
-                datefmt='%Y-%m-%d %H:%M:%S'
-            )
-            step_handler.setFormatter(step_formatter)
-            self.step_logger.addHandler(step_handler)
+            # 콘솔 핸들러 추가 (단계별 진행상황) - 안전한 스트림 처리
+            step_console_handler = logging.StreamHandler(sys.stdout)
+            step_console_handler.setLevel(logging.INFO)
+            step_formatter = logging.Formatter('%(asctime)s | %(levelname)-8s | %(name)-20s | %(message)s')
+            step_console_handler.setFormatter(step_formatter)
             
-            # 모듈 모드 전용 로그
-            self.module_mode_logger = logging.getLogger("chatbot_module_mode")
-            self.module_mode_logger.setLevel(logging.INFO)
-            self.module_mode_logger.handlers.clear()
-            
-            module_mode_handler = logging.FileHandler(self.module_mode_log_path, encoding='utf-8', mode='a')
-            module_mode_formatter = logging.Formatter(
-                '%(asctime)s | %(message)s',
-                datefmt='%Y-%m-%d %H:%M:%S'
-            )
-            module_mode_handler.setFormatter(module_mode_formatter)
-            self.module_mode_logger.addHandler(module_mode_handler)
+            # 스트림 에러 무시를 위한 필터 추가
+            step_console_handler.addFilter(StreamErrorFilter())
+            self.step_logger.addHandler(step_console_handler)
             
         except Exception as e:
-            logging.getLogger("chatbot_summary").error(f"로거 설정 실패: {e}")
+            try:
+                logging.getLogger("chatbot_summary").error(f"로거 설정 실패: {e}")
+            except (ValueError, OSError):
+                # 로깅 에러 무시
+                pass
+            # 에러 로그에 기록
+            log_error(e, "ChatbotLogger._setup_loggers")
             self._setup_fallback_logger()
     
     def _generate_session_id(self) -> str:
@@ -245,20 +281,14 @@ class ChatbotLogger:
             # 단계별 로그 기록
             self.step_logger.info(step_msg)
             
-            # 메타데이터가 있으면 상세 로그에도 기록
-            if metadata:
-                detailed_step_log = {
-                    "session_id": session_id,
-                    "timestamp": timestamp,
-                    "step": step.value,
-                    "step_time": step_time,
-                    "details": details,
-                    "metadata": metadata
-                }
-                self.detailed_logger.info(f"STEP_LOG: {json.dumps(detailed_step_log, ensure_ascii=False)}")
+            # 메타데이터는 콘솔에만 출력
                 
         except Exception as e:
-            logging.getLogger("chatbot_summary").error(f"단계별 로그 기록 실패: {e}")
+            try:
+                logging.getLogger("chatbot_summary").error(f"단계별 로그 기록 실패: {e}")
+            except (ValueError, OSError):
+                # 로깅 에러 무시
+                pass
     
     def log_question(self, 
                     user_question: str,
@@ -272,7 +302,8 @@ class ChatbotLogger:
                     used_chunks: Optional[List[str]] = None,
                     error_message: Optional[str] = None,
                     model_name: Optional[str] = None,
-                    additional_info: Optional[Dict[str, Any]] = None) -> str:
+                    additional_info: Optional[Dict[str, Any]] = None,
+                    question_analysis: Optional[Dict[str, Any]] = None) -> str:
         """
         질문 로깅
         
@@ -315,25 +346,59 @@ class ChatbotLogger:
                 additional_info=additional_info
             )
             
-            # 상세 로그 (JSON 형태)
-            detailed_log = {
-                "session_id": session_id,
-                "timestamp": timestamp,
-                "question": user_question,
-                "type": question_type.value,
-                "intent": intent,
-                "keywords": keywords,
-                "processing_time": processing_time,
-                "confidence": confidence_score,
-                "model": model_name,
-                "sql": generated_sql,
-                "answer": generated_answer,
-                "used_chunks": used_chunks,
-                "error": error_message,
-                "additional_info": additional_info
+            # qa_log에만 JSON 형태로 기록 (가독성 개선)
+            qa_log_entry = {
+                "세션_ID": session_id,
+                "타임스탬프": timestamp,
+                "사용자_질문": user_question,
+                "질문_유형": question_type.value,
+                "의도": intent,
+                "키워드": keywords,
+                "처리_시간_초": round(processing_time, 3),
+                "신뢰도": round(confidence_score, 3),
+                "사용_모델": model_name,
+                "생성된_SQL": generated_sql,
+                "생성된_답변": generated_answer,
+                "사용된_청크": used_chunks,
+                "에러_메시지": error_message,
+                "추가_정보": additional_info,
+                "질문_분석": question_analysis
             }
             
-            self.detailed_logger.info(json.dumps(detailed_log, ensure_ascii=False, indent=2))
+            # qa_log.jsonl에 기록 (가독성 좋게, 파일 잠금 처리)
+            try:
+                # 파일 잠금을 위한 재시도 로직
+                max_retries = 3
+                for attempt in range(max_retries):
+                    try:
+                        with open(self.qa_log_path, 'a', encoding='utf-8') as f:
+                            # 구분선과 질문 번호 추가
+                            f.write('\n' + '='*100 + '\n')
+                            f.write(f'질문 #{self.session_counter} - {timestamp}\n')
+                            f.write('='*100 + '\n\n')
+                            
+                            # JSON을 들여쓰기와 함께 저장
+                            formatted_json = json.dumps(qa_log_entry, ensure_ascii=False, indent=2)
+                            f.write(formatted_json + '\n\n')
+                            
+                            # 하단 구분선
+                            f.write('-'*100 + '\n')
+                            f.flush()  # 즉시 디스크에 쓰기
+                        break  # 성공 시 루프 종료
+                    except (OSError, IOError) as e:
+                        if attempt < max_retries - 1:
+                            time.sleep(0.1)  # 100ms 대기 후 재시도
+                            continue
+                        else:
+                            raise e
+            except Exception as e:
+                try:
+                    logging.getLogger("chatbot_summary").error(f"qa_log 기록 실패: {e}")
+                except (ValueError, OSError):
+                    # 로깅 에러 무시
+                    pass
+                # 에러 로그에 기록
+                log_error(e, "ChatbotLogger.log_question", {"session_id": session_id})
             
             # 요약 로그
             summary_msg = f"[{session_id}] {question_type.value.upper()} | {user_question[:50]}... | {processing_time:.2f}s | {confidence_score:.2f}"
@@ -341,27 +406,17 @@ class ChatbotLogger:
                 summary_msg += f" | ERROR: {error_message}"
             self.summary_logger.info(summary_msg)
             
-            # 유형별 전용 로그
-            if question_type == QuestionType.SQL and generated_sql:
-                sql_msg = f"[{session_id}] {user_question} | {generated_sql}"
-                self.sql_logger.info(sql_msg)
-            
-            elif question_type == QuestionType.PDF and generated_answer:
-                pdf_msg = f"[{session_id}] {user_question} | {generated_answer[:100]}..."
-                self.pdf_logger.info(pdf_msg)
+            # 유형별 로그는 qa_log에만 기록됨
             
             return session_id
             
         except Exception as e:
-            logging.getLogger("chatbot_summary").error(f"질문 로깅 실패: {e}")
-            return "error_session"
-            # 폴백 로깅
             try:
-                fallback_msg = f"LOG_ERROR: {user_question} | {question_type.value} | {error_message or 'No error'}"
-                self.detailed_logger.error(fallback_msg)
-                return f"error_session_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-            except:
-                return f"fallback_session_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+                logging.getLogger("chatbot_summary").error(f"질문 로깅 실패: {e}")
+            except (ValueError, OSError):
+                # 로깅 에러 무시
+                pass
+            return f"error_session_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
     
     def log_sql_query(self, 
                      user_question: str,
@@ -458,18 +513,14 @@ class ChatbotLogger:
             # 모듈 모드 로그 기록
             self.module_mode_logger.info(log_msg)
             
-            # 메타데이터가 있으면 상세 로그에도 기록
-            if metadata:
-                detailed_module_log = {
-                    "timestamp": timestamp,
-                    "session_id": session_id,
-                    "message": message,
-                    "metadata": metadata
-                }
-                self.detailed_logger.info(f"MODULE_MODE_LOG: {json.dumps(detailed_module_log, ensure_ascii=False)}")
+            # 메타데이터는 콘솔에만 출력
                 
         except Exception as e:
-            logging.getLogger("chatbot_summary").error(f"모듈 모드 로그 기록 실패: {e}")
+            try:
+                logging.getLogger("chatbot_summary").error(f"모듈 모드 로그 기록 실패: {e}")
+            except (ValueError, OSError):
+                # 로깅 에러 무시
+                pass
     
     def get_statistics(self) -> Dict[str, Any]:
         """로그 통계 조회"""
@@ -477,25 +528,24 @@ class ChatbotLogger:
             stats = {
                 "total_sessions": self.session_counter,
                 "log_files": {
-                    "detailed": str(self.detailed_log_path),
-                    "summary": str(self.summary_log_path),
-                    "sql": str(self.sql_log_path),
-                    "pdf": str(self.pdf_log_path),
-                    "step": str(self.step_log_path)
+                    "qa_log": str(self.qa_log_path)
                 }
             }
             
             # 파일 크기 정보
-            for log_type, log_path in stats["log_files"].items():
-                if os.path.exists(log_path):
-                    stats[f"{log_type}_size"] = os.path.getsize(log_path)
-                else:
-                    stats[f"{log_type}_size"] = 0
+            if os.path.exists(self.qa_log_path):
+                stats["qa_log_size"] = os.path.getsize(self.qa_log_path)
+            else:
+                stats["qa_log_size"] = 0
             
             return stats
             
         except Exception as e:
-            logging.getLogger("chatbot_summary").error(f"로그 통계 조회 실패: {e}")
+            try:
+                logging.getLogger("chatbot_summary").error(f"로그 통계 조회 실패: {e}")
+            except (ValueError, OSError):
+                # 로깅 에러 무시
+                pass
             return {
                 "total_sessions": self.session_counter,
                 "error": str(e)
@@ -504,48 +554,35 @@ class ChatbotLogger:
     def clear_logs(self):
         """로그 파일들 초기화"""
         try:
-            for log_path in [self.detailed_log_path, self.summary_log_path, 
-                            self.sql_log_path, self.pdf_log_path, self.step_log_path]:
-                if log_path.exists():
-                    log_path.unlink()
+            if self.qa_log_path.exists():
+                self.qa_log_path.unlink()
             
             self.session_counter = 0
-            logging.getLogger("chatbot_summary").info("모든 로그 파일이 초기화되었습니다.")
+            try:
+                logging.getLogger("chatbot_summary").info("qa_log 파일이 초기화되었습니다.")
+            except (ValueError, OSError):
+                # 로깅 에러 무시
+                pass
             
         except Exception as e:
-            logging.getLogger("chatbot_summary").error(f"로그 초기화 실패: {e}")
+            try:
+                logging.getLogger("chatbot_summary").error(f"로그 초기화 실패: {e}")
+            except (ValueError, OSError):
+                # 로깅 에러 무시
+                pass
 
-def _ensure_error_log_handler(logger_name: str = "error_file"):
-    """Ensure error.log file handler is attached once."""
-    root_dir = Path(__file__).resolve().parents[1]
-    logs_dir = root_dir / "logs"
-    logs_dir.mkdir(parents=True, exist_ok=True)
-    error_log_path = logs_dir / "error.log"
-
-    logger = logging.getLogger(logger_name)
-    if not any(isinstance(h, logging.FileHandler) and getattr(h, "_is_error_log", False) for h in logger.handlers):
-        handler = logging.FileHandler(error_log_path, encoding='utf-8')
-        handler.setLevel(logging.ERROR)
-        formatter = logging.Formatter('%(asctime)s | %(levelname)-8s | %(name)-25s | %(message)s')
-        handler.setFormatter(formatter)
-        # mark handler to detect duplicates
-        handler._is_error_log = True  # type: ignore[attr-defined]
-        logger.addHandler(handler)
-    return logger
-
-
-def log_exception_to_error_log(message: str):
-    """Write an error message into logs/error.log."""
-    try:
-        err_logger = _ensure_error_log_handler()
-        err_logger.error(message)
-    except Exception:
-        pass
+# 기존 에러 로그 함수들은 새로운 error_logger로 대체됨
 
 # 전역 로거 인스턴스
 try:
     chatbot_logger = ChatbotLogger()
 except Exception as e:
-    logging.getLogger("chatbot_summary").error(f"전역 로거 생성 실패: {e}")
+    try:
+        logging.getLogger("chatbot_summary").error(f"전역 로거 생성 실패: {e}")
+    except (ValueError, OSError):
+        # 로깅 에러 무시
+        pass
+    # 에러 로그에 기록
+    log_error(e, "전역_로거_생성")
     # 최소한의 로거 생성
     chatbot_logger = None

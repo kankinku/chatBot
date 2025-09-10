@@ -9,12 +9,15 @@
 """
 
 import time
+import numpy as np
 from typing import List, Dict, Optional, Any, Tuple
 from dataclasses import dataclass
 
 from .pdf_processor import TextChunk, PDFProcessor
 from .pdf_router import PDFRouter, PDFMode, PDFResponse, create_optimized_pdf_router
 from .vector_store import HybridVectorStore
+from .enhanced_vector_search import EnhancedVectorSearcher, create_enhanced_searcher
+from .accuracy_validator import AccuracyValidator
 from core.llm.answer_generator import AnswerGenerator, Answer
 
 import logging
@@ -36,8 +39,9 @@ class EnhancedPDFConfig:
     
     # LLM 설정
     llm_model: str = "qwen2:1.5b-instruct-q4_K_M"
-    max_context_chunks: int = 3
+    max_context_chunks: int = 5
     max_tokens: int = 256
+    window_expand: int = 1  # 인접 윈도우 확장 (같은 페이지 인접 청크 우선)
 
 class EnhancedPDFPipeline:
     """향상된 PDF 파이프라인"""
@@ -49,8 +53,8 @@ class EnhancedPDFPipeline:
         # PDF 처리기
         self.pdf_processor = PDFProcessor(
             embedding_model=self.config.embedding_model,
-            chunk_size=512,
-            chunk_overlap=50,
+            chunk_size=256,
+            chunk_overlap=30,
             enable_keyword_extraction=True
         )
         
@@ -70,6 +74,17 @@ class EnhancedPDFPipeline:
             primary_model=self.config.embedding_model
         )
         
+        # 향상된 벡터 검색기
+        self.enhanced_searcher = create_enhanced_searcher(
+            vector_store=self.vector_store,
+            primary_model=self.config.embedding_model
+        )
+        
+        # 정확도 검증기
+        self.accuracy_validator = AccuracyValidator(
+            embedding_model=self.config.embedding_model
+        )
+        
         logger.info("향상된 PDF 파이프라인 초기화 완료")
     
     def process_pdf_file(self, pdf_path: str) -> List[TextChunk]:
@@ -78,7 +93,7 @@ class EnhancedPDFPipeline:
         
         try:
             # PDF에서 텍스트 추출 및 청킹
-            chunks = self.pdf_processor.process_pdf(pdf_path)
+            chunks, metadata = self.pdf_processor.process_pdf(pdf_path)
             
             # 벡터 저장소에 추가
             self.vector_store.add_chunks(chunks)
@@ -113,31 +128,69 @@ class EnhancedPDFPipeline:
     def search_and_answer(self, 
                          query: str, 
                          mode: PDFMode = PDFMode.ACCURACY,
-                         max_results: Optional[int] = None) -> Dict[str, Any]:
+                         max_results: Optional[int] = None,
+                         expected_answer: Optional[str] = None) -> Dict[str, Any]:
         """검색 및 답변 생성"""
         start_time = time.time()
         
         logger.info(f"PDF 검색 및 답변 생성 시작: '{query}' (모드: {mode.value})")
         
         try:
-            # 1. PDF 검색
+            # 1. 향상된 벡터 검색 수행
+            enhanced_search_results = self.enhanced_searcher.search(
+                query=query,
+                top_k=max_results or self.config.max_results * 2,  # 더 많은 후보 검색
+                context=expected_answer  # 예상 답변을 컨텍스트로 활용
+            )
+            
+            # 2. PDF 라우터로 추가 검색 (기존 방식과 병행)
             search_results = self.pdf_router.search_pdf(
                 query=query,
                 mode=mode,
                 top_k=max_results or self.config.max_results
             )
             
-            # 2. 컨텍스트 준비
+            # 3. 검색 결과 정확도 검증
+            validation_result = self.accuracy_validator.validate_search_results(
+                query=query,
+                search_results=enhanced_search_results,
+                expected_answer=expected_answer
+            )
+            
+            # 2. 컨텍스트 준비 (인접 윈도우 확장 포함)
             context_chunks = self._prepare_context(search_results.results)
             
-            # 3. 답변 생성
+            # 3. 답변 생성 (PDF-only 정책: 컨텍스트 없으면 무응답)
             if context_chunks:
                 answer = self.answer_generator.generate_context_answer(
                     question=query,
                     context_chunks=context_chunks
                 )
             else:
-                answer = self.answer_generator.generate_direct_answer(query)
+                # PDF 기반 컨텍스트가 없으므로 즉시 무응답
+                total_time = time.time() - start_time
+                return {
+                    'query': query,
+                    'answer': "제공된 PDF 문서에서 답변에 해당하는 정보를 찾을 수 없습니다.",
+                    'confidence': 0.0,
+                    'sources': [],
+                    'search_results': {
+                        'total_found': 0,
+                        'threshold_passed': 0,
+                        'search_time': search_results.search_time,
+                        'rerank_time': search_results.rerank_time,
+                        'total_search_time': search_results.total_time
+                    },
+                    'generation_time': 0.0,
+                    'total_time': total_time,
+                    'mode': mode.value,
+                    'metadata': {
+                        'context_chunks_used': 0,
+                        'max_context_chunks': self.config.max_context_chunks,
+                        'llm_model': self.config.llm_model,
+                        'pdf_only_abstain': True
+                    }
+                }
             
             total_time = time.time() - start_time
             
@@ -153,6 +206,18 @@ class EnhancedPDFPipeline:
                     'search_time': search_results.search_time,
                     'rerank_time': search_results.rerank_time,
                     'total_search_time': search_results.total_time
+                },
+                'enhanced_search': {
+                    'total_candidates': len(enhanced_search_results),
+                    'avg_confidence': np.mean([r.confidence for r in enhanced_search_results]) if enhanced_search_results else 0.0,
+                    'model_scores': {model: np.mean([r.model_scores.get(model, 0.0) for r in enhanced_search_results]) 
+                                   for model in self.enhanced_searcher.embedding_models.keys()} if enhanced_search_results else {}
+                },
+                'validation': {
+                    'is_accurate': validation_result.is_accurate,
+                    'confidence_score': validation_result.confidence_score,
+                    'accuracy_issues': validation_result.accuracy_issues,
+                    'improvement_suggestions': validation_result.improvement_suggestions
                 },
                 'generation_time': answer.generation_time,
                 'total_time': total_time,
@@ -180,30 +245,48 @@ class EnhancedPDFPipeline:
             }
     
     def _prepare_context(self, search_results: List) -> List[TextChunk]:
-        """검색 결과에서 컨텍스트 준비"""
-        context_chunks = []
-        
-        # 상위 결과들을 컨텍스트로 사용
-        for result in search_results[:self.config.max_context_chunks]:
-            if hasattr(result, 'chunk'):
-                chunk = result.chunk
-            else:
-                chunk = result
-            
-            # TextChunk 객체로 변환
+        """검색 결과에서 컨텍스트 준비 (인접 윈도우 확장)"""
+        if not search_results:
+            return []
+
+        # 1) 기본 상위 결과 선택
+        selected: List[TextChunk] = []
+        for result in search_results:
+            chunk = result.chunk if hasattr(result, 'chunk') else result
             if isinstance(chunk, TextChunk):
-                context_chunks.append(chunk)
+                selected.append(chunk)
             else:
-                # 다른 형태의 청크를 TextChunk로 변환
-                text_chunk = TextChunk(
+                selected.append(TextChunk(
                     content=getattr(chunk, 'content', str(chunk)),
                     page_number=getattr(chunk, 'page_number', 1),
-                    chunk_id=getattr(chunk, 'chunk_id', f"chunk_{len(context_chunks)}"),
+                    chunk_id=getattr(chunk, 'chunk_id', f"chunk_{len(selected)}"),
                     metadata=getattr(chunk, 'metadata', {})
-                )
-                context_chunks.append(text_chunk)
-        
-        return context_chunks
+                ))
+            if len(selected) >= self.config.max_context_chunks:
+                break
+
+        # 2) 인접 윈도우 확장: 같은 페이지 또는 인접 페이지의 후보 우선 추가
+        if self.config.window_expand > 0 and len(selected) < self.config.max_context_chunks:
+            base_pages = {c.page_number for c in selected}
+            extra: List[TextChunk] = []
+            for result in search_results:
+                chunk = result.chunk if hasattr(result, 'chunk') else result
+                if not isinstance(chunk, TextChunk):
+                    chunk = TextChunk(
+                        content=getattr(chunk, 'content', str(chunk)),
+                        page_number=getattr(chunk, 'page_number', 1),
+                        chunk_id=getattr(chunk, 'chunk_id', f"chunk_ex_{len(extra)}"),
+                        metadata=getattr(chunk, 'metadata', {})
+                    )
+                # 같은 페이지 또는 ±window 페이지
+                if any(abs(chunk.page_number - p) <= self.config.window_expand for p in base_pages):
+                    if all(chunk.chunk_id != c.chunk_id for c in selected) and all(chunk.chunk_id != e.chunk_id for e in extra):
+                        extra.append(chunk)
+                        if len(selected) + len(extra) >= self.config.max_context_chunks:
+                            break
+            selected.extend(extra[: max(0, self.config.max_context_chunks - len(selected))])
+
+        return selected
     
     def _format_sources(self, search_results: List) -> List[Dict[str, Any]]:
         """검색 결과를 소스 형태로 포맷팅"""
@@ -278,7 +361,7 @@ def create_fast_pdf_pipeline(embedding_model: str = "jhgan/ko-sroberta-multitask
         embedding_model=embedding_model,
         llm_model=llm_model,
         enable_hybrid_search=True,
-        enable_reranking=False,  # 재순위화 비활성화
+        enable_reranking=True,  # 재순위화 활성화
         enable_multiview=False,  # 멀티뷰 비활성화
         similarity_threshold=0.25,
         max_results=8

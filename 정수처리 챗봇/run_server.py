@@ -42,10 +42,10 @@ except Exception:
 
 # 로깅 설정 (import 전에 설정) - 콘솔 출력 제거, 파일로만 기록
 logging.basicConfig(
-    level=logging.WARNING,  # 필요 최소 레벨만 기록
+    level=logging.CRITICAL,  # 로그 출력 최소화
     format='%(asctime)s | %(levelname)-8s | %(name)-20s | %(message)s',
     handlers=[
-        logging.FileHandler(log_dir / "server.log", encoding='utf-8')
+        logging.NullHandler()
     ]
 )
 
@@ -80,6 +80,7 @@ def force_startup_cleanup():
     """시작 시 Chroma/FAISS/전처리 DB를 강제 초기화한다."""
     try:
         import shutil
+        import time
         base_dir = current_dir
 
         chroma_dir = base_dir / "chroma_db"
@@ -87,36 +88,108 @@ def force_startup_cleanup():
         pdf_db = base_dir / "data" / "pdf_database.db"
         error_log = base_dir / "logs" / "error.log"
 
+        # ChromaDB 제거 (강화된 재시도 로직)
         if chroma_dir.exists():
-            shutil.rmtree(chroma_dir, ignore_errors=True)
+            _safe_remove_directory(chroma_dir, "ChromaDB")
             logger.info(f"[CLEANUP] ChromaDB 제거: {chroma_dir}")
 
+        # FAISS 제거 (강화된 재시도 로직)
         if faiss_dir.exists():
-            shutil.rmtree(faiss_dir, ignore_errors=True)
+            _safe_remove_directory(faiss_dir, "FAISS")
             logger.info(f"[CLEANUP] FAISS 제거: {faiss_dir}")
 
+        # PDF DB 제거 (강화된 재시도 로직)
         if pdf_db.exists():
-            try:
-                pdf_db.unlink()
-            except Exception:
-                # Windows 파일 잠금 대비 재시도용 폴백
-                try:
-                    os.remove(str(pdf_db))
-                except Exception:
-                    pass
+            _safe_remove_file(pdf_db, "전처리 DB")
             logger.info(f"[CLEANUP] 전처리 DB 삭제: {pdf_db}")
 
-        # error.log 초기화
+        # error.log 초기화 (강화된 재시도 로직)
         try:
             (base_dir / "logs").mkdir(exist_ok=True)
-            with open(error_log, 'w', encoding='utf-8') as f:
-                f.write("")
+            _safe_write_file(error_log, "", "error.log 초기화")
             logger.info(f"[CLEANUP] error.log 초기화: {error_log}")
         except Exception as e:
             logger.warning(f"[CLEANUP] error.log 초기화 실패: {e}")
 
     except Exception as e:
         logger.warning(f"[CLEANUP] 시작 시 초기화 실패(계속 진행): {e}")
+
+def _safe_remove_directory(directory_path, description=""):
+    """디렉토리를 안전하게 제거 (WinError 32 대응)"""
+    max_retries = 3
+    base_delay = 0.2
+    
+    for attempt in range(max_retries):
+        try:
+            shutil.rmtree(directory_path, ignore_errors=True)
+            return  # 성공 시 종료
+        except (OSError, PermissionError) as e:
+            error_code = getattr(e, 'winerror', None) if hasattr(e, 'winerror') else None
+            if error_code == 32 or isinstance(e, PermissionError):
+                if attempt < max_retries - 1:
+                    delay = base_delay * (2 ** attempt)
+                    time.sleep(delay)
+                    continue
+                else:
+                    logger.warning(f"[CLEANUP] {description} 제거 실패 (파일 잠금): {directory_path}")
+                    return
+            else:
+                logger.warning(f"[CLEANUP] {description} 제거 실패: {e}")
+                return
+
+def _safe_remove_file(file_path, description=""):
+    """파일을 안전하게 제거 (WinError 32 대응)"""
+    max_retries = 3
+    base_delay = 0.2
+    
+    for attempt in range(max_retries):
+        try:
+            file_path.unlink()
+            return  # 성공 시 종료
+        except (OSError, PermissionError) as e:
+            error_code = getattr(e, 'winerror', None) if hasattr(e, 'winerror') else None
+            if error_code == 32 or isinstance(e, PermissionError):
+                if attempt < max_retries - 1:
+                    delay = base_delay * (2 ** attempt)
+                    time.sleep(delay)
+                    continue
+                else:
+                    # 최종 시도 실패 시 os.remove로 재시도
+                    try:
+                        os.remove(str(file_path))
+                        return
+                    except Exception:
+                        logger.warning(f"[CLEANUP] {description} 제거 실패 (파일 잠금): {file_path}")
+                        return
+            else:
+                logger.warning(f"[CLEANUP] {description} 제거 실패: {e}")
+                return
+
+def _safe_write_file(file_path, content, description=""):
+    """파일을 안전하게 쓰기 (WinError 32 대응)"""
+    max_retries = 3
+    base_delay = 0.2
+    
+    for attempt in range(max_retries):
+        try:
+            with open(file_path, 'w', encoding='utf-8') as f:
+                f.write(content)
+                f.flush()
+                os.fsync(f.fileno())
+            return  # 성공 시 종료
+        except (OSError, PermissionError) as e:
+            error_code = getattr(e, 'winerror', None) if hasattr(e, 'winerror') else None
+            if error_code == 32 or isinstance(e, PermissionError):
+                if attempt < max_retries - 1:
+                    delay = base_delay * (2 ** attempt)
+                    time.sleep(delay)
+                    continue
+                else:
+                    logger.warning(f"[CLEANUP] {description} 실패 (파일 잠금): {file_path}")
+                    return
+            else:
+                logger.warning(f"[CLEANUP] {description} 실패: {e}")
+                return
 
 # 핵심 모듈 import 시도 (에러 처리 포함)
 try:
@@ -450,7 +523,7 @@ class ChatbotServer:
         try:
             # 시작 배너는 파일 로그로만 기록하고, 콘솔에는 1회만 알림
             self.print_startup_banner()
-            print("서버 시작 준비 완료. 모든 로그는 logs/server.log에 저장됩니다.")
+            print("서버 시작 준비 완료.")
             
             # 로컬 모델 준비 확인 및 완전 로드
             if self.model_type == "local":

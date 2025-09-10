@@ -62,13 +62,13 @@ class PDFKeywordExtractor:
     
     def extract_keywords_from_text(self, text: str) -> List[str]:
         """
-        텍스트에서 키워드 추출
+        텍스트에서 키워드 추출 (개선된 버전)
         
         Args:
             text: 추출할 텍스트
             
         Returns:
-            추출된 키워드 리스트
+            추출된 키워드 리스트 (최대 20개)
         """
         # 텍스트 전처리
         text = self._preprocess_text(text)
@@ -77,20 +77,20 @@ class PDFKeywordExtractor:
         words = self._tokenize_text(text)
         
         # 불용어 제거 및 필터링
-        keywords = []
+        valid_keywords = []
         for word in words:
             if self._is_valid_keyword(word):
-                keywords.append(word)
+                valid_keywords.append(word)
         
         # 키워드 빈도수 업데이트
-        self.keyword_cache.update(keywords)
+        self.keyword_cache.update(valid_keywords)
         
-        # 상세 나열 대신 요약 로그: 상위 10개와 총 개수만 (DEBUG 레벨로 변경)
+        # 중요도 기반 키워드 선택 (최대 20개)
+        keywords = self._select_important_keywords(valid_keywords, text)
+        
+        # 로그 출력 (개선된 버전)
         if keywords:
-            top_n = 10
-            sample = keywords[:top_n]
-            remainder = max(0, len(keywords) - top_n)
-            logger.debug(f"[SUCCESS] 키워드 추출 완료: 총 {len(keywords)}개 (상위 {top_n}: {sample}{' +'+str(remainder)+'개' if remainder else ''})")
+            logger.debug(f"[SUCCESS] 키워드 추출 완료: {len(keywords)}개 (전체 후보: {len(valid_keywords)}개)")
         else:
             logger.debug("[SUCCESS] 키워드 추출 완료: 0개")
         return keywords
@@ -106,35 +106,83 @@ class PDFKeywordExtractor:
         return text.strip()
     
     def _tokenize_text(self, text: str) -> List[str]:
-        """텍스트를 단어로 분할 (한국어 개선)"""
+        """텍스트를 단어로 분할 (복합명사 고려)"""
         words = []
         
-        # 한국어 토큰화 개선
-        import re
+        # 1. 복합명사 추출 (공백이 있는 복합명사도 포함)
+        compound_words = self._extract_compound_nouns(text)
+        words.extend(compound_words)
         
-        # 조사 제거 패턴
-        particles = ['에서', '으로', '에게', '까지', '부터', '사이', '안에', '밖에', '위에', '아래에', '앞에', '뒤에', '옆에', '과', '와', '를', '을', '이', '가', '의', '에', '로', '고', '며', '거나', '지만', '므로', '서', '니', '면', '던', '든', '든지', '자', '셨다', '신다', '시는', '시고', '시며', '시거나', '시지만', '시므로', '셔서', '시니', '시면', '시던', '시든', '시든지', '시자', '하', '되', '이', '아니', '하고', '되고', '이고', '아니고', '하며', '되며', '이며', '아니며', '하거나', '되거나', '이거나', '아니거나', '하지만', '되지만', '이지만', '아니지만', '하므로', '되므로', '이므로', '아니므로', '하여', '되어', '이어', '아니어', '하니', '되니', '이니', '아니니', '하면', '되면', '이면', '아니면', '하던', '되던', '이던', '아니던', '하든', '되든', '이든', '아니든', '하든지', '되든지', '이든지', '아니든지', '하자', '되자', '이자', '아니자']
-        
-        # 한국어 단어 패턴 (한글 + 영어 + 숫자 조합)
+        # 2. 일반 단어 토큰화
         korean_pattern = r'[가-힣]+|[a-zA-Z]+|\d+'
         tokens = re.findall(korean_pattern, text)
         
         for token in tokens:
-            # 조사 제거
-            clean_token = token
-            for particle in particles:
-                if clean_token.endswith(particle):
-                    clean_token = clean_token[:-len(particle)]
-                    break
-            
-            # 2글자 이상인 단어만 유효한 키워드로 간주
-            if len(clean_token) >= 2:
-                words.append(clean_token.lower())
+            # 기본 길이 필터링 (2글자 이상)
+            if len(token) >= 2:
+                words.append(token.lower())
         
         return words
     
+    def _extract_compound_nouns(self, text: str) -> List[str]:
+        """복합명사 추출"""
+        compound_words = []
+        
+        # 정수처리 도메인 특화 복합명사 패턴
+        compound_patterns = [
+            # 공정 관련 (공백 포함/미포함 모두)
+            r'착수\s*공정',
+            r'약품\s*공정',
+            r'혼화\s*응집\s*공정',
+            r'혼화\s*공정',
+            r'응집\s*공정',
+            r'침전\s*공정',
+            r'여과\s*공정',
+            r'소독\s*공정',
+            r'슬러지\s*처리\s*공정',
+            r'슬러지\s*공정',
+            
+            # 시스템 관련
+            r'ems\s*시스템',
+            r'pms\s*시스템',
+            r'스마트\s*정수장',
+            r'ai\s*모델',
+            r'머신러닝\s*모델',
+            r'딥러닝\s*모델',
+            
+            # 장비/설비 관련
+            r'교반기\s*회전속도',
+            r'펌프\s*세부\s*현황',
+            r'밸브\s*개도율',
+            r'수위\s*목표값',
+            r'잔류염소\s*농도',
+            r'원수\s*탁도',
+            r'응집제\s*주입률',
+            r'슬러지\s*발생량',
+            
+            # 성능 지표 관련
+            r'성능\s*지표',
+            r'정확도\s*지표',
+            r'효율\s*지표',
+            r'mae\s*평균\s*절대\s*오차',
+            r'mse\s*평균\s*제곱\s*오차',
+            r'rmse\s*평균\s*제곱근\s*오차',
+            r'r²\s*결정계수',
+            r'r2\s*결정계수',
+        ]
+        
+        for pattern in compound_patterns:
+            matches = re.findall(pattern, text, re.IGNORECASE)
+            for match in matches:
+                # 공백 제거하여 표준화
+                normalized = re.sub(r'\s+', '', match)
+                if len(normalized) >= 2:
+                    compound_words.append(normalized.lower())
+        
+        return compound_words
+    
     def _is_valid_keyword(self, word: str) -> bool:
-        """유효한 키워드인지 확인"""
+        """유효한 키워드인지 확인 (개선된 버전)"""
         # 불용어 제거
         if word in self.stop_words:
             return False
@@ -151,7 +199,72 @@ class PDFKeywordExtractor:
         if word.isascii() and len(word) < 3:
             return False
         
+        # 너무 긴 단어 제거 (20글자 이상)
+        if len(word) > 20:
+            return False
+        
+        # 반복 문자 패턴 제거 (예: "aaaa", "1111")
+        if len(set(word)) == 1 and len(word) > 2:
+            return False
+        
+        # 특수 패턴 제거 (예: "abcabc", "123123")
+        if len(word) >= 4 and word[:len(word)//2] == word[len(word)//2:]:
+            return False
+        
         return True
+    
+    def _select_important_keywords(self, keywords: List[str], original_text: str) -> List[str]:
+        """
+        중요도 기반 키워드 선택 (최대 30개)
+        
+        Args:
+            keywords: 후보 키워드 리스트
+            original_text: 원본 텍스트
+            
+        Returns:
+            선택된 중요 키워드 리스트
+        """
+        if not keywords:
+            return []
+        
+        # 키워드 빈도 계산
+        keyword_freq = Counter(keywords)
+        
+        # 중요도 점수 계산
+        keyword_scores = {}
+        for keyword, freq in keyword_freq.items():
+            score = 0
+            
+            # 1. 빈도 점수 (0-40점)
+            score += min(freq * 2, 40)
+            
+            # 2. 길이 점수 (0-20점) - 적당한 길이의 단어 선호
+            if 3 <= len(keyword) <= 6:
+                score += 20
+            elif len(keyword) == 2 or len(keyword) == 7:
+                score += 15
+            elif len(keyword) == 8:
+                score += 10
+            
+            # 3. 전문용어 점수 (0-20점)
+            technical_terms = ['시스템', '모델', '데이터', '공정', '처리', '운영', '제어', '분석', '예측', '알고리즘', 
+                             '성능', '효율', '최적화', '관리', '모니터링', '설정', '구성', '기능', '서비스', '플랫폼']
+            if keyword in technical_terms:
+                score += 20
+            
+            # 4. 도메인 특화 용어 점수 (0-20점)
+            domain_terms = ['정수장', '정수', '원수', '유입', '유출', '수위', '탁도', '염소', '응집', '침전', 
+                           '소독', '밸브', '펌프', '센서', '알람', '스마트', 'ai', '인공지능', '머신러닝']
+            if keyword in domain_terms:
+                score += 20
+            
+            keyword_scores[keyword] = score
+        
+        # 점수 순으로 정렬하여 상위 30개 선택 (20개에서 30개로 증가)
+        sorted_keywords = sorted(keyword_scores.items(), key=lambda x: x[1], reverse=True)
+        selected_keywords = [kw for kw, score in sorted_keywords[:30] if score > 0]
+        
+        return selected_keywords
     
     def get_frequent_keywords(self, min_frequency: int = None) -> List[str]:
         """

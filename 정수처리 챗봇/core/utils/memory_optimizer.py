@@ -220,10 +220,12 @@ def memory_profiler(operation_name: str):
         memory_diff = after_info.process_memory - before_info.process_memory
         duration = end_time - start_time
         
-        logger.info(f"메모리 프로파일 [{operation_name}]: "
-                   f"사용량 변화: {memory_diff:+.3f}GB, "
-                   f"실행 시간: {duration:.3f}초, "
-                   f"현재 사용량: {after_info.process_memory:.3f}GB")
+        # 중요한 메모리 변화나 긴 실행 시간일 때만 로깅
+        if abs(memory_diff) >= 0.1 or duration >= 5.0:
+            logger.info(f"메모리 프로파일 [{operation_name}]: "
+                       f"사용량 변화: {memory_diff:+.3f}GB, "
+                       f"실행 시간: {duration:.3f}초, "
+                       f"현재 사용량: {after_info.process_memory:.3f}GB")
 
 class ModelMemoryManager:
     """AI 모델 메모리 관리자 (LRU 캐시 기반)"""

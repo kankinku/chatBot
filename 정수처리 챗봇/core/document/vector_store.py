@@ -118,14 +118,17 @@ class FAISSVectorStore(VectorStoreInterface):
         logger.info(f"{len(chunks)}개 청크를 FAISS 인덱스에 추가 (총 {len(self.chunks)}개)")
     
     def search(self, query_embedding: np.ndarray, top_k: int = 5, 
-               use_hybrid_search: bool = True) -> List[Tuple[TextChunk, float]]:
+               use_hybrid_search: bool = True, answer_target: str = None,
+               target_type: str = None) -> List[Tuple[TextChunk, float]]:
         """
-        쿼리 임베딩과 유사한 청크들을 검색 (개선된 버전)
+        쿼리 임베딩과 유사한 청크들을 검색 (목표 기반 검색 강화)
         
         Args:
             query_embedding: 쿼리 임베딩 벡터
             top_k: 반환할 최대 결과 수
             use_hybrid_search: 하이브리드 검색 사용 여부
+            answer_target: 답변 목표 (예: "약품 주입률", "모델 성능 지표")
+            target_type: 목표 유형 (quantitative_value, qualitative_definition 등)
             
         Returns:
             (TextChunk, 유사도 점수) 튜플 리스트
@@ -148,10 +151,11 @@ class FAISSVectorStore(VectorStoreInterface):
         )
         vector_time = time.time() - vector_start
         
-        # 2. 하이브리드 검색 (키워드 매칭 + 벡터 유사도)
+        # 2. 하이브리드 검색 (키워드 매칭 + 벡터 유사도 + 목표 기반 가중치)
         hybrid_start = time.time()
         if use_hybrid_search:
-            results = self._hybrid_search(query_embedding, scores[0], indices[0], top_k)
+            results = self._hybrid_search(query_embedding, scores[0], indices[0], top_k, 
+                                        answer_target, target_type)
         else:
             results = [(self.chunks[i], float(s)) for s, i in zip(scores[0], indices[0])]
         hybrid_time = time.time() - hybrid_start
@@ -169,15 +173,18 @@ class FAISSVectorStore(VectorStoreInterface):
     def _hybrid_search(self, query_embedding: np.ndarray, 
                       vector_scores: np.ndarray, 
                       vector_indices: np.ndarray,
-                      top_k: int) -> List[Tuple[TextChunk, float]]:
+                      top_k: int, answer_target: str = None,
+                      target_type: str = None) -> List[Tuple[TextChunk, float]]:
         """
-        하이브리드 검색 (벡터 유사도 + 키워드 매칭)
+        하이브리드 검색 (벡터 유사도 + 키워드 매칭 + 목표 기반 가중치)
         
         Args:
             query_embedding: 쿼리 임베딩
             vector_scores: 벡터 유사도 점수들
             vector_indices: 벡터 인덱스들
             top_k: 반환할 결과 수
+            answer_target: 답변 목표
+            target_type: 목표 유형
             
         Returns:
             하이브리드 점수로 정렬된 결과들
@@ -187,14 +194,17 @@ class FAISSVectorStore(VectorStoreInterface):
         for score, idx in zip(vector_scores, vector_indices):
             chunk = self.chunks[idx]
             
-            # 벡터 유사도 점수 (0.6 가중치)
-            vector_score = float(score) * 0.6
+            # 벡터 유사도 점수 (0.4 가중치)
+            vector_score = float(score) * 0.4
             
-            # 키워드 매칭 점수 (0.4 가중치)
-            keyword_score = self._calculate_keyword_score(chunk) * 0.4
+            # 키워드 매칭 점수 (0.3 가중치)
+            keyword_score = self._calculate_keyword_score(chunk) * 0.3
+            
+            # 목표 기반 가중치 (0.3 가중치)
+            target_score = self._calculate_target_score(chunk, answer_target, target_type) * 0.3
             
             # 하이브리드 점수
-            hybrid_score = vector_score + keyword_score
+            hybrid_score = vector_score + keyword_score + target_score
             
             hybrid_results.append((chunk, hybrid_score))
         
@@ -205,7 +215,7 @@ class FAISSVectorStore(VectorStoreInterface):
     
     def _calculate_keyword_score(self, chunk: TextChunk) -> float:
         """
-        청크의 키워드 매칭 점수 계산
+        청크의 키워드 매칭 점수 계산 (정수처리 도메인 특화)
         
         Args:
             chunk: 평가할 텍스트 청크
@@ -213,31 +223,38 @@ class FAISSVectorStore(VectorStoreInterface):
         Returns:
             키워드 매칭 점수 (0.0 ~ 1.0)
         """
-        # 중요 키워드 패턴 (도메인별로 확장 가능)
-        important_keywords = [
-            '시스템', '프로그램', '소프트웨어', '애플리케이션',
-            '데이터', '정보', '자료', '파일',
-            '사용자', '관리자', '고객', '이용자',
-            '보안', '인증', '권한', '접근',
-            '성능', '속도', '효율', '품질',
-            '오류', '문제', '장애', '해결',
-            '설정', '구성', '환경', '옵션',
-            '백업', '복구', '저장', '보관',
-            '네트워크', '통신', '연결', '전송',
-            '데이터베이스', 'DB', '테이블', '쿼리',
-            # 교통 시스템 관련 키워드 추가
-            '분석', '뷰', '활성화', '교차로', '교통',
-            '네비게이션', '사이드바', '목록', '검색',
-            '선택', '마커', '지도', '패널',
-            '버튼', '클릭', '위치', '방법',
-            '좌측', '우측', '상단', '하단'
+        # 정수처리 도메인 특화 키워드 (공정별 분류)
+        process_keywords = {
+            '착수': ['착수', '수위', '목표값', '유입량', '정수지', '밸브', 'k-means', '군집분석', '월별'],
+            '약품': ['약품', '응집제', '주입률', 'n-beats', '모델', '탁도', '알칼리도', '전기전도도'],
+            '혼화응집': ['혼화', '응집', '회전속도', 'rpm', '교반', 'g값', '설비값', '산출식', '동점성계수'],
+            '침전': ['침전', '슬러지', '발생량', '수집기', '대차', '운전', '스케줄', 'naoh', '활성탄'],
+            '여과': ['여과', '여과지', '세척', '주기', '운전', '스케줄', '수위', '운영지수'],
+            '소독': ['소독', '염소', '잔류염소', '주입률', '체류시간', '전차염', '농도'],
+            'ems': ['ems', '펌프', '제어', '전력', '피크', '에너지', '사용량'],
+            'pms': ['pms', '모터', '진단', '전류', '진동', '온도', '고장'],
+            '대시보드': ['대시보드', '영역', '사이드바', '메뉴', '콘텐츠', '상단', '좌측', '우측'],
+            '사용자관리': ['사용자', '관리', '권한', '관리자', '운용자', '로그인', '접근'],
+            '탄소중립': ['탄소', '중립', '모니터링', '배출량', '에너지', 'co2', '저감량']
+        }
+        
+        # 일반 중요 키워드
+        general_keywords = [
+            '시스템', '데이터', 'ai', '모델', '알고리즘', '예측', '분석', '성능',
+            '설정', '구성', '운영', '관리', '모니터링', '제어', '최적화'
         ]
         
         content_lower = chunk.content.lower()
         score = 0.0
         
-        # 중요 키워드 매칭
-        for keyword in important_keywords:
+        # 공정별 키워드 매칭 (높은 가중치)
+        for process, keywords in process_keywords.items():
+            for keyword in keywords:
+                if keyword in content_lower:
+                    score += 0.2  # 공정별 키워드는 높은 가중치
+        
+        # 일반 키워드 매칭
+        for keyword in general_keywords:
             if keyword in content_lower:
                 score += 0.1
         
@@ -245,7 +262,122 @@ class FAISSVectorStore(VectorStoreInterface):
         total_words = len(content_lower.split())
         if total_words > 0:
             keyword_density = score / total_words
-            score += keyword_density * 0.5
+            score += keyword_density * 0.3
+        
+        return min(score, 1.0)
+    
+    def _calculate_target_score(self, chunk: TextChunk, answer_target: str, target_type: str) -> float:
+        """
+        목표 기반 점수 계산 (정수처리 도메인 특화)
+        
+        Args:
+            chunk: 평가할 텍스트 청크
+            answer_target: 답변 목표
+            target_type: 목표 유형
+            
+        Returns:
+            목표 기반 점수 (0.0 ~ 1.0)
+        """
+        if not answer_target or not target_type:
+            return 0.0
+        
+        content_lower = chunk.content.lower()
+        target_lower = answer_target.lower()
+        score = 0.0
+        
+        # 목표 타입별 특화 키워드 매칭
+        if target_type == "quantitative_value":
+            # 정량적 값 관련 키워드들
+            quantitative_keywords = [
+                "mae", "mse", "rmse", "r²", "r2", "정확도", "오차", "성능", "지표",
+                "수치", "값", "비율", "농도", "속도", "압력", "온도", "유량", 
+                "주입률", "개도율", "효율", "발생량", "회전속도"
+            ]
+            
+            # 목표 키워드가 청크에 포함되어 있는지 확인
+            for keyword in quantitative_keywords:
+                if keyword in target_lower and keyword in content_lower:
+                    score += 0.3
+            
+            # 수치 패턴 매칭 (숫자 + 단위)
+            import re
+            numeric_patterns = [
+                r'\d+(?:\.\d+)?\s*(?:mg/l|mg/l|%|rpm|m³/h|m3/h|㎥/h)',
+                r'(?:mae|mse|rmse|r²|r2)\s*[:=]\s*\d+(?:\.\d+)?',
+                r'\d+(?:\.\d+)?\s*(?:~|\-|–|to)\s*\d+(?:\.\d+)?'
+            ]
+            
+            for pattern in numeric_patterns:
+                if re.search(pattern, content_lower):
+                    score += 0.2
+        
+        elif target_type == "qualitative_definition":
+            # 정의/개념 관련 키워드들
+            definition_keywords = [
+                "목표", "기능", "역할", "목적", "정의", "개념", "특징", "장점", "단점",
+                "예측", "제어", "관리", "최적화", "분석", "모니터링"
+            ]
+            
+            for keyword in definition_keywords:
+                if keyword in target_lower and keyword in content_lower:
+                    score += 0.25
+        
+        elif target_type == "procedural":
+            # 절차/과정 관련 키워드들
+            procedural_keywords = [
+                "절차", "과정", "단계", "순서", "방식", "방법", "계산", "결정", "설정",
+                "산출", "도출", "생성", "처리", "운전", "스케줄"
+            ]
+            
+            for keyword in procedural_keywords:
+                if keyword in target_lower and keyword in content_lower:
+                    score += 0.25
+        
+        elif target_type == "comparative":
+            # 비교/관계 관련 키워드들
+            comparative_keywords = [
+                "상관관계", "관계", "영향", "비교", "대비", "높은", "낮은", "가장",
+                "상관계수", "영향도", "연관성"
+            ]
+            
+            for keyword in comparative_keywords:
+                if keyword in target_lower and keyword in content_lower:
+                    score += 0.3
+        
+        elif target_type == "verification":
+            # 확인/가능성 관련 키워드들
+            verification_keywords = [
+                "확인", "접근", "사용", "제공", "가능", "불가능", "유효", "무효",
+                "상세", "현황", "정보", "데이터", "통계", "이력"
+            ]
+            
+            for keyword in verification_keywords:
+                if keyword in target_lower and keyword in content_lower:
+                    score += 0.25
+        
+        # 목표 키워드 직접 매칭 (높은 가중치)
+        target_words = target_lower.split()
+        for word in target_words:
+            if len(word) > 2 and word in content_lower:  # 2글자 이상의 의미있는 단어만
+                score += 0.15
+        
+        # 정수처리 도메인 특화 키워드 매칭
+        domain_keywords = {
+            "착수": ["수위", "목표값", "유입량", "정수지", "밸브", "k-means", "군집분석"],
+            "약품": ["약품", "응집제", "주입률", "n-beats", "탁도", "알칼리도", "전기전도도"],
+            "혼화응집": ["혼화", "응집", "회전속도", "rpm", "교반", "g값", "설비값"],
+            "침전": ["침전", "슬러지", "발생량", "수집기", "대차", "운전", "스케줄"],
+            "여과": ["여과", "여과지", "세척", "주기", "운전", "스케줄", "수위"],
+            "소독": ["소독", "염소", "잔류염소", "주입률", "체류시간", "전차염", "농도"],
+            "ems": ["ems", "펌프", "제어", "전력", "피크", "에너지", "사용량"],
+            "pms": ["pms", "모터", "진단", "전류", "진동", "온도", "고장"]
+        }
+        
+        # 도메인별 키워드 매칭
+        for domain, keywords in domain_keywords.items():
+            domain_match_count = sum(1 for keyword in keywords if keyword in content_lower)
+            if domain_match_count > 0:
+                score += domain_match_count * 0.1
         
         return min(score, 1.0)
     
@@ -914,15 +1046,20 @@ class HybridVectorStore:
     def search(self, query_embedding: np.ndarray, top_k: int = 5,
                use_metadata_filter: bool = False,
                filter_metadata: Optional[Dict] = None,
-               similarity_threshold: float = 0.3) -> List[Tuple[TextChunk, float]]:
+               similarity_threshold: float = 0.15,
+               answer_target: str = None,
+               target_type: str = None) -> List[Tuple[TextChunk, float]]:
         """
-        하이브리드 검색
+        하이브리드 검색 (목표 기반 검색 지원)
         
         Args:
             query_embedding: 쿼리 임베딩
             top_k: 결과 개수
             use_metadata_filter: 메타데이터 필터 사용 여부
             filter_metadata: 필터 조건
+            similarity_threshold: 유사도 임계값
+            answer_target: 답변 목표
+            target_type: 목표 유형
             
         Returns:
             검색 결과
@@ -934,8 +1071,10 @@ class HybridVectorStore:
             # 메타데이터 필터가 필요한 경우 ChromaDB 사용
             result = self.chroma_store.search(query_embedding, top_k, filter_metadata)
         else:
-            # 빠른 검색이 필요한 경우 FAISS 사용
-            result = self.faiss_store.search(query_embedding, top_k)
+            # 빠른 검색이 필요한 경우 FAISS 사용 (목표 기반 검색 지원)
+            result = self.faiss_store.search(query_embedding, top_k, 
+                                           answer_target=answer_target, 
+                                           target_type=target_type)
         
         # 유사도 임계값 필터링 추가
         filtered_result = [(chunk, score) for chunk, score in result if score >= similarity_threshold]
@@ -961,9 +1100,45 @@ class HybridVectorStore:
         """저장된 데이터 로드"""
         load_path = path or "./vector_store"
         
+        # 기존 방식: faiss 서브디렉토리 확인
         faiss_path = os.path.join(load_path, "faiss")
         if os.path.exists(faiss_path):
             self.faiss_store.load(faiss_path)
+        else:
+            # 새로운 방식: 직접 faiss_index.bin 파일 확인
+            faiss_index_path = os.path.join(load_path, "faiss_index.bin")
+            metadata_path = os.path.join(load_path, "metadata.npz")
+            
+            if os.path.exists(faiss_index_path) and os.path.exists(metadata_path):
+                try:
+                    # FAISS 인덱스 로드
+                    self.faiss_store.index = faiss.read_index(faiss_index_path)
+                    
+                    # 메타데이터 로드
+                    metadata = np.load(metadata_path, allow_pickle=True)
+                    self.faiss_store.chunks = []
+                    
+                    # 메타데이터에서 청크 정보 복원
+                    for i, (doc_id, metadata_dict, document) in enumerate(zip(
+                        metadata['ids'], 
+                        metadata['metadatas'], 
+                        metadata['documents']
+                    )):
+                        # page_number 기본값 설정
+                        page_number = metadata_dict.get('page_number', 1) if metadata_dict else 1
+                        
+                        chunk = TextChunk(
+                            chunk_id=doc_id,
+                            content=document,
+                            page_number=page_number,
+                            metadata=metadata_dict
+                        )
+                        self.faiss_store.chunks.append(chunk)
+                    
+                    logger.info(f"FAISS 인덱스 로드 완료: {len(self.faiss_store.chunks)}개 청크")
+                    
+                except Exception as e:
+                    logger.warning(f"FAISS 인덱스 로드 실패: {e}")
         
         # ChromaDB는 자동 로드
         logger.info(f"하이브리드 벡터 저장소 로드 완료: {load_path}")
@@ -1063,7 +1238,7 @@ class VectorStore:
         self._store.add_chunks(chunks)
     
     def search(self, query_embedding: np.ndarray, top_k: int = 5, 
-               similarity_threshold: float = 0.5, use_metadata_filter: bool = False,
+               similarity_threshold: float = 0.15, use_metadata_filter: bool = False,
                filter_metadata: Optional[Dict] = None) -> List[Tuple[TextChunk, float]]:
         """쿼리 임베딩과 유사한 청크들을 검색"""
         return self._store.search(query_embedding, top_k, similarity_threshold, 

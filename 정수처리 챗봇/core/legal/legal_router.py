@@ -45,7 +45,7 @@ class LegalResponse:
     results: List[RerankResult]         # 검색 결과
     inference_result: Optional[InferenceResult] = None  # 유추 결과
     confidence: float = 0.0             # 전체 신뢰도
-    source_citations: List[str] = None  # 출처 인용
+    source_citations: List[str] = None  # 근거 문헌 표시(법령명/조문 등)
     reasoning: str = ""                 # 응답 근거
     needs_clarification: bool = False   # 추가 질문 필요
     clarification_questions: List[str] = None  # 명확화 질문

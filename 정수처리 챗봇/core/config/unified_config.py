@@ -109,6 +109,9 @@ class UnifiedConfig:
             'PROJECT_DOMAIN': ('범용', '프로젝트 도메인'),
             'PROJECT_INDUSTRY': ('범용', '프로젝트 산업'),
             'DOMAIN_PRIORITY': (['water','legal','general'], '다중 도메인 우선순위 리스트'),
+            'DOMAIN_TEMPLATE': ('water', '프롬프트 도메인 템플릿'),
+            'PROMPT_VARIANT': ('A', '프롬프트 변형'),
+            'PROMPT_VERSION': ('1', '프롬프트 버전'),
             
             # 모델 설정
             'EMBEDDING_MODEL': ('jhgan/ko-sroberta-multitask', '임베딩 모델'),

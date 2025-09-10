@@ -53,7 +53,7 @@ class PDFReranker:
         
         # 캘리브레이션 파라미터
         self.calibration_params = {
-            'temperature': self.config.temperature,
+            'temperature': max(0.8, self.config.temperature * 0.8),
             'bias': 0.0
         }
         

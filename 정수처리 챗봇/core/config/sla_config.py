@@ -44,8 +44,9 @@ def get_llm_policy(route: str, mode: str = "default") -> Dict[str, Any]:
       LLM_MAX_NEW_TOKENS__PDF_SEARCH__LOW=256
     """
     # 기본값
-    default_temp = float(get_config("LLM_DEFAULT_TEMPERATURE", 0.7))
-    default_max_new = int(get_config("LLM_DEFAULT_MAX_NEW_TOKENS", 512))
+    # 보수적 기본값으로 낮춤
+    default_temp = float(get_config("LLM_DEFAULT_TEMPERATURE", 0.3))
+    default_max_new = int(get_config("LLM_DEFAULT_MAX_NEW_TOKENS", 256))
 
     route_upper = route.upper()
     mode_upper = (mode or "default").upper()
@@ -61,9 +62,9 @@ def get_llm_policy(route: str, mode: str = "default") -> Dict[str, Any]:
         max_new = get_config(f"LLM_MAX_NEW_TOKENS__{route_upper}", default_max_new)
     max_new = int(max_new)
 
-    top_p = float(get_config("LLM_DEFAULT_TOP_P", 0.9))
-    num_beams = int(get_config("LLM_DEFAULT_NUM_BEAMS", 3))
-    do_sample = str(get_config("LLM_DEFAULT_DO_SAMPLE", True)).lower() in ("true", "1", "yes")
+    top_p = float(get_config("LLM_DEFAULT_TOP_P", 0.8))
+    num_beams = int(get_config("LLM_DEFAULT_NUM_BEAMS", 2))
+    do_sample = str(get_config("LLM_DEFAULT_DO_SAMPLE", False)).lower() in ("true", "1", "yes")
     early_stopping = str(get_config("LLM_DEFAULT_EARLY_STOP", True)).lower() in ("true", "1", "yes")
 
     return {

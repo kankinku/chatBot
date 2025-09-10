@@ -16,6 +16,22 @@ from typing import Optional, List
 import subprocess
 import requests
 
+# 에러 로거 import
+try:
+    from utils.error_logger import log_error, log_system_error, catch_and_log_errors
+except ImportError:
+    # 폴백 함수들
+    def log_error(error, context=None, additional_info=None):
+        print(f"에러 로그 기록 실패: {error}", file=sys.stderr)
+    
+    def log_system_error(message, module="unknown", additional_info=None):
+        print(f"시스템 에러: {message}", file=sys.stderr)
+    
+    def catch_and_log_errors(context=None):
+        def decorator(func):
+            return func
+        return decorator
+
 # Windows에서 한국어 인코딩 문제 해결
 if sys.platform == "win32":
     import codecs
@@ -30,13 +46,12 @@ sys.path.insert(0, str(current_dir))
 log_dir = current_dir / "logs"
 log_dir.mkdir(parents=True, exist_ok=True)
 
-# 로깅 설정 - 가독성 개선
+# 로깅 설정 - 핵심 정보만 출력
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.WARNING,  # WARNING 이상만 출력
     format='%(asctime)s | %(levelname)-8s | %(name)-20s | %(message)s',
     handlers=[
-        logging.StreamHandler(sys.stdout),
-        logging.FileHandler(current_dir / "logs" / "local_test.log", encoding='utf-8')
+        logging.NullHandler()
     ]
 )
 
@@ -123,6 +138,7 @@ def force_startup_cleanup():
     """시작 시 Chroma/FAISS/전처리 DB를 강제 초기화한다."""
     try:
         import shutil
+        import time
         base_dir = Path(__file__).parent
 
         chroma_dir = base_dir / "chroma_db"
@@ -130,29 +146,25 @@ def force_startup_cleanup():
         pdf_db = base_dir / "data" / "pdf_database.db"
         error_log = base_dir / "logs" / "error.log"
 
+        # ChromaDB 제거 (강화된 재시도 로직)
         if chroma_dir.exists():
-            shutil.rmtree(chroma_dir, ignore_errors=True)
+            _safe_remove_directory(chroma_dir, "ChromaDB")
             logger.info(f"[CLEANUP] ChromaDB 제거: {chroma_dir}")
 
+        # FAISS 제거 (강화된 재시도 로직)
         if faiss_dir.exists():
-            shutil.rmtree(faiss_dir, ignore_errors=True)
+            _safe_remove_directory(faiss_dir, "FAISS")
             logger.info(f"[CLEANUP] FAISS 제거: {faiss_dir}")
 
+        # PDF DB 제거 (강화된 재시도 로직)
         if pdf_db.exists():
-            try:
-                pdf_db.unlink()
-            except Exception:
-                try:
-                    os.remove(str(pdf_db))
-                except Exception:
-                    pass
+            _safe_remove_file(pdf_db, "전처리 DB")
             logger.info(f"[CLEANUP] 전처리 DB 삭제: {pdf_db}")
 
         # error.log 초기화 (비활성화됨 - 로그 보존)
         # try:
         #     (base_dir / "logs").mkdir(parents=True, exist_ok=True)
-        #     with open(error_log, 'w', encoding='utf-8') as f:
-        #         f.write("")
+        #     _safe_write_file(error_log, "", "error.log 초기화")
         #     logger.info(f"[CLEANUP] error.log 초기화: {error_log}")
         # except Exception as e:
         #     logger.warning(f"[CLEANUP] error.log 초기화 실패: {e}")
@@ -160,6 +172,83 @@ def force_startup_cleanup():
 
     except Exception as e:
         logger.warning(f"[CLEANUP] 시작 시 초기화 실패(계속 진행): {e}")
+
+def _safe_remove_directory(directory_path, description=""):
+    """디렉토리를 안전하게 제거 (WinError 32 대응)"""
+    max_retries = 3
+    base_delay = 0.2
+    
+    for attempt in range(max_retries):
+        try:
+            shutil.rmtree(directory_path, ignore_errors=True)
+            return  # 성공 시 종료
+        except (OSError, PermissionError) as e:
+            error_code = getattr(e, 'winerror', None) if hasattr(e, 'winerror') else None
+            if error_code == 32 or isinstance(e, PermissionError):
+                if attempt < max_retries - 1:
+                    delay = base_delay * (2 ** attempt)
+                    time.sleep(delay)
+                    continue
+                else:
+                    logger.warning(f"[CLEANUP] {description} 제거 실패 (파일 잠금): {directory_path}")
+                    return
+            else:
+                logger.warning(f"[CLEANUP] {description} 제거 실패: {e}")
+                return
+
+def _safe_remove_file(file_path, description=""):
+    """파일을 안전하게 제거 (WinError 32 대응)"""
+    max_retries = 3
+    base_delay = 0.2
+    
+    for attempt in range(max_retries):
+        try:
+            file_path.unlink()
+            return  # 성공 시 종료
+        except (OSError, PermissionError) as e:
+            error_code = getattr(e, 'winerror', None) if hasattr(e, 'winerror') else None
+            if error_code == 32 or isinstance(e, PermissionError):
+                if attempt < max_retries - 1:
+                    delay = base_delay * (2 ** attempt)
+                    time.sleep(delay)
+                    continue
+                else:
+                    # 최종 시도 실패 시 os.remove로 재시도
+                    try:
+                        os.remove(str(file_path))
+                        return
+                    except Exception:
+                        logger.warning(f"[CLEANUP] {description} 제거 실패 (파일 잠금): {file_path}")
+                        return
+            else:
+                logger.warning(f"[CLEANUP] {description} 제거 실패: {e}")
+                return
+
+def _safe_write_file(file_path, content, description=""):
+    """파일을 안전하게 쓰기 (WinError 32 대응)"""
+    max_retries = 3
+    base_delay = 0.2
+    
+    for attempt in range(max_retries):
+        try:
+            with open(file_path, 'w', encoding='utf-8') as f:
+                f.write(content)
+                f.flush()
+                os.fsync(f.fileno())
+            return  # 성공 시 종료
+        except (OSError, PermissionError) as e:
+            error_code = getattr(e, 'winerror', None) if hasattr(e, 'winerror') else None
+            if error_code == 32 or isinstance(e, PermissionError):
+                if attempt < max_retries - 1:
+                    delay = base_delay * (2 ** attempt)
+                    time.sleep(delay)
+                    continue
+                else:
+                    logger.warning(f"[CLEANUP] {description} 실패 (파일 잠금): {file_path}")
+                    return
+            else:
+                logger.warning(f"[CLEANUP] {description} 실패: {e}")
+                return
 
 class LocalChatbot:
     """로컬 테스트용 챗봇 클래스"""
@@ -169,6 +258,11 @@ class LocalChatbot:
         logger.info("로컬 챗봇 초기화 시작...")
         
         try:
+            # QA 로그 초기화 (새로운 세션 시작)
+            from utils.chatbot_logger import ChatbotLogger
+            chatbot_logger = ChatbotLogger(reset_qa_log=True)
+            logger.info("QA 로그 초기화 완료")
+            
             # 컴포넌트들 초기화
             self.pdf_processor = PDFProcessor()
             self.vector_store = HybridVectorStore()
@@ -202,9 +296,13 @@ class LocalChatbot:
                     
             except Exception as e:
                 logger.warning(f"기존 PDF 로드 실패: {e}")
+                # 에러 로그에 기록
+                log_error(e, "LocalChatbot.__init__", {"step": "기존_PDF_로드"})
             
         except Exception as e:
             logger.error(f"챗봇 초기화 실패: {e}")
+            # 에러 로그에 기록
+            log_error(e, "LocalChatbot.__init__", {"step": "챗봇_초기화"})
             raise
     
     def reset_and_regenerate_chunks(self):
@@ -367,15 +465,18 @@ class LocalChatbot:
                 if chatbot_logger and session_id:
                     chatbot_logger.log_step(session_id, ProcessingStep.PDF_PIPELINE, 0.0, "PDF 파이프라인 시작")
                 
-                # 질문 분석
+                # 질문 분석 (다층적 Answer Target 추출 포함)
                 analysis_start = time.time()
                 analyzed_question = self.question_analyzer.analyze_question(question)
                 analysis_time = time.time() - analysis_start
                 
                 logger.info(f"질문 분석 완료: {analyzed_question.question_type.value}")
+                logger.info(f"답변 목표: {analyzed_question.answer_target} ({analyzed_question.target_type}, {analyzed_question.value_intent})")
+                logger.info(f"추출 신뢰도: {analyzed_question.confidence_score:.3f}")
                 
                 if chatbot_logger and session_id:
-                    chatbot_logger.log_step(session_id, ProcessingStep.QUESTION_ANALYSIS, analysis_time, f"질문분석: {analyzed_question.question_type.value}")
+                    chatbot_logger.log_step(session_id, ProcessingStep.QUESTION_ANALYSIS, analysis_time, 
+                        f"질문분석: {analyzed_question.question_type.value}, 목표: {analyzed_question.answer_target} (신뢰도: {analyzed_question.confidence_score:.3f})")
                 
                 # 벡터 검색
                 search_start = time.time()
@@ -395,10 +496,10 @@ class LocalChatbot:
                         'used_chunks': []
                     }
                 
-                # 컨텍스트 과다 사용 방지: 상위 5개, 임계값 상향
+                # 검색 범위 확대: 상위 10개, 임계값 상향
                 relevant_chunks = self.vector_store.search(
                     analyzed_question.embedding,
-                    top_k=5,
+                    top_k=10,
                     similarity_threshold=0.2
                 )
                 search_time = time.time() - search_start
@@ -445,6 +546,41 @@ class LocalChatbot:
                 if chatbot_logger and session_id:
                     chatbot_logger.log_step(session_id, ProcessingStep.COMPLETION, total_time, "PDF 파이프라인 완료")
                 
+                # 질문 분석 정보 추출
+                question_analysis = {
+                    "question_type": analyzed_question.question_type.value,
+                    "processed_question": analyzed_question.processed_question,
+                    "keywords": analyzed_question.keywords,
+                    "entities": analyzed_question.entities,
+                    "intent": analyzed_question.intent,
+                    "context_keywords": analyzed_question.context_keywords,
+                    "answer_target": analyzed_question.answer_target,
+                    "target_type": analyzed_question.target_type,
+                    "value_intent": analyzed_question.value_intent,
+                    "confidence_score": analyzed_question.confidence_score,
+                    "enhanced_question": analyzed_question.enhanced_question,
+                    "metadata": analyzed_question.metadata
+                }
+                
+                # QA 로그 기록
+                if chatbot_logger:
+                    chatbot_logger.log_question(
+                        user_question=question,
+                        question_type=QuestionType.PDF,
+                        intent=analyzed_question.intent,
+                        keywords=analyzed_question.keywords,
+                        processing_time=total_time,
+                        confidence_score=answer.confidence,
+                        generated_answer=answer.content,
+                        used_chunks=[chunk.chunk_id for chunk in answer.sources] if answer.sources else [],
+                        model_name=answer.model_name,
+                        additional_info={
+                            "pipeline_type": route_result.route.value,
+                            "session_id": session_id
+                        },
+                        question_analysis=question_analysis
+                    )
+                
                 return {
                     'success': True,
                     'answer': answer.content,
@@ -453,20 +589,28 @@ class LocalChatbot:
                     'processing_time': total_time,
                     'route': route_result.route.value,
                     'sql_query': None,
-                    'used_chunks': [chunk.chunk_id for chunk in answer.sources] if answer.sources else []
+                    'used_chunks': [chunk.chunk_id for chunk in answer.sources] if answer.sources else [],
+                    # Answer Target 정보 추가
+                    'answer_target': analyzed_question.answer_target,
+                    'target_type': analyzed_question.target_type,
+                    'value_intent': analyzed_question.value_intent,
+                    'extraction_confidence': analyzed_question.confidence_score
                 }
             
             # 5. 기본 처리 (PDF 검색으로 폴백)
             logger.info("기본 처리 (PDF 검색으로 폴백)")
             
-            # 질문 분석
+            # 질문 분석 (다층적 Answer Target 추출 포함)
             analyzed_question = self.question_analyzer.analyze_question(question)
+            logger.info(f"기본 처리 - 질문 분석 완료: {analyzed_question.question_type.value}")
+            logger.info(f"답변 목표: {analyzed_question.answer_target} ({analyzed_question.target_type}, {analyzed_question.value_intent})")
+            logger.info(f"추출 신뢰도: {analyzed_question.confidence_score:.3f}")
             
             # 벡터 검색
             # 기본 폴백 검색도 동일한 상한/임계값 적용
             relevant_chunks = self.vector_store.search(
                 analyzed_question.embedding,
-                top_k=5,
+                top_k=10,
                 similarity_threshold=0.2
             )
             
@@ -493,6 +637,41 @@ class LocalChatbot:
             
             total_time = time.time() - start_time
             
+            # 질문 분석 정보 추출
+            question_analysis = {
+                "question_type": analyzed_question.question_type.value,
+                "processed_question": analyzed_question.processed_question,
+                "keywords": analyzed_question.keywords,
+                "entities": analyzed_question.entities,
+                "intent": analyzed_question.intent,
+                "context_keywords": analyzed_question.context_keywords,
+                "answer_target": analyzed_question.answer_target,
+                "target_type": analyzed_question.target_type,
+                "value_intent": analyzed_question.value_intent,
+                "confidence_score": analyzed_question.confidence_score,
+                "enhanced_question": analyzed_question.enhanced_question,
+                "metadata": analyzed_question.metadata
+            }
+            
+            # QA 로그 기록
+            if chatbot_logger:
+                chatbot_logger.log_question(
+                    user_question=question,
+                    question_type=QuestionType.PDF,
+                    intent=analyzed_question.intent,
+                    keywords=analyzed_question.keywords,
+                    processing_time=total_time,
+                    confidence_score=answer.confidence,
+                    generated_answer=answer.content,
+                    used_chunks=[chunk.chunk_id for chunk in answer.sources] if answer.sources else [],
+                    model_name=answer.model_name,
+                    additional_info={
+                        "pipeline_type": "fallback",
+                        "session_id": session_id
+                    },
+                    question_analysis=question_analysis
+                )
+            
             return {
                 'success': True,
                 'answer': answer.content,
@@ -501,7 +680,12 @@ class LocalChatbot:
                 'processing_time': total_time,
                 'route': 'fallback',
                 'sql_query': None,
-                'used_chunks': [chunk.chunk_id for chunk in answer.sources] if answer.sources else []
+                'used_chunks': [chunk.chunk_id for chunk in answer.sources] if answer.sources else [],
+                # Answer Target 정보 추가
+                'answer_target': analyzed_question.answer_target,
+                'target_type': analyzed_question.target_type,
+                'value_intent': analyzed_question.value_intent,
+                'extraction_confidence': analyzed_question.confidence_score
             }
             
         except Exception as e:
@@ -602,6 +786,13 @@ def main():
                 print(f"  라우팅: {result['route']}")
                 print(f"  처리 시간: {result['processing_time']:.3f}초")
                 print(f"  신뢰도: {result['confidence_score']:.3f}")
+                
+                # Answer Target 정보 표시 (새로운 기능)
+                if hasattr(result, 'answer_target') and result.get('answer_target'):
+                    print(f"  답변 목표: {result.get('answer_target', 'N/A')}")
+                    print(f"  목표 유형: {result.get('target_type', 'N/A')}")
+                    print(f"  값의 의도: {result.get('value_intent', 'N/A')}")
+                    print(f"  추출 신뢰도: {result.get('confidence_score', 'N/A')}")
                 
                 if result.get('sql_query'):
                     print(f"  생성된 SQL: {result['sql_query']}")

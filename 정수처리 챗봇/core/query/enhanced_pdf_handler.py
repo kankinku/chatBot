@@ -34,7 +34,7 @@ class EnhancedPDFHandlerConfig:
     
     # 결과 설정
     max_results: int = 5
-    max_context_chunks: int = 3
+    max_context_chunks: int = 5
 
 class EnhancedPDFHandler:
     """향상된 PDF 질의 처리기"""
@@ -167,7 +167,7 @@ def create_fast_pdf_handler(embedding_model: str = "jhgan/ko-sroberta-multitask"
         embedding_model=embedding_model,
         llm_model=llm_model,
         default_mode=PDFMode.SPEED,
-        enable_reranking=False,
+        enable_reranking=True,
         enable_multiview=False,
         max_results=8
     )

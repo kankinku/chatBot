@@ -16,8 +16,8 @@ class MemoryConfig:
     
     # PDF 처리 메모리 설정
     pdf_max_memory_gb: float = 2.0
-    pdf_chunk_size: int = 512
-    pdf_chunk_overlap: int = 50
+    pdf_chunk_size: int = 256
+    pdf_chunk_overlap: int = 30
     pdf_batch_size: int = 16
     
     # 모델별 메모리 사용량 (GB)

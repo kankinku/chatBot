@@ -43,21 +43,25 @@ class PDFRouterConfig:
     """PDF 라우터 설정"""
     # 검색 설정
     default_mode: PDFMode = PDFMode.ACCURACY
-    accuracy_threshold: float = 0.7
-    speed_threshold: float = 0.5
+    accuracy_threshold: float = 0.5  # 낮춤
+    speed_threshold: float = 0.3     # 낮춤
+    # 무응답(abstain) 정책
+    min_evidence: int = 3            # 최소 근거 수 상향
+    confidence_threshold: float = 0.7 # 응답 허용 최소 신뢰도 상향
+    abstain_on_low_confidence: bool = True
     
     # 결과 수 제한
-    max_results_accuracy: int = 5
-    max_results_speed: int = 8
-    max_results_balanced: int = 6
+    max_results_accuracy: int = 8    # 늘림
+    max_results_speed: int = 10      # 늘림
+    max_results_balanced: int = 8    # 늘림
     
     # 재순위화 설정
     enable_reranking: bool = True
-    rerank_threshold: float = 0.55
+    rerank_threshold: float = 0.35   # 낮춤
     
     # 성능 설정
     enable_multiview: bool = True
-    similarity_threshold: float = 0.3
+    similarity_threshold: float = 0.15  # 낮춤
 
 class PDFRouter:
     """PDF 파이프라인 통합 라우터"""
@@ -171,6 +175,22 @@ class PDFRouter:
         
         # 3. 신뢰도 계산
         confidence = self._calculate_confidence(final_results, search_mode)
+
+        # 3.5 무응답(abstain) 정책 적용
+        passed_count = sum(1 for r in final_results if r.passed_threshold)
+        should_abstain = False
+        if self.config.abstain_on_low_confidence:
+            if passed_count < self.config.min_evidence:
+                should_abstain = True
+            if confidence < self.config.confidence_threshold:
+                should_abstain = True
+        if should_abstain:
+            logger.info(
+                f"무응답 결정: passed={passed_count}, conf={confidence:.3f}, "
+                f"min_evidence={self.config.min_evidence}, conf_th={self.config.confidence_threshold}"
+            )
+            final_results = []
+            confidence = 0.0
         
         # 4. 메타데이터 생성
         metadata = {
@@ -179,7 +199,8 @@ class PDFRouter:
             'reranking_used': use_reranking,
             'threshold_passed': sum(1 for r in final_results if r.passed_threshold),
             'retriever_stats': self.retriever.get_search_stats(),
-            'reranker_stats': self.reranker.get_stats() if self.reranker else None
+            'reranker_stats': self.reranker.get_stats() if self.reranker else None,
+            'abstained': should_abstain if 'should_abstain' in locals() else False
         }
         
         response = PDFResponse(
@@ -278,7 +299,7 @@ def create_speed_pdf_router(embedding_model: str = "jhgan/ko-sroberta-multitask"
     """속도 최적화 PDF 라우터 생성"""
     config = PDFRouterConfig(
         default_mode=PDFMode.SPEED,
-        enable_reranking=False,
+        enable_reranking=True,
         enable_multiview=False,
         max_results_speed=8,
         similarity_threshold=0.25

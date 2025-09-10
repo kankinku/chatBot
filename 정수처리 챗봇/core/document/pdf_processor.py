@@ -10,6 +10,7 @@ PDF 텍스트 추출 및 임베딩 생성 모듈
 import os
 import re
 import logging
+import io
 from typing import List, Dict, Tuple, Optional
 from dataclasses import dataclass
 import hashlib
@@ -22,8 +23,20 @@ from sentence_transformers import SentenceTransformer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
+# OCR 라이브러리 추가
+try:
+    import pytesseract
+    from PIL import Image
+    import cv2
+    OCR_AVAILABLE = True
+except ImportError:
+    OCR_AVAILABLE = False
+    # logger는 나중에 정의되므로 print 사용
+    print("OCR 라이브러리가 설치되지 않았습니다. pip install pytesseract pillow opencv-python")
+
 # 키워드 추출기 import
 from .pdf_keyword_extractor import PDFKeywordExtractor
+from .units import normalize_unit, is_excluded_numeric_context
 # 메모리 최적화 import
 from core.utils.memory_optimizer import memory_profiler, model_memory_manager
 
@@ -57,8 +70,8 @@ class PDFProcessor:
     
     def __init__(self, 
                  embedding_model: str = "jhgan/ko-sroberta-multitask",
-                 chunk_size: int = 512,
-                 chunk_overlap: int = 50,
+                 chunk_size: int = 256,
+                 chunk_overlap: int = 30,
                  enable_keyword_extraction: bool = True,
                  keyword_cache_threshold: int = 5,
                  max_memory_usage_gb: float = 2.0):
@@ -119,7 +132,7 @@ class PDFProcessor:
                     self._embedding_model_loaded = True
     
     def _clean_text(self, text: str) -> str:
-        """텍스트 정리 및 UTF-8 인코딩 문제 해결"""
+        """텍스트 정리 및 UTF-8 인코딩 문제 해결 (한국어 레이아웃·공백·하이픈 보정)"""
         if not text:
             return ""
         
@@ -131,12 +144,121 @@ class PDFProcessor:
             # 추가적인 텍스트 정리
             text = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f]', '', text)  # 제어 문자 제거
             text = re.sub(r'\s+', ' ', text)  # 연속된 공백을 하나로
+            
+            # PDF 특화 정리
+            text = re.sub(r'[^\w\s가-힣.,!?;:()\[\]{}"\'-]', ' ', text)  # 특수문자 정리
+            text = re.sub(r'\s+', ' ', text)  # 다시 공백 정리
+            
+            # 한국어 텍스트 정규화 (과도 결합 방지: 문장부호/단위 앞뒤는 유지)
+            # 하이픈으로 잘린 단어 재결합 (줄 끝 하이픈)
+            text = re.sub(r"-\s*\n\s*", "", text)
+            # 문단 내 줄바꿈을 공백으로 축소
+            text = re.sub(r"\s*\n\s*", " ", text)
+            # 한글 사이 과도 공백만 축소(완전 제거가 아니라 1칸 유지)
+            text = re.sub(r"([가-힣])\s{2,}([가-힣])", r"\1 \2", text)
+            # 숫자 사이 과도 공백 축소
+            text = re.sub(r"([0-9])\s{2,}([0-9])", r"\1\2", text)
+            
+            # 불필요한 패턴 제거
+            text = re.sub(r'^\s*[-=]+\s*$', '', text, flags=re.MULTILINE)  # 구분선 제거
+            text = re.sub(r'^\s*\d+\s*$', '', text, flags=re.MULTILINE)  # 단독 숫자 제거
+            
             text = text.strip()
             
             return text
         except Exception as e:
             logger.warning(f"텍스트 정리 중 에러: {e}")
             return text.encode('ascii', errors='ignore').decode('ascii')
+    
+    def _extract_text_with_ocr(self, pdf_path: str) -> str:
+        """
+        OCR을 사용하여 PDF에서 텍스트 추출 (이미지 기반 PDF용)
+        
+        Args:
+            pdf_path: PDF 파일 경로
+            
+        Returns:
+            추출된 텍스트
+        """
+        if not OCR_AVAILABLE:
+            return ""
+        
+        try:
+            # PyMuPDF로 PDF를 이미지로 변환
+            doc = fitz.open(pdf_path)
+            full_text = ""
+            
+            for page_num in range(doc.page_count):
+                page = doc[page_num]
+                
+                # 페이지를 이미지로 변환 (고해상도)
+                mat = fitz.Matrix(2.0, 2.0)  # 2배 확대
+                pix = page.get_pixmap(matrix=mat)
+                img_data = pix.tobytes("png")
+                
+                # PIL Image로 변환
+                image = Image.open(io.BytesIO(img_data))
+                
+                # 이미지 전처리 (OCR 정확도 향상)
+                processed_image = self._preprocess_image_for_ocr(image)
+                
+                # OCR 수행 (한국어 + 영어)
+                text = pytesseract.image_to_string(
+                    processed_image, 
+                    lang='kor+eng',
+                    config='--psm 6'  # 단일 텍스트 블록으로 인식
+                )
+                
+                if text.strip():
+                    cleaned_text = self._clean_text(text)
+                    if cleaned_text:
+                        full_text += f"\n--- 페이지 {page_num + 1} ---\n{cleaned_text}\n"
+            
+            doc.close()
+            return full_text
+            
+        except Exception as e:
+            logger.error(f"OCR 텍스트 추출 실패: {e}")
+            return ""
+    
+    def _preprocess_image_for_ocr(self, image) -> 'Image.Image':
+        """
+        OCR 정확도 향상을 위한 이미지 전처리
+        
+        Args:
+            image: 원본 이미지
+            
+        Returns:
+            전처리된 이미지
+        """
+        try:
+            # PIL Image를 OpenCV 형식으로 변환
+            img_array = np.array(image)
+            
+            # 그레이스케일 변환
+            if len(img_array.shape) == 3:
+                gray = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)
+            else:
+                gray = img_array
+            
+            # 노이즈 제거
+            denoised = cv2.medianBlur(gray, 3)
+            
+            # 대비 향상
+            clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+            enhanced = clahe.apply(denoised)
+            
+            # 이진화 (Otsu 방법)
+            _, binary = cv2.threshold(enhanced, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+            
+            # 다시 PIL Image로 변환
+            processed_image = Image.fromarray(binary)
+            
+            return processed_image
+            
+        except Exception as e:
+            logger.warning(f"이미지 전처리 실패: {e}")
+            return image
 
     def extract_text_from_pdf(self, pdf_path: str) -> Tuple[str, Dict]:
         """
@@ -195,7 +317,7 @@ class PDFProcessor:
                 except Exception as e:
                     logger.warning(f"PyMuPDF 추출 실패: {e}")
             
-            # 3. pdfplumber로 최종 시도
+            # 3. pdfplumber로 시도
             if not full_text.strip():
                 try:
                     with pdfplumber.open(pdf_path) as pdf:
@@ -214,6 +336,18 @@ class PDFProcessor:
                             
                 except Exception as e:
                     logger.warning(f"pdfplumber 추출 실패: {e}")
+            
+            # 4. OCR 기반 텍스트 추출 (이미지 기반 PDF용)
+            if not full_text.strip() and OCR_AVAILABLE:
+                try:
+                    ocr_text = self._extract_text_with_ocr(pdf_path)
+                    if ocr_text.strip():
+                        full_text = ocr_text
+                        metadata["extraction_method"].append("OCR")
+                        logger.info("OCR로 텍스트 추출 성공")
+                        
+                except Exception as e:
+                    logger.warning(f"OCR 추출 실패: {e}")
             
             # 메모리 정리
             if not full_text.strip():
@@ -304,6 +438,71 @@ class PDFProcessor:
             
             logger.info(f"텍스트 청크화 완료: {len(chunks)}개 청크 생성")
             return chunks
+
+    # ==== 숫자·단위·대상 구조화 추출 (경량 규칙 기반) ====
+    _NUM_PATTERN = re.compile(
+        r"(?P<val1>\d+(?:[\,\.]\d+)?)\s*(?:(?P<range>[~\-–]|~|to|~\s*|-)\s*(?P<val2>\d+(?:[\,\.]\d+)?))?\s*(?P<unit>%|mg\s*/\s*L|㎎\s*/\s*L|mg/L|mg·l-1|m³/h|m3/h|㎥/h|분|시간|초)?",
+        re.IGNORECASE,
+    )
+
+    def _extract_measurements_from_text(self, text: str, page_number: int) -> List[Dict]:
+        measurements: List[Dict] = []
+        if not text or is_excluded_numeric_context(text):
+            return measurements
+
+        # 간단한 토큰 시퀀스 생성
+        tokens = re.split(r"(\s+)", text)
+        for match in self._NUM_PATTERN.finditer(text):
+            unit_raw = match.group("unit") or ""
+            unit = normalize_unit(unit_raw) if unit_raw else None
+
+            val1_raw = match.group("val1")
+            val2_raw = match.group("val2")
+            rng = match.group("range")
+
+            # 값 정규화(쉼표 제거)
+            def _norm_num(v: Optional[str]) -> Optional[float]:
+                if not v:
+                    return None
+                try:
+                    return float(v.replace(",", ""))
+                except Exception:
+                    return None
+
+            v1 = _norm_num(val1_raw)
+            v2 = _norm_num(val2_raw)
+
+            # 주변 문맥에서 대상 후보 추출(숫자 주변 8~12자 범위)
+            start, end = match.span()
+            left_ctx = text[max(0, start - 24):start]
+            right_ctx = text[end:min(len(text), end + 24)]
+            # 조사 제거 단순 휴리스틱
+            def _clean_noun(s: str) -> str:
+                s = re.sub(r"[\s\,\.:;\(\)\[\]]+", " ", s)
+                s = re.sub(r"\b(을|를|은|는|이|가|과|와|의|에|로|에서|까지|부터)$", "", s.strip())
+                return s[-12:].strip() if s else s
+
+            target_left = _clean_noun(left_ctx)
+            target_right = _clean_noun(right_ctx)
+            # 우선 왼쪽 명사성 문구를 사용, 없으면 오른쪽 사용
+            target = target_left or target_right or None
+
+            mtype = "range" if (rng and v1 is not None and v2 is not None) else "exact"
+
+            # 최소 유효성: unit 또는 대상 중 하나는 있어야 함
+            if v1 is None:
+                continue
+
+            record: Dict = {
+                "target": target,
+                "type": mtype,
+                "unit": unit,
+                "value": v1 if mtype == "exact" else [v1, v2],
+                "page": page_number,
+            }
+            measurements.append(record)
+
+        return measurements
     
     def _generate_chunk_id(self, content: str, pdf_id: str, chunk_index: int) -> str:
         """청크 ID 생성"""
@@ -419,6 +618,15 @@ class PDFProcessor:
                 for chunk in chunks_with_embeddings:
                     chunk.filename = filename
                     chunk.upload_time = upload_time
+                    # 숫자·단위 측정치 추출 후 메타데이터에 저장
+                    try:
+                        ms = self._extract_measurements_from_text(chunk.content, chunk.page_number)
+                        if ms:
+                            if chunk.metadata is None:
+                                chunk.metadata = {}
+                            chunk.metadata["measurements"] = ms
+                    except Exception as _e:
+                        logger.debug(f"측정치 추출 스킵: {_e}")
                 
                 # 5. 키워드 추출 (선택적)
                 if self.enable_keyword_extraction:

@@ -17,6 +17,21 @@ from datetime import datetime
 from collections import deque
 import queue
 
+# 에러 로거 import
+try:
+    from .error_logger import log_error, log_system_error
+except ImportError:
+    # 상대 import 실패 시 절대 import 시도
+    try:
+        from utils.error_logger import log_error, log_system_error
+    except ImportError:
+        # 폴백 함수들
+        def log_error(error, context=None, additional_info=None):
+            print(f"에러 로그 기록 실패: {error}", file=sys.stderr)
+        
+        def log_system_error(message, module="unknown", additional_info=None):
+            print(f"시스템 에러: {message}", file=sys.stderr)
+
 class LogLevel(Enum):
     """로그 레벨"""
     DEBUG = "DEBUG"
@@ -58,68 +73,7 @@ class LogObserver:
         """로그 이벤트 처리"""
         raise NotImplementedError
 
-class FileLogObserver(LogObserver):
-    """파일 로그 옵저버"""
-    
-    def __init__(self, file_path: Path, max_size_mb: int = 100):
-        self.file_path = file_path
-        self.max_size_mb = max_size_mb
-        self._ensure_directory()
-    
-    def _ensure_directory(self):
-        """디렉토리 생성"""
-        self.file_path.parent.mkdir(parents=True, exist_ok=True)
-    
-    def on_log(self, entry: LogEntry):
-        """파일에 로그 기록"""
-        try:
-            # 파일 크기 체크 및 로테이션
-            if self.file_path.exists() and self.file_path.stat().st_size > self.max_size_mb * 1024 * 1024:
-                self._rotate_log()
-            
-            with open(self.file_path, 'a', encoding='utf-8') as f:
-                log_line = self._format_log_entry(entry)
-                f.write(log_line + '\n')
-        except Exception as e:
-            # 로깅 실패 시 표준 에러로 출력
-            print(f"로그 기록 실패: {e}", file=sys.stderr)
-    
-    def _format_log_entry(self, entry: LogEntry) -> str:
-        """로그 엔트리 포맷팅"""
-        base_info = f"{entry.timestamp} | {entry.level.value:8s} | {entry.category.value:12s} | {entry.module:20s} | {entry.message}"
-        
-        if entry.execution_time_ms:
-            base_info += f" | {entry.execution_time_ms:.2f}ms"
-        
-        if entry.session_id:
-            base_info += f" | session:{entry.session_id}"
-        
-        return base_info
-    
-    def _rotate_log(self):
-        """로그 파일 로테이션"""
-        backup_path = self.file_path.with_suffix(f'.{int(time.time())}.bak')
-        self.file_path.rename(backup_path)
-
-class JsonLogObserver(LogObserver):
-    """JSON 로그 옵저버"""
-    
-    def __init__(self, file_path: Path):
-        self.file_path = file_path
-        self._ensure_directory()
-    
-    def _ensure_directory(self):
-        """디렉토리 생성"""
-        self.file_path.parent.mkdir(parents=True, exist_ok=True)
-    
-    def on_log(self, entry: LogEntry):
-        """JSON 형태로 로그 기록"""
-        try:
-            with open(self.file_path, 'a', encoding='utf-8') as f:
-                json_line = json.dumps(asdict(entry), ensure_ascii=False, default=str)
-                f.write(json_line + '\n')
-        except Exception as e:
-            print(f"JSON 로그 기록 실패: {e}", file=sys.stderr)
+# 파일 로그 옵저버들은 제거됨 (에러 로그만 유지)
 
 class ConsoleLogObserver(LogObserver):
     """콘솔 로그 옵저버"""
@@ -206,16 +160,9 @@ class UnifiedLogger:
     
     def _setup_default_observers(self):
         """기본 옵저버 설정"""
-        log_dir = Path("logs")
-        
-        # 콘솔 로그 비활성화(과도한 출력 방지)
-        # self.add_observer(ConsoleLogObserver(LogLevel.INFO))
-        
-        # 통합 파일 로그
-        self.add_observer(FileLogObserver(log_dir / "unified.log"))
-        
-        # 카테고리별 JSON 로그
-        self.add_observer(JsonLogObserver(log_dir / "system.jsonl"))
+        # 콘솔 출력만 활성화 (WARNING 이상)
+        console_observer = ConsoleLogObserver(LogLevel.WARNING)
+        self.add_observer(console_observer)
     
     def add_observer(self, observer: LogObserver):
         """옵저버 추가"""
@@ -245,6 +192,8 @@ class UnifiedLogger:
                     except Exception as e:
                         # 옵저버 실패는 다른 옵저버에 영향 주지 않음
                         print(f"로그 옵저버 오류: {e}", file=sys.stderr)
+                        # 에러 로그에 기록
+                        log_error(e, "UnifiedLogger._worker_loop", {"observer_type": type(observer).__name__})
                 
                 self._log_queue.task_done()
                 
@@ -252,6 +201,8 @@ class UnifiedLogger:
                 continue
             except Exception as e:
                 print(f"로그 워커 오류: {e}", file=sys.stderr)
+                # 에러 로그에 기록
+                log_error(e, "UnifiedLogger._worker_loop")
     
     def set_session_id(self, session_id: str):
         """세션 ID 설정"""

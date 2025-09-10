@@ -11,6 +11,7 @@ from typing import List, Dict, Optional, Tuple
 from dataclasses import dataclass
 from enum import Enum
 import os
+import re
 
 try:
     import requests
@@ -31,6 +32,9 @@ from core.document.pdf_processor import TextChunk
 from core.query.question_analyzer import AnalyzedQuestion
 from core.cache.fast_cache import get_question_cache
 from core.utils.memory_optimizer import model_memory_manager, memory_profiler
+from core.document.units import normalize_unit
+from core.document.defined_value_detector import DefinedValueDetector, DefinedValue
+from utils.qa_logger import log_question_answer
 
 # 통합 설정 import (폴백 포함)
 try:
@@ -49,10 +53,10 @@ class ModelType(Enum):
 
 @dataclass
 class GenerationConfig:
-    """경량화된 생성 설정"""
+    """경량화된 생성 설정 (RAG 최적화)"""
     max_length: int = 1024
-    temperature: float = 0.7
-    top_p: float = 0.9
+    temperature: float = 0.3  # 창의성보다 정확성 우선
+    top_p: float = 0.8  # 더 집중된 토큰 선택
     do_sample: bool = True
     num_beams: int = 3
     early_stopping: bool = True
@@ -446,8 +450,83 @@ class AnswerGenerator:
             from core.config.prompt_catalog import get_templates
             self.prompt_template = get_templates('general', variant='A', version='1')
         
+        # 정의된 값 감지기 초기화
+        self.defined_value_detector = DefinedValueDetector()
+        
         logger.info(f"경량화된 답변 생성기 초기화 완료: {model_name}")
     
+    # ==== 가독성 포맷터 (모듈 내부 유틸) ====
+    @staticmethod
+    def _format_answer_for_readability(original_text: str) -> str:
+        """답변을 자연스러운 문단 형태로 정리 (번호 목록 제거)
+        규칙:
+        - 번호 목록(1. 2. 3.)이나 불릿 포인트(-, *) 제거
+        - 강조 표시(***) 제거
+        - 자연스러운 문단 형태로 변환
+        """
+        try:
+            if not original_text:
+                return original_text
+            
+            text = original_text.strip()
+            import re as _re
+            
+            # 번호 목록 제거 (1. 2. 3. 등)
+            text = _re.sub(r'^\d+\.\s*', '', text, flags=_re.MULTILINE)
+            
+            # 불릿 포인트 제거 (-, *, • 등)
+            text = _re.sub(r'^[-*•]\s*', '', text, flags=_re.MULTILINE)
+            
+            # 강조 표시 제거 (***, **, * 등)
+            text = _re.sub(r'\*{1,3}', '', text)
+            
+            # 줄바꿈을 공백으로 변환하여 자연스러운 문단으로 만들기
+            lines = [line.strip() for line in text.splitlines() if line.strip()]
+            
+            # 빈 줄로 구분된 문단들을 하나의 문단으로 합치기
+            paragraphs = []
+            current_paragraph = []
+            
+            for line in lines:
+                if line:
+                    current_paragraph.append(line)
+                else:
+                    if current_paragraph:
+                        paragraphs.append(' '.join(current_paragraph))
+                        current_paragraph = []
+            
+            # 마지막 문단 처리
+            if current_paragraph:
+                paragraphs.append(' '.join(current_paragraph))
+            
+            # 문단들을 자연스럽게 연결
+            result = ' '.join(paragraphs)
+            
+            # 연속된 공백 정리
+            result = _re.sub(r'\s+', ' ', result).strip()
+            
+            return result
+            
+        except Exception:
+            return original_text
+
+    @staticmethod
+    def _limit_sentences(answer_text: str, max_sentences: int = 2) -> str:
+        """답변을 최대 N문장으로 제한한다."""
+        try:
+            if not answer_text:
+                return answer_text
+            import re as _re
+            text = answer_text.strip()
+            # 문장 분리 (간단 규칙: 마침표/물음표/느낌표)
+            sentences = _re.split(r"(?<=[\.\?\!])\s+", text)
+            sentences = [s.strip() for s in sentences if s.strip()]
+            if len(sentences) <= max_sentences:
+                return text
+            return " ".join(sentences[:max_sentences]).strip()
+        except Exception:
+            return answer_text
+
     def _preload_models(self):
         """필요한 모델들을 미리 로딩"""
         # 완전 비활성화 (Qwen 고정)
@@ -485,11 +564,13 @@ class AnswerGenerator:
             context_prompt = self.prompt_template["no_context"].format(question=question)
             
             # 답변 생성
-            answer_text = self.llm.generate(context_prompt)
+            raw_text = self.llm.generate(context_prompt)
+            answer_text = self._postprocess_answer(raw_text)
+            answer_text = self._format_answer_for_readability(answer_text)
             
             generation_time = time.time() - start_time
             
-            return Answer(
+            answer = Answer(
                 content=answer_text,
                 confidence=0.8,  # 직접 답변은 신뢰도가 낮음
                 sources=[],
@@ -497,6 +578,23 @@ class AnswerGenerator:
                 model_name=self.model_name,
                 metadata={"answer_type": "direct", "context_used": False}
             )
+            
+            # QA 로그 기록
+            try:
+                log_question_answer(
+                    question=question,
+                    answer=answer_text,
+                    chunks_used=[],
+                    generation_time_ms=generation_time * 1000,
+                    confidence_score=0.8,
+                    model_name=self.model_name,
+                    pipeline_type="direct",
+                    session_id=answer.metadata.get("session_id") if answer.metadata else None
+                )
+            except Exception as e:
+                logger.debug(f"QA 로그 기록 실패: {e}")
+            
+            return answer
             
         except Exception as e:
             logger.error(f"직접 답변 생성 실패: {e}")
@@ -509,13 +607,23 @@ class AnswerGenerator:
                 metadata={"error": str(e)}
             )
     
-    def generate_context_answer(self, question: str, context_chunks: List[TextChunk]) -> Answer:
-        """컨텍스트 기반 답변 생성"""
+    def generate_context_answer(self, question: str, context_chunks: List[TextChunk], 
+                              analyzed_question=None) -> Answer:
+        """컨텍스트 기반 답변 생성 (목표 기반 프롬프트 강화)"""
         start_time = time.time()
         
         try:
-            # 컨텍스트 텍스트 생성 (가독성 위해 상위 3개로 제한)
-            trimmed_chunks = context_chunks[:3]
+            # 컨텍스트 텍스트 생성 (가독성 위해 상위 2개로 제한)
+            trimmed_chunks = context_chunks[:2]
+            
+            # 질문 분석 결과에서 목표 정보 추출
+            answer_target = ""
+            target_type = ""
+            value_intent = ""
+            if analyzed_question and hasattr(analyzed_question, 'answer_target'):
+                answer_target = analyzed_question.answer_target
+                target_type = analyzed_question.target_type
+                value_intent = analyzed_question.value_intent
             # 사용된 청크의 출처 정보를 로깅으로 출력
             try:
                 logger.debug("[PDF 출처] 답변 생성에 사용된 컨텍스트 청크:")
@@ -547,7 +655,40 @@ class AnswerGenerator:
             except Exception as _e:
                 # print 단계 오류는 무시 (답변 생성에는 영향 주지 않음)
                 logger.debug(f"출처 print 중 오류 무시: {_e}")
-            context_text = "\n\n".join([chunk.content for chunk in trimmed_chunks])
+            
+            # 정의된 값 감지 및 가중치 적용
+            all_defined_values = []
+            enhanced_context_parts = []
+            
+            for chunk in trimmed_chunks:
+                chunk_content = chunk.content
+                page_number = getattr(chunk, 'page_number', None)
+                source = getattr(chunk, 'filename', None) or getattr(chunk, 'pdf_id', None)
+                
+                # 청크에서 정의된 값들 감지
+                defined_values = self.defined_value_detector.detect_defined_values(
+                    chunk_content, page_number, source
+                )
+                all_defined_values.extend(defined_values)
+                
+                # 정의된 값이 있는 청크는 가중치를 높여서 컨텍스트에 포함
+                if defined_values:
+                    # 높은 가중치의 정의된 값들을 강조
+                    high_priority_values = self.defined_value_detector.get_high_priority_values(defined_values)
+                    if high_priority_values:
+                        # 정의된 값들을 강조 표시
+                        enhanced_content = self._enhance_context_with_defined_values(chunk_content, high_priority_values)
+                        enhanced_context_parts.append(enhanced_content)
+                    else:
+                        enhanced_context_parts.append(chunk_content)
+                else:
+                    enhanced_context_parts.append(chunk_content)
+            
+            # 질문과 관련된 정의된 값들 추출
+            relevant_defined_values = self.defined_value_detector.extract_values_for_question(all_defined_values, question)
+            
+            # 컨텍스트 텍스트 생성 (정의된 값이 강조된 버전)
+            context_text = "\n\n".join(enhanced_context_parts)
             
             # 사용된 키워드 추출 (로깅 최소화)
             used_keywords = self._extract_used_keywords(trimmed_chunks)
@@ -555,26 +696,91 @@ class AnswerGenerator:
                 preview = ", ".join(used_keywords[:5])
                 logger.debug(f"키워드 사용 수: {len(used_keywords)} | 미리보기: {preview}")
             
-            # 프롬프트 생성
-            prompt = self.prompt_template["context"].format(
-                context=context_text,
-                question=question
+            # 정의된 값 정보 로깅
+            if relevant_defined_values:
+                logger.debug(f"질문 관련 정의된 값 {len(relevant_defined_values)}개 감지:")
+                for idx, value in enumerate(relevant_defined_values[:3], 1):
+                    logger.debug(f"  - #{idx}: {value.normalized_value} (가중치: {value.weight:.1f}, 신뢰도: {value.confidence:.1f})")
+            
+            # 수치 질의 감지: 간단 정규식
+            import re as _re
+            _qnum = _re.search(r"(\d+(?:[\.,]\d+)?)(?:\s*(?:~|\-|–|to)\s*(\d+(?:[\.,]\d+)?))?\s*(%|mg\s*/\s*L|mg/L|m³/h|m3/h|㎥/h|분|시간|초)?", question)
+            numeric_guard = _qnum is not None
+
+            # 목표 기반 프롬프트 생성 (프롬프트 템플릿만 사용)
+            prompt = self._create_target_based_prompt(
+                context_text, question, answer_target, target_type, value_intent
             )
             
             # 답변 생성
-            answer_text = self.llm.generate(prompt)
+            raw_text = self.llm.generate(prompt)
+            answer_text = self._postprocess_answer(raw_text)
+            
+            # 답변 검증: 문서 기반 답변인지 확인
+            answer_text = self._validate_document_based_answer(answer_text, context_text, question)
+
+            # 가독성 포맷은 인용(출처) 추가 전 단계에서만 적용하여
+            # 불릿/줄바꿈 제거가 인용 레이아웃을 깨뜨리지 않도록 한다
+            answer_text = self._format_answer_for_readability(answer_text)
+            # 문장 수 제한 (최대 2문장)
+            answer_text = self._limit_sentences(answer_text, max_sentences=2)
+
+            # 인용(출처) 표기를 답변에서 제거: 메타데이터에만 유지
+            citations: List[Dict[str, str]] = []
+            for ch in trimmed_chunks[:2]:
+                page_no = getattr(ch, 'page_number', None) or (ch.metadata.get('page_number') if getattr(ch, 'metadata', None) else None)
+                section = None
+                if getattr(ch, 'metadata', None):
+                    section = ch.metadata.get('section') or ch.metadata.get('subsection')
+                filename = getattr(ch, 'filename', None) or (ch.metadata.get('title') if getattr(ch, 'metadata', None) else None)
+                span_src = (getattr(ch, 'content', '') or '').strip().replace('\n', ' ')
+                snippet = span_src[:90]
+                citations.append({
+                    'filename': str(filename) if filename else '',
+                    'page': str(page_no) if page_no is not None else '',
+                    'section': str(section) if section else '',
+                    'snippet': snippet
+                })
+            
+            # 수치 답변 후처리: 단위 누락 시 보정 시도(문맥에서 가장 빈도 높은 단위 부착은 위험하므로 스킵)
             
             generation_time = time.time() - start_time
             
             # 답변 길이와 포맷 간결화: 불필요한 리스트/중복 제거는 프롬프트 설계로 유도됨
-            return Answer(
+            answer = Answer(
                 content=answer_text,
                 confidence=0.9,  # 컨텍스트 기반 답변은 신뢰도가 높음
                 sources=trimmed_chunks,
                 generation_time=generation_time,
                 model_name=self.model_name,
-                metadata={"answer_type": "context", "context_used": True, "chunks_used": len(trimmed_chunks), "used_keywords": used_keywords}
+                metadata={
+                    "answer_type": "context", 
+                    "context_used": True, 
+                    "chunks_used": len(trimmed_chunks), 
+                    "used_keywords": used_keywords,
+                    "defined_values_detected": len(all_defined_values),
+                    "relevant_defined_values": len(relevant_defined_values),
+                    "high_priority_values": len([v for v in relevant_defined_values if v.weight >= 2.0]),
+                    "citations": citations
+                }
             )
+            
+            # QA 로그 기록
+            try:
+                log_question_answer(
+                    question=question,
+                    answer=answer_text,
+                    chunks_used=trimmed_chunks,
+                    generation_time_ms=generation_time * 1000,
+                    confidence_score=0.9,
+                    model_name=self.model_name,
+                    pipeline_type="context",
+                    session_id=answer.metadata.get("session_id") if answer.metadata else None
+                )
+            except Exception as e:
+                logger.debug(f"QA 로그 기록 실패: {e}")
+            
+            return answer
             
         except Exception as e:
             logger.error(f"컨텍스트 답변 생성 실패: {e}")
@@ -586,6 +792,21 @@ class AnswerGenerator:
                 model_name=self.model_name,
                 metadata={"error": str(e)}
             )
+    
+    def _enhance_context_with_defined_values(self, content: str, defined_values: List[DefinedValue]) -> str:
+        """정의된 값들을 강조하여 컨텍스트를 향상시킴"""
+        enhanced_content = content
+        
+        # 가중치가 높은 정의된 값들을 강조 표시
+        for value in defined_values:
+            if value.weight >= 2.0:  # 높은 가중치의 값들만 강조
+                # 원본 값을 **강조** 형태로 변경
+                enhanced_content = enhanced_content.replace(
+                    value.value, 
+                    f"**{value.normalized_value}**"
+                )
+        
+        return enhanced_content
     
     def _extract_used_keywords(self, context_chunks: List[TextChunk]) -> List[str]:
         """컨텍스트 청크에서 사용된 키워드 추출"""
@@ -615,6 +836,25 @@ class AnswerGenerator:
         
         return sorted(list(keywords))
     
+    def generate_answer(self, analyzed_question, context_chunks: List[TextChunk], 
+                       conversation_history=None, pdf_id=None, session_id=None) -> Answer:
+        """통합 답변 생성 메서드 (API 호출용) - 목표 기반 답변 생성 지원"""
+        question = analyzed_question.question if hasattr(analyzed_question, 'question') else str(analyzed_question)
+        
+        if context_chunks:
+            # 분석된 질문 정보를 전달하여 목표 기반 답변 생성
+            answer = self.generate_context_answer(question, context_chunks, analyzed_question)
+            # 세션 ID를 메타데이터에 추가
+            if session_id and answer.metadata:
+                answer.metadata["session_id"] = session_id
+            return answer
+        else:
+            answer = self.generate_direct_answer(question)
+            # 세션 ID를 메타데이터에 추가
+            if session_id and answer.metadata:
+                answer.metadata["session_id"] = session_id
+            return answer
+    
     def generate_summary(self, chunks: List[TextChunk]) -> Answer:
         start_time = time.time()
         
@@ -636,14 +876,31 @@ class AnswerGenerator:
             
             generation_time = time.time() - start_time
             
-            return Answer(
-                content=summary_text,
+            answer = Answer(
+                content=self._format_answer_for_readability(summary_text),
                 confidence=0.85,
                 sources=chunks,
                 generation_time=generation_time,
                 model_name=self.model_name,
                 metadata={"answer_type": "summary", "chunks_summarized": len(chunks), "used_keywords": used_keywords}
             )
+            
+            # QA 로그 기록
+            try:
+                log_question_answer(
+                    question="[요약 요청]",
+                    answer=self._format_answer_for_readability(summary_text),
+                    chunks_used=chunks,
+                    generation_time_ms=generation_time * 1000,
+                    confidence_score=0.85,
+                    model_name=self.model_name,
+                    pipeline_type="summary",
+                    session_id=None
+                )
+            except Exception as e:
+                logger.debug(f"QA 로그 기록 실패: {e}")
+            
+            return answer
             
         except Exception as e:
             logger.error(f"요약 생성 실패: {e}")
@@ -655,3 +912,345 @@ class AnswerGenerator:
                 model_name=self.model_name,
                 metadata={"error": str(e)}
             )
+
+    def _validate_document_based_answer(self, answer: str, context: str, question: str) -> str:
+        """답변이 문서 기반인지 검증하고 필요시 수정 (강화된 검증)
+        - 극단적 환상 패턴 차단
+        - 최소 길이 보장
+        - 문서-답변 토큰 겹침 비율이 임계치 미만이면 차단
+        - 질문과 무관한 서술 길이 제한 시 보조 차단
+        """
+        try:
+            if not answer or not context:
+                return answer
+            
+            # 문서에 없는 정보가 포함되었는지 검사
+            answer_lower = answer.lower()
+            context_lower = context.lower()
+            question_lower = question.lower()
+            
+            # 매우 명백한 환상 패턴들만 검사 (극도로 완화)
+            extreme_hallucination_patterns = [
+                "일반적으로 알려진", "보통의 경우", "대부분의 경우", "일반적인 원칙"
+            ]
+            
+            # 매우 명백한 환상 패턴이 발견되면 문서 기반 답변으로 교체
+            for pattern in extreme_hallucination_patterns:
+                if pattern in answer_lower:
+                    logger.warning(f"극도로 명백한 환상 패턴 감지: {pattern}")
+                    return "제공된 문서에서 해당 정보를 찾을 수 없습니다. 문서에 명시된 내용만을 기반으로 답변드릴 수 있습니다."
+            
+            # 답변이 너무 짧거나 의미가 없는 경우만 검사
+            if len(answer.strip()) < 10:
+                logger.warning("답변이 너무 짧음")
+                return "제공된 문서에서 해당 정보를 찾을 수 없습니다. 문서에 명시된 내용만을 기반으로 답변드릴 수 있습니다."
+            
+            # 문서-답변 토큰 겹침 비율 기반 차단 (간단 토크나이저)
+            import re as _re
+            token_pattern = _re.compile(r"[가-힣A-Za-z0-9]+")
+            context_tokens = [t for t in token_pattern.findall(context_lower) if len(t) >= 2]
+            answer_tokens = [t for t in token_pattern.findall(answer_lower) if len(t) >= 2]
+            if context_tokens and answer_tokens:
+                context_vocab = set(context_tokens)
+                answer_vocab = set(answer_tokens)
+                overlap = len(context_vocab.intersection(answer_vocab))
+                denom = max(1, len(answer_vocab))
+                overlap_ratio = overlap / denom
+                # 임계치: 답변 토큰의 20% 미만이 문서와 겹치면 환상 가능성 높음
+                if overlap_ratio < 0.20:
+                    logger.warning(f"문서-답변 토큰 겹침 비율 낮음: {overlap_ratio:.3f}")
+                    return "제공된 문서에서 해당 정보를 찾을 수 없습니다. 문서에 명시된 내용만을 기반으로 답변드릴 수 있습니다."
+            
+            # 문장별 스니펫 매칭 가드 (완화 기준)
+            try:
+                sentences = [s.strip() for s in re.split(r"[\.!?]\s+|\n+", answer) if s.strip()]
+                context_text = context_lower
+                kept_sentences = []
+                for s in sentences:
+                    s_low = s.lower()
+                    if len(s_low) < 8:
+                        kept_sentences.append(s)  # 너무 짧은 문장은 패스
+                        continue
+                    # 간단 부분 문자열/토큰 기반 매칭
+                    token_hits = sum(1 for t in token_pattern.findall(s_low) if len(t) >= 3 and t in context_text)
+                    unique_tokens = len(set(t for t in token_pattern.findall(s_low) if len(t) >= 3)) or 1
+                    ratio = token_hits / unique_tokens
+                    # 임계: 문장 토큰의 0.15 미만이 컨텍스트에서 발견되면 제거
+                    if ratio >= 0.15:
+                        kept_sentences.append(s)
+                # 최소 1문장 보장
+                if kept_sentences:
+                    answer = ". ".join(kept_sentences)
+            except Exception as _e:
+                logger.debug(f"문장별 스니펫 매칭 가드 스킵: {_e}")
+
+            # 핵심 키워드 강제 검증 (질문-답변 매칭)
+            try:
+                # 질문에서 핵심 키워드 추출 (간단 규칙)
+                q_tokens = [t for t in token_pattern.findall(question_lower) if len(t) >= 3]
+                a_tokens = [t for t in token_pattern.findall(answer_lower) if len(t) >= 3]
+                context_tokens = [t for t in token_pattern.findall(context_lower) if len(t) >= 3]
+                
+                # 질문 키워드가 컨텍스트에 있고 답변에 없으면 문제
+                missing_keywords = []
+                for q_token in q_tokens:
+                    if q_token in context_tokens and q_token not in a_tokens:
+                        missing_keywords.append(q_token)
+                
+                # 핵심 키워드 누락이 심하면 차단
+                if len(missing_keywords) >= 2:
+                    logger.warning(f"핵심 키워드 누락: {missing_keywords}")
+                    return "제공된 문서에서 해당 정보를 찾을 수 없습니다. 문서에 명시된 내용만을 기반으로 답변드릴 수 있습니다."
+            except Exception as _e:
+                logger.debug(f"핵심 키워드 검증 스킵: {_e}")
+
+            return answer
+            
+        except Exception as e:
+            logger.error(f"답변 검증 중 오류: {e}")
+            return answer
+    
+    def _postprocess_answer(self, text: str) -> str:
+        """생성 텍스트를 간결하고 자연스러운 한국어 문장으로 정제한다.
+        규칙:
+        - 프롬프트 위반 패턴 제거 (질문 재출력, AI 비고, 따옴표 등)
+        - 문서명/기관명으로 시작하는 과도한 주어 제거 시도
+        - URL/경로 표기를 백틱으로 감싸고 중복 제거
+        - 불필요한 접속사/군더더기 정리
+        - 중국어/일본어 등 외국어 혼입 제거
+        - 끝 마침표 보정
+        """
+        try:
+            if not text:
+                return text
+
+            cleaned = text.strip()
+
+            # 0) 프롬프트 위반 패턴 제거
+            # "질문: ... 답변:" 패턴 제거
+            cleaned = re.sub(r"^질문\s*:\s*[^\n]*\n\s*답변\s*:\s*", "", cleaned, flags=re.MULTILINE)
+            cleaned = re.sub(r"^사용자\s*질문\s*:\s*[^\n]*\n\s*답변\s*작성\s*지침\s*:\s*", "", cleaned, flags=re.MULTILINE)
+            
+            # "AI 비고:", "참고:", "주의:" 레이블 제거
+            cleaned = re.sub(r"^(AI\s*비고|참고|주의)\s*:\s*", "", cleaned, flags=re.MULTILINE)
+            
+            # 불필요한 따옴표 제거 (문장 시작/끝의 따옴표)
+            cleaned = re.sub(r'^["\']|["\']$', "", cleaned)
+            
+            # 중국어/일본어 혼입 제거 및 정규화
+            chinese_patterns = [
+                (r"이分别是", "이는"),
+                (r"적度过치", "적도 과치"),
+                (r"过치", "과치"),
+                (r"过", "과"),
+                (r"적도", "적도"),
+                (r"是", "는"),
+                (r"的", "의"),
+                (r"了", ""),
+                (r"在", "에서"),
+                (r"和", "와"),
+                (r"或", "또는"),
+                (r"与", "와"),
+                (r"为", "를 위해"),
+                (r"对", "에 대해"),
+                (r"从", "에서부터"),
+                (r"到", "까지"),
+                (r"通过", "통해"),
+                (r"根据", "에 따르면"),
+                (r"按照", "에 따라"),
+                (r"由于", "때문에"),
+                (r"因此", "따라서"),
+                (r"所以", "그래서"),
+                (r"但是", "하지만"),
+                (r"然而", "그러나"),
+                (r"而且", "또한"),
+                (r"并且", "그리고"),
+                (r"同时", "동시에"),
+                (r"另外", "또한"),
+                (r"此外", "게다가"),
+                (r"总之", "요약하면"),
+                (r"总之", "결론적으로"),
+            ]
+            
+            for pattern, replacement in chinese_patterns:
+                cleaned = re.sub(pattern, replacement, cleaned)
+            
+            # 일본어 패턴 제거
+            japanese_patterns = [
+                (r"です", ""),
+                (r"である", ""),
+                (r"だ", ""),
+                (r"である", ""),
+                (r"ですから", "따라서"),
+                (r"しかし", "하지만"),
+                (r"そして", "그리고"),
+                (r"また", "또한"),
+                (r"さらに", "더욱이"),
+                (r"つまり", "즉"),
+                (r"例えば", "예를 들어"),
+                (r"特に", "특히"),
+                (r"一般的に", "일반적으로"),
+            ]
+            
+            for pattern, replacement in japanese_patterns:
+                cleaned = re.sub(pattern, replacement, cleaned)
+            
+            # 숫자로 시작하는 불완전한 답변 제거
+            cleaned = re.sub(r"^,\s*", "", cleaned)
+            cleaned = re.sub(r"^\d+\.\s*$", "", cleaned)
+            
+            # 문장 수에 따른 숫자 매기기 제거 (1. 2. 3. 등)
+            cleaned = re.sub(r"^\d+\.\s*", "", cleaned, flags=re.MULTILINE)
+            
+            # 강조 표시 제거 (***, **, * 등)
+            cleaned = re.sub(r'\*{1,3}', '', cleaned)
+            
+            # 불릿 포인트 제거 (-, *, • 등)
+            cleaned = re.sub(r'^[-*•]\s*', '', cleaned, flags=re.MULTILINE)
+            
+            # 빈 괄호 제거 ( ) 또는 (  ) 등
+            cleaned = re.sub(r"\(\s*\)", "", cleaned)
+            
+            # 내용이 없는 괄호 패턴 제거
+            cleaned = re.sub(r"\(\s*\)", "", cleaned)  # ( )
+            cleaned = re.sub(r"\(\s*\)", "", cleaned)  # (  )
+            cleaned = re.sub(r"\(\s*\)", "", cleaned)  # (   )
+            
+            # 1) 앞부분 불필요한 문서명/기관명 서두 제거 패턴(간단 휴리스틱)
+            # 예: "금강 유역 남부 ... 사용자 설명서 ... 에 따르면" 류를 잘라냄
+            lead_patterns = [
+                r"^(?:[\w\s\-·\(\)\/]+?설명서|[\w\s\-·\(\)\/]+?매뉴얼|[\w\s\-·\(\)\/]+?문서|[\w\s\-·\(\)\/]+?가이드)[^\n\.!?]{0,80}?(?:에\s*따르면|에\s*의하면|에\s*따라|에서\s*제공하는|에\s*기재된)\s*",
+                r"^[\w\s\-·\(\)\/]+?컨소시엄[^\n\.!?]{0,80}?(?:에서\s*제공하는|에\s*따르면)\s*",
+                r"^문서에\s*따르면[,\s]*",
+                r"^제공된\s*문서에\s*따르면[,\s]*",
+                r"^금강유역\s*남부\s*스마트\s*정수장[^\n\.!?]{0,100}?문서에서[^\n\.!?]{0,50}?",
+                r"^[\w\s\-·\(\)\/]+?문서에서[^\n\.!?]{0,50}?",
+                r"^[\w\s\-·\(\)\/]+?에셈블\s*컨소시엄[^\n\.!?]{0,50}?",
+                r"^[\w\s\-·\(\)\/]+?시스템[^\n\.!?]{0,50}?(?:에서\s*제공하는|에\s*따르면)\s*",
+            ]
+            for pat in lead_patterns:
+                cleaned = re.sub(pat, "", cleaned)
+
+            # 2) URL 정규화: 공백 옆 URL 감지 → 백틱 감싸기, 중복 제거
+            url_regex = r"(https?://[\w\-\.:/#?%&=]+)"
+            urls = re.findall(url_regex, cleaned)
+            unique_urls = []
+            for u in urls:
+                if u not in unique_urls:
+                    unique_urls.append(u)
+            # 백틱으로 감싸기
+            for u in unique_urls:
+                cleaned = cleaned.replace(u, f"`{u}`")
+
+            # 3) 문장 분리(간단): 마침표/물음표/느낌표 기준
+            sentences = re.split(r"(?<=[\.?\!])\s+", cleaned)
+            sentences = [s.strip() for s in sentences if s.strip()]
+
+            # 4) 군더더기 접두사 정리
+            def tidy_sentence(s: str) -> str:
+                s = re.sub(r"^(그리고|또는|또|그러나|하지만|그런데|즉|그러므로|따라서)\s+", "", s)
+                s = re.sub(r"\s+\.$", ".", s)
+                # 끝 마침표 보정
+                if not re.search(r"[\.?\!]$", s):
+                    s += "."
+                return s
+
+            sentences = [tidy_sentence(s) for s in sentences]
+
+            # 5) 3문장 이내로 제한 (강제)
+            if len(sentences) > 3:
+                sentences = sentences[:3]
+
+            # 6) 동일 URL이 문장에 반복되면 두 번째부터 제거
+            if unique_urls and len(sentences) >= 2:
+                u0 = unique_urls[0]
+                for i in range(1, len(sentences)):
+                    sentences[i] = sentences[i].replace(f"`{u0}`", "").strip()
+                    if sentences[i] and sentences[i][-1] not in ".?!":
+                        sentences[i] += "."
+
+            final_text = " ".join(sentences)
+            # 여분 공백 정리
+            final_text = re.sub(r"\s{2,}", " ", final_text).strip()
+            return final_text
+        except Exception:
+            return text
+    
+    def _create_target_based_prompt(self, context_text: str, question: str, 
+                                  answer_target: str, target_type: str, value_intent: str) -> str:
+        """목표 기반 프롬프트 생성"""
+        
+        # 기본 프롬프트 템플릿
+        base_prompt = self.prompt_template["context"].format(
+            context=context_text,
+            question=question
+        )
+        
+        # 목표 정보가 있는 경우 프롬프트 강화
+        if answer_target and target_type:
+            target_instructions = self._get_target_instructions(target_type, answer_target, value_intent)
+            
+            # 목표 기반 지침 추가
+            enhanced_prompt = base_prompt + "\n\n" + target_instructions
+            
+            logger.debug(f"목표 기반 프롬프트 생성: {answer_target} ({target_type})")
+            return enhanced_prompt
+        
+        return base_prompt
+    
+    def _get_target_instructions(self, target_type: str, answer_target: str, value_intent: str) -> str:
+        """목표 타입별 답변 지침 생성"""
+        
+        if target_type == "quantitative_value":
+            return f"""
+답변 목표: {answer_target}
+답변 유형: 정량적 수치/값
+
+답변 지침:
+문서에서 {answer_target}에 대한 구체적인 수치, 범위, 단위를 찾아 답변하세요. MAE, MSE, RMSE, R² 등의 성능 지표가 있으면 반드시 포함하세요. 수치와 단위를 정확히 표기하세요 (예: 0.68 mg/L, 1.54 RPM). 문서에 해당 수치 정보가 없으면 '문서에 {answer_target}에 대한 구체적인 수치 정보가 명시되어 있지 않습니다'라고 답하세요. 추측이나 일반적인 정보는 포함하지 마세요.
+"""
+        
+        elif target_type == "qualitative_definition":
+            return f"""
+답변 목표: {answer_target}
+답변 유형: 정의/개념/목적
+
+답변 지침:
+문서에서 {answer_target}에 대한 명확한 정의, 목적, 기능을 찾아 답변하세요. AI 모델의 목표, 시스템의 기능, 역할 등을 구체적으로 설명하세요. 문서에 명시된 내용만을 기반으로 답변하세요. 추상적이거나 일반적인 설명은 피하고 구체적인 내용을 우선하세요.
+"""
+        
+        elif target_type == "procedural":
+            return f"""
+답변 목표: {answer_target}
+답변 유형: 절차/과정/방법
+
+답변 지침:
+문서에서 {answer_target}에 대한 구체적인 절차, 과정, 방법을 찾아 답변하세요. 단계별 과정이나 계산 방법이 있으면 순서대로 설명하세요. 사용되는 공식, 알고리즘, 모델이 있으면 구체적으로 언급하세요. 문서에 해당 절차 정보가 없으면 '문서에 {answer_target}에 대한 구체적인 절차가 명시되어 있지 않습니다'라고 답하세요.
+"""
+        
+        elif target_type == "comparative":
+            return f"""
+답변 목표: {answer_target}
+답변 유형: 비교/관계/상관관계
+
+답변 지침:
+문서에서 {answer_target}에 대한 구체적인 비교 결과, 상관관계, 영향도를 찾아 답변하세요. 상관계수, 영향도 수치가 있으면 반드시 포함하세요. 어떤 변수가 가장 높은/낮은 관계를 가지는지 구체적으로 명시하세요. 문서에 해당 관계 정보가 없으면 '문서에 {answer_target}에 대한 구체적인 관계 정보가 명시되어 있지 않습니다'라고 답하세요.
+"""
+        
+        elif target_type == "verification":
+            return f"""
+답변 목표: {answer_target}
+답변 유형: 확인/가능성/유효성
+
+답변 지침:
+문서에서 {answer_target}에 대한 구체적인 확인 가능 여부, 접근 가능성, 유효성을 찾아 답변하세요. 가능/불가능, 유효/무효를 명확히 답변하세요. 구체적으로 어떤 정보를 확인할 수 있는지, 어떤 기능에 접근할 수 있는지 설명하세요. 문서에 해당 확인 정보가 없으면 '문서에 {answer_target}에 대한 구체적인 확인 정보가 명시되어 있지 않습니다'라고 답하세요.
+"""
+        
+        else:
+            return f"""
+답변 목표: {answer_target}
+답변 유형: 일반
+
+답변 지침:
+문서에서 {answer_target}에 대한 관련 정보를 찾아 답변하세요. 구체적이고 정확한 정보를 우선적으로 제공하세요. 문서에 명시된 내용만을 기반으로 답변하세요.
+"""
