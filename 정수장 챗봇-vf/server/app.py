@@ -41,7 +41,7 @@ def _load_corpus(path: str) -> List[Chunk]:
 if FASTAPI_AVAILABLE:
     app = FastAPI()
     cfg = PipelineConfig()
-    corpus_path = str(Path("data/corpus.jsonl"))
+    corpus_path = str(Path("data/corpus_v1.jsonl"))
     pipe = UnifiedPDFPipeline(_load_corpus(corpus_path), cfg)
     _warmed = False
     # Simple in-memory aggregator

@@ -1,4 +1,4 @@
 {
   "dim": 768,
-  "space": "cosine"
+  "space": "l2"
 }

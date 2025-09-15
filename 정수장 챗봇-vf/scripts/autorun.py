@@ -2,10 +2,14 @@ import argparse
 import os
 import subprocess
 import sys
+import warnings
 from pathlib import Path
 import json
 import time
 import urllib.request
+
+# PyTorch 경고 메시지 숨기기
+warnings.filterwarnings("ignore", message=".*TypedStorage is deprecated.*")
 
 
 def sh(cmd: list[str], check: bool = False) -> int:
@@ -166,7 +170,7 @@ def main():
     use_pdf = True
     if pdf_dir is None:
         # Fallback to existing corpus
-        corpus = Path("data/corpus.jsonl")
+        corpus = Path("data/corpus_v1.jsonl")
         if corpus.exists() and corpus.stat().st_size > 0:
             print(f"No PDFs found in {', '.join(str(p) for p in candidates)}. Using existing corpus: {corpus}")
             use_pdf = False
@@ -201,7 +205,7 @@ def main():
             extractor = "pymupdf4llm"
             cmd += ["--pdf", str(pdf_dir), "--pdf-extractor", extractor, "--ocr", ocr_mode]
         else:
-            cmd += ["--corpus", "data/corpus.jsonl"]
+            cmd += ["--corpus", "data/corpus_v1.jsonl"]
         cmd += ["--server", "--host", args.host, "--port", args.port]
         sh(cmd)
         return
@@ -228,11 +232,11 @@ def main():
                 except Exception:
                     old_man = {}
             changed = json.dumps(new_man, sort_keys=True) != json.dumps(old_man, sort_keys=True)
-            if changed or not Path("data/corpus.jsonl").exists():
+            if changed or not Path("data/corpus_v1.jsonl").exists():
                 sh([
                     sys.executable, "scripts/build_corpus_from_pdfs.py",
                     "--pdf_dir", str(pdf_dir),
-                    "--out", "data/corpus.jsonl",
+                    "--out", "data/corpus_v1.jsonl",
                     "--pdf-extractor", "pymupdf4llm",
                     "--ocr", ocr_mode,
                     "--chunking", "window",
@@ -269,7 +273,7 @@ def main():
         if use_pdf:
             cmd += ["--pdf", str(pdf_dir), "--pdf-extractor", "pymupdf4llm", "--ocr", ocr_mode]
         else:
-            cmd += ["--corpus", "data/corpus.jsonl"]
+            cmd += ["--corpus", "data/corpus_v1.jsonl"]
         cmd += ["--question", args.question]
         sh(cmd)
         return
@@ -285,7 +289,7 @@ def main():
         sh([
             sys.executable, "scripts/build_corpus_from_pdfs.py",
             "--pdf_dir", str(pdf_dir),
-            "--out", "data/corpus.jsonl",
+            "--out", "data/corpus_v1.jsonl",
             "--pdf-extractor", "pymupdf4llm",
             "--ocr", ocr_mode,
             "--chunking", "window",

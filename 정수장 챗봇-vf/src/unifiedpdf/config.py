@@ -8,14 +8,23 @@ from typing import Dict, Optional
 
 @dataclass
 class Thresholds:
-    # Base thresholds
-    confidence_threshold: float = 0.25
-    confidence_threshold_numeric: float = 0.16
-    confidence_threshold_long: float = 0.17
-    guard_overlap_threshold: float = 0.12
+    # Base thresholds - 더 관대한 임계값으로 조정
+    confidence_threshold: float = 0.20  # 0.25 -> 0.20
+    confidence_threshold_numeric: float = 0.12  # 0.16 -> 0.12
+    confidence_threshold_long: float = 0.13  # 0.17 -> 0.13
+    guard_overlap_threshold: float = 0.10  # 0.12 -> 0.10
     guard_key_tokens_min: int = 1
-    base_no_answer_confidence: float = 0.65
+    base_no_answer_confidence: float = 0.60  # 0.65 -> 0.60
     analyzer_threshold_delta: float = -0.02
+
+
+@dataclass
+class DeduplicationPolicy:
+    # 중복 제거 관련 설정
+    jaccard_threshold: float = 0.9  # Jaccard 유사도 임계값
+    semantic_threshold: float = 0.0  # 의미적 유사도 임계값 (0.0이면 비활성화)
+    enable_semantic_dedup: bool = False  # 의미적 중복 제거 활성화
+    min_chunk_length: int = 50  # 중복 제거 대상 최소 청크 길이
 
 
 @dataclass
@@ -44,6 +53,10 @@ class ModeFlags:
     use_gpu: bool = False
     store_backend: str = "auto"  # "faiss", "hnsw", or "auto" (fallback: inmem)
     rerank_top_n: int = 50
+    # Retrieval execution/control flags
+    enable_parallel_search: bool = True
+    enable_retrieval_cache: bool = True
+    retrieval_cache_size: int = 256
 
 
 @dataclass
@@ -60,8 +73,9 @@ class PipelineConfig:
     context: ContextPolicy = ContextPolicy()
     flags: ModeFlags = ModeFlags()
     domain: DomainConfig = DomainConfig()
+    deduplication: DeduplicationPolicy = DeduplicationPolicy()
     seed: int = 42
-    model_name: str = "llama3:8b-instruct-q4_K_M"
+    model_name: str = "qwen2:1.5b-instruct-q4_K_M"
     embedding_model: str = "jhgan/ko-sroberta-multitask"
     vector_store_dir: str = "vector_store"
     llm_retries: int = 2

@@ -53,10 +53,16 @@ def analyze_question(q: str, cfg: PipelineConfig) -> Analysis:
     def _re_or(base: str, extras: List[str]) -> str:
         return base if not extras else base[:-1] + "|" + "|".join(map(re.escape, extras)) + ")"
 
-    is_definition = bool(re.search(_re_or(r"(정의|무엇|란|의미|개념|설명)", dom.get("definition", [])), q))
-    is_procedural = bool(re.search(_re_or(r"(방법|절차|순서|어떻게|운영|조치)", dom.get("procedural", [])), q))
-    is_comparative = bool(re.search(_re_or(r"(비교|vs|더|높|낮|차이|장점|단점)", dom.get("comparative", [])), ql))
-    is_problem = bool(re.search(_re_or(r"(문제|오류|이상|고장|원인|대응|대책)", dom.get("problem", [])), q))
+    # 정수장 도메인 특화 질문 유형 분류
+    is_definition = bool(re.search(_re_or(r"(정의|무엇|란|의미|개념|설명|목적|기능|특징)", dom.get("definition", [])), q))
+    is_procedural = bool(re.search(_re_or(r"(방법|절차|순서|어떻게|운영|조치|설정|접속|로그인)", dom.get("procedural", [])), q))
+    is_comparative = bool(re.search(_re_or(r"(비교|vs|더|높|낮|차이|장점|단점|차이점)", dom.get("comparative", [])), ql))
+    is_problem = bool(re.search(_re_or(r"(문제|오류|이상|고장|원인|대응|대책|해결|증상)", dom.get("problem", [])), q))
+    
+    # 정수장 특화 질문 유형 추가
+    is_system_info = bool(re.search(r"(시스템|플랫폼|대시보드|로그인|계정|비밀번호|주소|url)", ql))
+    is_technical_spec = bool(re.search(r"(모델|알고리즘|성능|지표|입력변수|설정값|고려사항)", ql))
+    is_operational = bool(re.search(r"(운영|모드|제어|알람|진단|결함|정보|현황)", ql))
 
     if numeric_like:
         qtype = "numeric"
@@ -68,13 +74,32 @@ def analyze_question(q: str, cfg: PipelineConfig) -> Analysis:
         qtype = "comparative"
     elif is_problem:
         qtype = "problem"
+    elif is_system_info:
+        qtype = "system_info"
+    elif is_technical_spec:
+        qtype = "technical_spec"
+    elif is_operational:
+        qtype = "operational"
     else:
         qtype = "general"
     
-    vw, bw = cfg.rrf.vector_weight, cfg.rrf.bm25_weight
+    # 질문 유형에 따른 검색 가중치 조정
+    if qtype in ["system_info", "technical_spec"]:
+        vw, bw = 0.4, 0.6  # BM25에 더 의존 (정확한 키워드 매칭)
+    elif qtype in ["operational", "procedural"]:
+        vw, bw = 0.7, 0.3  # 벡터 검색에 더 의존 (의미적 유사성)
+    else:
+        vw, bw = cfg.rrf.vector_weight, cfg.rrf.bm25_weight
 
-    key_token_count = len([t for t in tokens if len(t) >= 2])
-    threshold_adj = cfg.thresholds.analyzer_threshold_delta
+    # 키워드 토큰 수 계산 개선 (정수장 전문 용어 우선)
+    domain_tokens = [t for t in tokens if any(kw in t for kw in ["ai", "플랫폼", "공정", "모델", "알고리즘", "설정", "운영", "진단", "결함", "성능", "지표"])]
+    key_token_count = len([t for t in tokens if len(t) >= 2]) + len(domain_tokens)
+    
+    # 질문 유형에 따른 임계값 조정
+    if qtype in ["system_info", "technical_spec"]:
+        threshold_adj = cfg.thresholds.analyzer_threshold_delta - 0.1  # 더 관대한 필터링
+    else:
+        threshold_adj = cfg.thresholds.analyzer_threshold_delta
 
     return Analysis(
         qtype=qtype,

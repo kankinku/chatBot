@@ -44,7 +44,11 @@ class UnifiedPDFPipeline:
         metrics["merged"] = len(spans)
 
         # Merge + dedup
-        spans = merge_then_dedup(spans)
+        spans = merge_then_dedup(
+            spans, 
+            jaccard_thr=cfg.deduplication.jaccard_threshold,
+            semantic_thr=cfg.deduplication.semantic_threshold if cfg.deduplication.enable_semantic_dedup else 0.0
+        )
         metrics["deduped"] = len(spans)
 
         # Filter calibration
@@ -84,17 +88,17 @@ class UnifiedPDFPipeline:
         # If hard blocked or no context, attempt fallback path: relax threshold once
         fallback_used = "none"
         if (guard["hard_blocked"] == 1) or not contexts:
-            # Relax threshold by 20% and re-run filter quickly
+            # Relax threshold by 30% and re-run filter quickly
             orig_th = cfg.thresholds.confidence_threshold
-            cfg.thresholds.confidence_threshold = max(0.2, orig_th * 0.8)
+            cfg.thresholds.confidence_threshold = max(0.15, orig_th * 0.7)
             spans2, _ = calibrate_and_filter(spans, cfg)
             cfg.thresholds.confidence_threshold = orig_th
             if spans2:
                 contexts = spans2[:k]
                 fallback_used = "low_conf_retry"
             elif spans:
-                # Single top span fallback
-                contexts = spans[:1]
+                # Single top span fallback with more context
+                contexts = spans[:min(2, len(spans))]
                 fallback_used = "single_span"
         metrics["fallback_used"] = fallback_used
 

@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import math
-from collections import Counter, defaultdict
+import concurrent.futures
+import time
+from collections import Counter, defaultdict, OrderedDict
 from typing import Dict, Iterable, List, Tuple
 
 from .types import Chunk, RetrievedSpan
@@ -79,6 +81,36 @@ class HybridRetriever:
         self.bm25 = InMemoryBM25(chunks)
         embedder = get_embedder(cfg.embedding_model, use_gpu=cfg.flags.use_gpu) if cfg.flags.store_backend in {"faiss", "hnsw", "auto"} else None
         self.vec = make_vector_store(chunks, backend=cfg.flags.store_backend, index_dir=cfg.vector_store_dir, embedder=embedder)
+        # Retrieval cache (LRU)
+        self._cache_enabled = bool(getattr(cfg.flags, "enable_retrieval_cache", True))
+        self._cache_max = int(getattr(cfg.flags, "retrieval_cache_size", 256)) or 0
+        self._cache: "OrderedDict[tuple, dict]" = OrderedDict()
+        # Simple corpus signature to mitigate stale cache across corpora
+        try:
+            total_len = sum(len(c.text) for c in chunks)
+        except Exception:
+            total_len = len(chunks)
+        self._corpus_sig = (len(chunks), int(total_len))
+        self._parallel_enabled = bool(getattr(cfg.flags, "enable_parallel_search", True))
+
+    def _cache_key(self, query: str, topk_each: int) -> tuple:
+        return (query, int(topk_each), self._corpus_sig, self.cfg.config_hash())
+
+    def _cache_get(self, key: tuple):
+        if not (self._cache_enabled and self._cache_max > 0):
+            return None
+        val = self._cache.get(key)
+        if val is not None:
+            self._cache.move_to_end(key)
+        return val
+
+    def _cache_set(self, key: tuple, value: dict) -> None:
+        if not (self._cache_enabled and self._cache_max > 0):
+            return
+        self._cache[key] = value
+        self._cache.move_to_end(key)
+        if len(self._cache) > self._cache_max:
+            self._cache.popitem(last=False)
 
     def retrieve(
         self,
@@ -87,13 +119,51 @@ class HybridRetriever:
         rrf_k: int = 60,
         rrf_weights: Tuple[float, float] = (0.6, 0.4),
     ) -> Tuple[List[RetrievedSpan], Dict[str, int]]:
-        import time
-        t0 = time.time()
-        v_hits = run_with_timeout(lambda: self.vec.query(query, topk_each), timeout_s=SEARCH_TIMEOUT_S, default=[])
-        vt = int((time.time() - t0) * 1000)
-        t1 = time.time()
-        b_hits = run_with_timeout(lambda: self.bm25.query(query, topk_each), timeout_s=SEARCH_TIMEOUT_S, default=[])
-        bt = int((time.time() - t1) * 1000)
+        # Try cache first
+        cache_key = self._cache_key(query, topk_each)
+        cached = self._cache_get(cache_key)
+        if cached is not None:
+            v_hits = list(cached.get("v_hits", []))
+            b_hits = list(cached.get("b_hits", []))
+            vt, bt = 0, 0
+            timings: Dict[str, int] = {"vector_time_ms": vt, "bm25_time_ms": bt, "cache_hit": 1}
+        else:
+            timings = {"cache_hit": 0}
+            if self._parallel_enabled:
+                # Run vector and BM25 in parallel with shared timeout budget
+                with concurrent.futures.ThreadPoolExecutor(max_workers=2) as ex:
+                    start = time.time()
+                    f_vec = ex.submit(self.vec.query, query, topk_each)
+                    f_bm = ex.submit(self.bm25.query, query, topk_each)
+                    v_hits: List[Tuple[int, float]] = []
+                    b_hits: List[Tuple[int, float]] = []
+                    # vector
+                    t0 = time.time()
+                    try:
+                        v_hits = f_vec.result(timeout=SEARCH_TIMEOUT_S) or []
+                    except Exception:
+                        v_hits = []
+                    vt = int((time.time() - t0) * 1000)
+                    # bm25 (respect remaining budget best-effort)
+                    t1 = time.time()
+                    try:
+                        remaining = max(0.0, SEARCH_TIMEOUT_S - (time.time() - start))
+                        b_hits = f_bm.result(timeout=remaining) or []
+                    except Exception:
+                        b_hits = []
+                    bt = int((time.time() - t1) * 1000)
+            else:
+                # Sequential (fallback to previous behavior)
+                t0 = time.time()
+                v_hits = run_with_timeout(lambda: self.vec.query(query, topk_each), timeout_s=SEARCH_TIMEOUT_S, default=[])
+                vt = int((time.time() - t0) * 1000)
+                t1 = time.time()
+                b_hits = run_with_timeout(lambda: self.bm25.query(query, topk_each), timeout_s=SEARCH_TIMEOUT_S, default=[])
+                bt = int((time.time() - t1) * 1000)
+
+            timings.update({"vector_time_ms": vt, "bm25_time_ms": bt})
+            # Save cache
+            self._cache_set(cache_key, {"v_hits": v_hits, "b_hits": b_hits})
         rrf_scores = rrf_merge(v_hits, b_hits, rrf_k, rrf_weights[0], rrf_weights[1])
 
         spans: List[RetrievedSpan] = []
@@ -115,4 +185,4 @@ class HybridRetriever:
                     },
                 )
             )
-        return spans, {"vector_time_ms": vt, "bm25_time_ms": bt}
+        return spans, timings

@@ -9,7 +9,61 @@ import sys
 
 sys.path.append(str(Path(__file__).resolve().parents[1] / "src"))
 
-def extract_text_pdfplumber(pdf_path: Path, save_text: bool = False, text_dir: Path = None) -> str:
+from unifiedpdf.types import Chunk
+from unifiedpdf.utils import char_ngrams, jaccard
+
+
+def deduplicate_chunks(chunks: list[Chunk], threshold: float = 0.9, min_length: int = 50) -> list[Chunk]:
+    """코퍼스 구축 시 청크 중복 제거"""
+    if not chunks:
+        return chunks
+    
+    # 길이가 너무 짧은 청크는 중복 제거 대상에서 제외
+    filtered_chunks = [c for c in chunks if len(c.text) >= min_length]
+    
+    if len(filtered_chunks) <= 1:
+        return chunks
+    
+    # 중복 제거 로직
+    seen_hashes = set()
+    unique_chunks = []
+    duplicate_count = 0
+    
+    for chunk in chunks:
+        if len(chunk.text) < min_length:
+            unique_chunks.append(chunk)
+            continue
+            
+        # 텍스트 해시로 정확한 중복 확인
+        text_hash = hash(chunk.text)
+        if text_hash in seen_hashes:
+            duplicate_count += 1
+            continue
+            
+        # Jaccard 유사도로 근사 중복 확인
+        chunk_ngrams = char_ngrams(chunk.text)
+        is_duplicate = False
+        
+        for existing in unique_chunks:
+            if len(existing.text) < min_length:
+                continue
+            existing_ngrams = char_ngrams(existing.text)
+            similarity = jaccard(chunk_ngrams, existing_ngrams)
+            
+            if similarity >= threshold:
+                is_duplicate = True
+                duplicate_count += 1
+                break
+        
+        if not is_duplicate:
+            seen_hashes.add(text_hash)
+            unique_chunks.append(chunk)
+    
+    print(f"중복 제거 완료: {duplicate_count}개 중복 청크 제거, {len(unique_chunks)}개 유니크 청크 유지")
+    return unique_chunks
+
+
+def extract_text_pdfplumber(pdf_path: Path) -> str:
     try:
         import pdfplumber  # type: ignore
     except Exception:
@@ -18,21 +72,10 @@ def extract_text_pdfplumber(pdf_path: Path, save_text: bool = False, text_dir: P
     with pdfplumber.open(str(pdf_path)) as pdf:
         for page in pdf.pages:
             text.append(page.extract_text() or "")
-    extracted_text = "\n".join(text)
-    
-    # 텍스트 저장 기능
-    if save_text and text_dir and extracted_text.strip():
-        text_dir.mkdir(parents=True, exist_ok=True)
-        text_file = text_dir / f"{pdf_path.stem}_pdfplumber.txt"
-        try:
-            text_file.write_text(extracted_text, encoding="utf-8")
-        except Exception:
-            pass  # 저장 실패 시 무시
-    
-    return extracted_text
+    return "\n".join(text)
 
 
-def extract_text_fitz(pdf_path: Path, save_text: bool = False, text_dir: Path = None) -> str:
+def extract_text_fitz(pdf_path: Path) -> str:
     """Extract text using PyMuPDF (fitz). Better for 디지털 PDF."""
     try:
         import fitz  # type: ignore
@@ -46,18 +89,7 @@ def extract_text_fitz(pdf_path: Path, save_text: bool = False, text_dir: Path = 
         doc.close()
     except Exception:
         return ""
-    extracted_text = "\n".join(text)
-    
-    # 텍스트 저장 기능
-    if save_text and text_dir and extracted_text.strip():
-        text_dir.mkdir(parents=True, exist_ok=True)
-        text_file = text_dir / f"{pdf_path.stem}_fitz.txt"
-        try:
-            text_file.write_text(extracted_text, encoding="utf-8")
-        except Exception:
-            pass  # 저장 실패 시 무시
-    
-    return extracted_text
+    return "\n".join(text)
 
 
 def extract_text_pymupdf4llm(pdf_path: Path) -> str:
@@ -97,7 +129,7 @@ def extract_text_auto(pdf_path: Path) -> str:
 def main():
     ap = argparse.ArgumentParser(description="Build JSONL corpus from PDFs (best-effort)")
     ap.add_argument("--pdf_dir", default="./pdfs")
-    ap.add_argument("--out", default="data/corpus.jsonl")
+    ap.add_argument("--out", default="data/corpus_v1.jsonl")
     ap.add_argument("--pdf-extractor", default="auto", choices=["auto", "plumber", "fitz", "pymupdf4llm"], help="PDF text extractor")
     ap.add_argument("--ocr", default="auto", choices=["auto", "always", "off"], help="OCR fallback policy")
     ap.add_argument("--ocr-lang", default="kor+eng", help="OCR languages (tesseract/ocrmypdf)")
@@ -114,6 +146,10 @@ def main():
     ap.add_argument("--llm-correct-max-chars", type=int, default=10000, help="Max total characters to correct per document")
     ap.add_argument("--llm-correct-batch", type=int, default=4, help="LLM correction batch size")
     ap.add_argument("--llm-dict-file", default=None, help="Optional domain dictionary file (UTF-8 text)")
+    # 중복 제거 옵션
+    ap.add_argument("--dedup", action="store_true", help="Enable chunk deduplication during corpus building")
+    ap.add_argument("--dedup-threshold", type=float, default=0.9, help="Jaccard similarity threshold for deduplication [0,1]")
+    ap.add_argument("--dedup-min-length", type=int, default=50, help="Minimum chunk length to consider for deduplication")
     # 구버전 플래그(호환): --ocr-lite*
     ap.add_argument("--ocr-lite", action="store_true", help="[deprecated] alias of --llm-correct")
     ap.add_argument("--ocr-lite-threshold", type=float, default=0.6, help="[deprecated] alias of --llm-correct-threshold")
@@ -419,6 +455,43 @@ def main():
 
     # Write only if we have content; otherwise keep existing corpus (if any)
     if len(lines) > 0:
+        # 중복 제거 적용
+        if args.dedup:
+            print(f"중복 제거 전: {len(lines)}개 청크")
+            # JSON 객체를 Chunk 객체로 변환
+            chunks = []
+            for obj in lines:
+                chunks.append(Chunk(
+                    doc_id=obj.get("doc_id", obj.get("filename", "doc")),
+                    filename=obj.get("filename", "doc"),
+                    page=obj.get("page"),
+                    start_offset=int(obj.get("start", 0)),
+                    length=int(obj.get("length", len(obj.get("text", "")))),
+                    text=obj.get("text", ""),
+                    extra=obj.get("extra", {}),
+                ))
+            
+            # 중복 제거 실행
+            unique_chunks = deduplicate_chunks(
+                chunks, 
+                threshold=args.dedup_threshold, 
+                min_length=args.dedup_min_length
+            )
+            
+            # Chunk 객체를 다시 JSON 객체로 변환
+            lines = []
+            for chunk in unique_chunks:
+                lines.append({
+                    "doc_id": chunk.doc_id,
+                    "filename": chunk.filename,
+                    "page": chunk.page,
+                    "start": chunk.start_offset,
+                    "length": chunk.length,
+                    "text": chunk.text,
+                    "extra": chunk.extra,
+                })
+            print(f"중복 제거 후: {len(lines)}개 청크")
+        
         # Backup existing file once
         if out.exists():
             try:
@@ -435,13 +508,6 @@ def main():
             for obj in lines:
                 f.write(json.dumps(obj, ensure_ascii=False) + "\n")
     print(f"Wrote {len(lines)} chunks to {out}")
-    if len(lines) == 0:
-        print("[hint] PDF에서 텍스트를 추출하지 못했습니다. 스캔본일 수 있습니다.")
-        print("       - 자동 OCR은 pytesseract 또는 ocrmypdf가 설치되어 있어야 동작합니다.")
-        print("       - Windows: Tesseract 설치 후 재시도 (예: https://github.com/UB-Mannheim/tesseract/wiki)")
-        print("         그리고 'pip install pytesseract pillow pymupdf' 설치")
-        print("       - 대안: ocrmypdf 설치 후 --ocr auto 유지")
-        print("       - 또는 --pdf-extractor fitz/plumber로 시도")
 
 
 if __name__ == "__main__":

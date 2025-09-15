@@ -50,7 +50,7 @@
 ## 가장 쉬운 실행(autorun)
 - 완전 자동(설치 확인 → PDF 찾기 → OCR 폴백 → 벤치마크 실행):
   - `python scripts/autorun.py --backend auto`
-  - 기본 PDF 탐색 경로: `data/pdfs` → `data/tests` → `./pdfs` → 없으면 `data/corpus.jsonl` 사용
+  - 기본 PDF 탐색 경로: `data/pdfs` → `data/tests` → `./pdfs` → 없으면 `data/corpus_v1.jsonl` 사용
 - 단일 질문만 실행:
   - `python scripts/autorun.py --backend auto --question "<질문>"`
 - 경로를 고정하고 싶다면:
@@ -72,10 +72,10 @@
   - 임계 튠: `--thr-base 0.25 --thr-numeric 0.16 --thr-long 0.17`
 
 ## 수동 절차
-- PDF→코퍼스: `python scripts/build_corpus_from_pdfs.py --pdf_dir data/pdfs --out data/corpus.jsonl --pdf-extractor auto --ocr auto --ocr-lang kor+eng --ocr-dpi 200`
-- 벡터 인덱스: `python scripts/build_vector_index.py --corpus data/corpus.jsonl --backend faiss --outdir vector_store`
-- 수동 CLI: `python scripts/manual_cli.py --corpus data/corpus.jsonl --mode accuracy --store-backend auto --question "<질문>"`
-- 하네스: `python scripts/run_qa_benchmark.py --input data/tests/qa.json --corpus data/corpus.jsonl --mode accuracy --store-backend auto --report out/report.json --csv out/report.csv`
+- PDF→코퍼스: `python scripts/build_corpus_from_pdfs.py --pdf_dir data/pdfs --out data/corpus_v1.jsonl --pdf-extractor auto --ocr auto --ocr-lang kor+eng --ocr-dpi 200`
+- 벡터 인덱스: `python scripts/build_vector_index.py --corpus data/corpus_v1.jsonl --backend faiss --outdir vector_store`
+- 수동 CLI: `python scripts/manual_cli.py --corpus data/corpus_v1.jsonl --mode accuracy --store-backend auto --question "<질문>"`
+- 하네스: `python scripts/run_qa_benchmark.py --input data/tests/qa.json --corpus data/corpus_v1.jsonl --mode accuracy --store-backend auto --report out/report.json --csv out/report.csv`
 
  
 

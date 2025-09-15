@@ -1,12 +1,23 @@
 import argparse
 import json
 import sys
+import logging
 from dataclasses import asdict
 from pathlib import Path
 from typing import Dict, List
 
 # Ensure 'src' is on sys.path for module imports
 sys.path.append(str(Path(__file__).resolve().parents[1] / "src"))
+
+# 로깅 설정
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+logger = logging.getLogger(__name__)
 
 from unifiedpdf.config import PipelineConfig
 from unifiedpdf.facade import UnifiedPDFPipeline
@@ -90,14 +101,17 @@ def score_answer(pred: str, gold: str, tags: List[str]) -> float:
 
 
 def main():
+    logger.info("=== QA 벤치마크 시작 ===")
+    
     ap = argparse.ArgumentParser(description="Run QA benchmark for UnifiedPDFPipeline")
     ap.add_argument("--input", default="data/tests/qa.json", help="Path to input QA JSON")
-    ap.add_argument("--corpus", default="data/corpus.jsonl", help="Path to JSONL corpus")
+    ap.add_argument("--corpus", default="data/corpus_v1.jsonl", help="Path to JSONL corpus")
     ap.add_argument("--mode", default="accuracy", choices=["accuracy", "speed"])
     ap.add_argument("--k", default="auto")
     ap.add_argument("--report", default="out/report.json")
     ap.add_argument("--csv", default="out/report.csv")
     ap.add_argument("--store-backend", default="auto", choices=["auto", "faiss", "hnsw"]) 
+    ap.add_argument("--vector-store-dir", default="vector_store", help="Directory of prebuilt vector index")
     ap.add_argument("--use-cross-reranker", action="store_true")
     ap.add_argument("--rerank-top-n", type=int, default=50)
     ap.add_argument("--thr-base", type=float, default=None)
@@ -105,9 +119,17 @@ def main():
     ap.add_argument("--thr-long", type=float, default=None)
     args = ap.parse_args()
 
+    logger.info(f"설정: 입력={args.input}, 코퍼스={args.corpus}, 모드={args.mode}")
+    logger.info(f"벡터스토어: {args.vector_store_dir}, 백엔드={args.store_backend}")
+
+    logger.info("코퍼스 로딩 중...")
     chunks = load_corpus(args.corpus)
+    logger.info(f"코퍼스 로딩 완료: {len(chunks)}개 청크")
+    
+    logger.info("파이프라인 설정 중...")
     cfg = PipelineConfig()
     cfg.flags.store_backend = args.store_backend
+    cfg.vector_store_dir = args.vector_store_dir
     cfg.flags.use_cross_reranker = args.use_cross_reranker
     cfg.flags.rerank_top_n = args.rerank_top_n
     if args.thr_base is not None:
@@ -116,18 +138,30 @@ def main():
         cfg.thresholds.confidence_threshold_numeric = args.thr_numeric
     if args.thr_long is not None:
         cfg.thresholds.confidence_threshold_long = args.thr_long
+    
+    logger.info("파이프라인 초기화 중...")
     pipe = UnifiedPDFPipeline(chunks, cfg)
+    logger.info("파이프라인 초기화 완료")
 
+    logger.info("QA 데이터 로딩 중...")
     with open(args.input, "r", encoding="utf-8") as f:
         items = json.load(f)
+    logger.info(f"QA 데이터 로딩 완료: {len(items)}개 질문")
 
+    logger.info("=== 질문 처리 시작 ===")
     mc = MetricsCollector()
-    for it in items:
+    for i, it in enumerate(items, 1):
         q = it["question"]
         gold = it.get("answer", "")
         tags = it.get("tags", [])
+        
+        logger.info(f"[{i}/{len(items)}] 질문 처리 중: {q[:50]}...")
+        
         res = pipe.ask(q, mode=args.mode)
         s = score_answer(res.text, gold, tags)
+        
+        logger.info(f"[{i}/{len(items)}] 완료 - 점수: {s:.3f}, 신뢰도: {res.confidence:.3f}")
+        
         row = {
             "id": it.get("id"),
             "question": q,
@@ -141,6 +175,7 @@ def main():
         row["config_hash"] = cfg.config_hash()
         mc.add(row)
 
+    logger.info("=== 결과 저장 중 ===")
     Path(args.report).parent.mkdir(parents=True, exist_ok=True)
     mc.to_json(args.report)
     mc.to_csv(args.csv)
@@ -159,8 +194,17 @@ def main():
     with open(simple_report_path, "w", encoding="utf-8") as f:
         json.dump(simple_results, f, ensure_ascii=False, indent=2)
     
-    print(f"Wrote report to {args.report} and CSV to {args.csv}")
-    print(f"Wrote simple report to {simple_report_path}")
+    logger.info(f"상세 보고서 저장: {args.report}")
+    logger.info(f"CSV 보고서 저장: {args.csv}")
+    logger.info(f"간단 보고서 저장: {simple_report_path}")
+    
+    # 전체 성능 요약
+    avg_score = sum(row["score"] for row in mc.rows) / len(mc.rows)
+    avg_confidence = sum(row["confidence"] for row in mc.rows) / len(mc.rows)
+    logger.info(f"=== 벤치마크 완료 ===")
+    logger.info(f"평균 점수: {avg_score:.3f}")
+    logger.info(f"평균 신뢰도: {avg_confidence:.3f}")
+    logger.info(f"총 처리 시간: {sum(row['total_time_ms'] for row in mc.rows)/1000:.1f}초")
 
 
 if __name__ == "__main__":
