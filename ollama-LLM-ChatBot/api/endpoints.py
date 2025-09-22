@@ -15,7 +15,7 @@ from datetime import datetime
 from pathlib import Path
 import logging
 
-from fastapi import FastAPI, File, UploadFile, HTTPException, Depends
+from fastapi import FastAPI, File, UploadFile, HTTPException, Depends, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
@@ -26,7 +26,8 @@ from core.document.pdf_processor import PDFProcessor, TextChunk
 from core.document.vector_store import HybridVectorStore, VectorStoreInterface
 from core.query.question_analyzer import QuestionAnalyzer, AnalyzedQuestion, ConversationItem
 from core.llm.answer_generator import AnswerGenerator, Answer, ModelType, GenerationConfig
-from core.database.sql_generator import SQLGenerator, DatabaseSchema, SQLQuery
+from core.database.enhanced_sql_system import EnhancedSQLSystem as SQLGenerator, EnhancedSQLResult as SQLQuery
+from core.database.sql_generator import DatabaseSchema
 
 from core.query.query_router import QueryRouter, QueryRoute
 from core.query.llm_greeting_handler import GreetingHandler
@@ -317,6 +318,61 @@ async def root():
 async def health_check():
     """헬스 체크"""
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
+
+@app.get("/performance/stats")
+async def get_performance_stats(sql_generator: SQLGenerator = Depends(get_sql_generator)):
+    """SQL 생성 성능 통계 조회"""
+    try:
+        stats = sql_generator.get_performance_stats()
+        return {
+            "success": True,
+            "data": stats
+        }
+    except Exception as e:
+        logger.error(f"성능 통계 조회 실패: {e}")
+        raise HTTPException(status_code=500, detail=f"성능 통계 조회 실패: {str(e)}")
+
+@app.get("/performance/summary")
+async def get_performance_summary(
+    hours: int = Query(24, description="조회 시간 범위 (시간)"),
+    sql_generator: SQLGenerator = Depends(get_sql_generator)
+):
+    """SQL 생성 성능 요약 조회"""
+    try:
+        summary = sql_generator.get_performance_summary(hours)
+        return {
+            "success": True,
+            "data": summary
+        }
+    except Exception as e:
+        logger.error(f"성능 요약 조회 실패: {e}")
+        raise HTTPException(status_code=500, detail=f"성능 요약 조회 실패: {str(e)}")
+
+@app.post("/schema/refresh")
+async def refresh_schema(sql_generator: SQLGenerator = Depends(get_sql_generator)):
+    """데이터베이스 스키마 갱신"""
+    try:
+        sql_generator.refresh_schema()
+        return {
+            "success": True,
+            "message": "스키마 갱신 완료"
+        }
+    except Exception as e:
+        logger.error(f"스키마 갱신 실패: {e}")
+        raise HTTPException(status_code=500, detail=f"스키마 갱신 실패: {str(e)}")
+
+@app.post("/cache/clear")
+async def clear_cache(sql_generator: SQLGenerator = Depends(get_sql_generator)):
+    """캐시 초기화"""
+    try:
+        sql_generator.clear_cache()
+        return {
+            "success": True,
+            "message": "캐시 초기화 완료"
+        }
+    except Exception as e:
+        logger.error(f"캐시 초기화 실패: {e}")
+        raise HTTPException(status_code=500, detail=f"캐시 초기화 실패: {str(e)}")
 
 @app.post("/clear-vector-store")
 async def clear_vector_store(

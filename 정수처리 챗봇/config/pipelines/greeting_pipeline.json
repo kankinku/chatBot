@@ -1,0 +1,18 @@
+{
+  "pipeline_name": "GREETING",
+  "description": "범용 RAG 시스템 인사말 처리 파이프라인",
+  "keywords": [
+    "안녕", "안녕하세요", "안녕하십니까", "반갑습니다", "반가워", "하이", "hi", "hello"
+  ],
+  "reference_questions": [
+    "안녕하세요",
+    "반갑습니다",
+    "안녕",
+    "하이",
+    "hi",
+    "hello",
+    "안녕하세요?",
+    "반갑습니다!"
+  ],
+  "domain_specific_keywords": []
+}

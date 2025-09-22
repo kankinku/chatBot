@@ -1,0 +1,40 @@
+                    chatbot_logger.log_step(session_id, ProcessingStep.VECTOR_SEARCH, search_time, f"ë²¡í„°ê²€?? {len(relevant_chunks)}ê°?ì²?¬ ë°œê²¬")
+                
+                # ?µë? ?ì„±
+                answer_start = time.time()
+                if relevant_chunks:
+                    chunks = [chunk for chunk, score in relevant_chunks]
+                    logger.info(f"ì»¨í…?¤íŠ¸ ê¸°ë°˜ ?µë? ?ì„± ?œì‘ ({len(chunks)}ê°?ì²?¬ ?¬ìš©)")
+                    answer = self.answer_generator.generate_context_answer(question, chunks)
+                else:
+                    logger.info("ê´€??ë¬¸ì„œë¥?ì°¾ì„ ???†ì–´ ì§ì ‘ ?µë? ?ì„± ?œì‘")
+                    answer = self.answer_generator.generate_direct_answer(question)
+                    
+                    # ì§ì ‘ ?µë????¤íŒ¨??ê²½ìš° ?ì ˆ??ë©”ì‹œì§€ ë°˜í™˜
+                    if not answer or not answer.content or len(answer.content.strip()) < 10:
+                        logger.warning("PDF?ì„œ ?µë????´ë‹¹?˜ëŠ” ?´ìš©??ì°¾ì„ ???†ìŠµ?ˆë‹¤.")
+                        return {
+                            'success': False,
+                            'answer': "ì£„ì†¡?©ë‹ˆ?? PDF?ì„œ ?µë????´ë‹¹?˜ëŠ” ?´ìš©??ì°¾ì„ ???†ìŠµ?ˆë‹¤. ?¤ë¥¸ ì§ˆë¬¸???œë„?´ë³´?œê±°????êµ¬ì²´?ì¸ ì§ˆë¬¸???´ì£¼?¸ìš”.",
+                            'confidence_score': 0.0,
+                            'question_type': 'pdf_no_content',
+                            'processing_time': time.time() - start_time,
+                            'route': route_result.route.value,
+                            'sql_query': None,
+                            'used_chunks': []
+                        }
+                
+                answer_time = time.time() - answer_start
+                
+                logger.info(f"?µë? ?ì„± ?„ë£Œ (?Œìš”?œê°„: {answer_time:.2f}ì´?")
+                logger.info(f"?ì„±???µë?: {answer.content[:100]}...")
+                
+                if chatbot_logger and session_id:
+                    chatbot_logger.log_step(session_id, ProcessingStep.ANSWER_GENERATION, answer_time, "?µë??ì„± ?„ë£Œ")
+                
+                total_time = time.time() - start_time
+                
+                if chatbot_logger and session_id:
+                    chatbot_logger.log_step(session_id, ProcessingStep.COMPLETION, total_time, "PDF ?Œì´?„ë¼???„ë£Œ")
+                
+                # ì§ˆë¬¸ ë¶„ì„ ?•ë³´ ì¶”ì¶œ

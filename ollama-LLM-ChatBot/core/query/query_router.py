@@ -48,27 +48,30 @@ class QueryRouter:
     """
     
     def __init__(self, embedding_model: str = "jhgan/ko-sroberta-multitask"):
-        """쿼리 라우터 초기화"""
+        """쿼리 라우터 초기화 (싱글톤 매니저 사용)"""
         
         self.embedding_model = None
         if SBERT_AVAILABLE:
             try:
-                # 오프라인 로딩 강제: 모델이 없으면 예외 발생
-                self.embedding_model = SentenceTransformer(embedding_model, cache_folder="./models")
-                logger.info(f"✅ 라우팅용 SBERT 모델 로드: {embedding_model}")
+                # 싱글톤 매니저를 통한 모델 로드
+                from core.utils.singleton_manager import get_embedding_model
+                self.embedding_model = get_embedding_model(embedding_model)
+                logger.info(f"✅ 라우팅용 SBERT 모델 로드 (싱글톤): {embedding_model}")
             except Exception as e:
                 logger.error(f"SBERT 모델 로드 실패(오프라인 필요): {e}")
                 raise
         
-        # 환경 변수에서 회사/프로젝트 정보 읽기
-        self.company_name = os.getenv('COMPANY_NAME', '범용 RAG 시스템')
-        self.project_name = os.getenv('PROJECT_NAME', '범용 RAG 시스템')
-        self.system_type = os.getenv('SYSTEM_TYPE', '범용 RAG 시스템')
+        # 통합 설정에서 회사/프로젝트 정보 읽기
+        from core.config.unified_config import get_config
+        self.company_name = get_config('COMPANY_NAME')
+        self.project_name = get_config('PROJECT_NAME')
+        self.system_type = get_config('SYSTEM_TYPE')
         
         logger.info(f"쿼리 라우터 초기화: {self.company_name} - {self.project_name}")
         
-        # 파이프라인 설정 관리자 초기화
-        self.pipeline_config_manager = PipelineConfigManager()
+        # 파이프라인 설정 관리자 초기화 (싱글톤)
+        from core.utils.singleton_manager import get_config
+        self.pipeline_config_manager = get_config('pipeline_config_manager')
         
         # 라우팅을 위한 참조 질문들 (JSON 설정에서 로드)
         self.reference_questions = {}
