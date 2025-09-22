@@ -1,0 +1,35 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Shell scripts should use LF
+*.sh text eol=lf
+
+# Dockerfile should use LF  
+Dockerfile text eol=lf
+docker-entrypoint.sh text eol=lf
+entrypoint.sh text eol=lf
+
+# Python files
+*.py text eol=lf
+
+# Docker Compose files
+docker-compose.yml text eol=lf
+docker-compose.yaml text eol=lf
+
+# Configuration files
+*.conf text eol=lf
+*.ini text eol=lf
+*.toml text eol=lf
+
+# Prevent binary files from being modified
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.svg binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.eot binary

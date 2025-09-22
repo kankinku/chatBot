@@ -1,0 +1,185 @@
+# GPU 지원 Docker Compose 설정 - GPU 100% 활용 최적화
+# NVIDIA GPU가 있는 시스템에서 사용
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: mysql-gpu
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: traffic
+      # 한글 지원 설정
+      LANG: ko_KR.UTF-8
+      LC_ALL: ko_KR.UTF-8
+      LC_CTYPE: ko_KR.UTF-8
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./django-react-backend-api-ifro/sqldata-backup/20250727:/docker-entrypoint-initdb.d
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default-authentication-plugin=mysql_native_password --skip-ssl
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./django-react-backend-api-ifro
+    container_name: backend-gpu
+    ports:
+      - "8000:8000"
+    environment:
+      - MYSQL_DATABASE=traffic
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=1234
+      - MYSQL_HOST=db
+      - MYSQL_PORT=3306
+      - DJANGO_SECRET_KEY=unsafe-dev-secret-key-for-local-development
+      - JWT_SECRET_KEY=a-different-unsafe-secret-key-for-jwt
+      - DJANGO_ENCRYPTION_PASSWORD=forBus_password
+      - DJANGO_DEBUG=True
+      - DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
+      - GEMINI_API_KEY=AIzaSyAwA17afiK3RW95Z9hBcWpDOOVU_PELtfw
+      - CHATBOT_URL=http://chatbot:8000
+      # 한글 지원 설정
+      - LANG=ko_KR.UTF-8
+      - LC_ALL=ko_KR.UTF-8
+      - LC_CTYPE=ko_KR.UTF-8
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./django-react-backend-api-ifro:/app
+    command: >
+      sh -c "cd /app/src &&
+             echo 'Waiting for MySQL to be ready...' &&
+             until mysql -h db -u root -p$$MYSQL_PASSWORD --skip-ssl -e 'SELECT 1;' > /dev/null 2>&1; do
+               sleep 1;
+             done &&
+             echo 'MySQL is ready.' &&
+             echo 'Starting Django server...' &&
+             python manage.py runserver 0.0.0.0:8000"
+
+  frontend:
+    build:
+      context: ./django-react-frontend-ifro
+    container_name: frontend-gpu
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./django-react-frontend-ifro:/app
+      - /app/node_modules
+    environment:
+      - NODE_OPTIONS=--max-old-space-size=4096
+      - REACT_APP_API_URL=http://localhost:8000
+      # 한글 지원 설정
+      - LANG=ko_KR.UTF-8
+      - LC_ALL=ko_KR.UTF-8
+      - LC_CTYPE=ko_KR.UTF-8
+    depends_on:
+      - backend
+    deploy:
+      resources:
+        limits:
+          memory: 4096M
+    stdin_open: true
+    tty: true
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama-gpu
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      # GPU 최적화 환경 변수
+      - OLLAMA_GPU_LAYERS=-1  # 모든 레이어를 GPU에서 실행
+      - OLLAMA_NUM_PARALLEL=4  # 병렬 처리 수 증가
+      - OLLAMA_MAX_LOADED_MODELS=2  # 동시 로드 모델 수
+      - OLLAMA_FLASH_ATTENTION=1  # Flash Attention 활성화
+    volumes:
+      - ollama_data:/root/.ollama
+    deploy:
+      resources:
+        limits:
+          memory: 16G  # 메모리 제한 증가
+        reservations:
+          memory: 8G
+    # GPU 설정 - 모든 GPU 리소스 활용
+    runtime: nvidia
+    shm_size: 8gb  # 공유 메모리 증가
+    # 기본 Ollama 서버 시작 (GPU 최적화는 환경 변수로 설정됨)
+    # 모델은 챗봇 서버 시작 시 자동으로 다운로드됨
+    healthcheck:
+      test: ["CMD", "ollama", "ps"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  chatbot:
+    build: ./ollama-chatbot-api-ifro
+    container_name: chatbot-gpu
+    ports:
+      - "8008:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONUTF8=1
+      # GPU 최적화된 타임아웃 설정
+      - LLM_TIMEOUT=60
+      - RERANK_TIMEOUT=20
+      - SEARCH_TIMEOUT=10
+      - OLLAMA_HOST=ollama
+      # GPU 활용을 위한 추가 설정
+      - OLLAMA_GPU_LAYERS=-1
+      - BATCH_SIZE=8  # 배치 크기 증가로 GPU 활용도 향상
+      - MAX_CONCURRENT_REQUESTS=4  # 동시 요청 수 증가
+      # 로깅 설정 - Docker Desktop에서 확인하기 쉽도록
+      - LOG_LEVEL=INFO
+      - LOG_FORMAT=detailed
+      - LANG=ko_KR.UTF-8
+      - LC_ALL=ko_KR.UTF-8
+      - LC_CTYPE=ko_KR.UTF-8
+    volumes:
+      - ./ollama-chatbot-api-ifro:/app
+      - ./ollama-chatbot-api-ifro/data:/app/data
+      - ./ollama-chatbot-api-ifro/models:/app/models
+      - ./ollama-chatbot-api-ifro/vector_store:/app/vector_store
+      - ./ollama-chatbot-api-ifro/logs:/app/logs
+    depends_on:
+      ollama:
+        condition: service_healthy
+    restart: unless-stopped
+    # Docker Desktop에서 로그 확인을 위한 설정
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          memory: 8G  # 메모리 제한 증가로 GPU 활용도 향상
+        reservations:
+          memory: 4G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+volumes:
+  mysql_data:
+  ollama_data:
+
+networks:
+  default:
+    driver: bridge
