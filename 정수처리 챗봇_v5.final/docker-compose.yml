@@ -30,7 +30,7 @@ services:
     build:
       context: ./new-chatbot-backend-api
       dockerfile: Dockerfile
-    container_name: backend-new-chatbot
+    container_name: backend-chatbot
     ports:
       - "8001:8000"
     environment:
@@ -61,7 +61,7 @@ services:
     build:
       context: ./new-chatbot-front
       dockerfile: Dockerfile
-    container_name: frontend-new-chatbot
+    container_name: frontend-chatbot
     ports:
       - "3001:3000"
     volumes:
@@ -138,6 +138,10 @@ services:
       # 로깅 설정 - Docker Desktop에서 확인하기 쉽도록
       - LOG_LEVEL=INFO
       - LOG_FORMAT=detailed
+      # 모델 자동 다운로드 설정
+      - AUTO_PULL_MODEL=true
+      - MODEL_PULL_TIMEOUT=600
+      - MODEL_PULL_RETRIES=3
       - LANG=ko_KR.UTF-8
       - LC_ALL=ko_KR.UTF-8
       - LC_CTYPE=ko_KR.UTF-8
@@ -149,7 +153,7 @@ services:
     depends_on:
       ollama:
         condition: service_healthy
-    restart: unless-stopped
+    restart: always  # 모델 다운로드 실패 시 자동 재시작
     # Docker Desktop에서 로그 확인을 위한 설정
     logging:
       driver: "json-file"
@@ -162,12 +166,17 @@ services:
           memory: 8G  # 메모리 제한 증가로 GPU 활용도 향상
         reservations:
           memory: 4G
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 10
+        window: 120s
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 60s
+      interval: 30s  # 체크 간격 증가 (모델 다운로드 시간 고려)
+      timeout: 10s
+      retries: 10  # 재시도 횟수 증가
+      start_period: 180s  # 시작 대기 시간 증가 (모델 다운로드 고려)
 
 volumes:
   mysql_data:

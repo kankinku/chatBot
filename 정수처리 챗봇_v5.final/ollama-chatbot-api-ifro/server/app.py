@@ -269,26 +269,79 @@ if FASTAPI_AVAILABLE:
                 model_name = cfg.model_name
                 model_exists = any(m.get("name") == model_name for m in models)
                 
-                if not model_exists:
+                # 자동 모델 다운로드 설정 확인
+                auto_pull = os.getenv('AUTO_PULL_MODEL', 'true').lower() == 'true'
+                pull_timeout = int(os.getenv('MODEL_PULL_TIMEOUT', '600'))
+                max_retries = int(os.getenv('MODEL_PULL_RETRIES', '3'))
+                
+                if not model_exists and auto_pull:
                     print(f"Model '{model_name}' not found. Pulling via Ollama API...")
-                    # 모델 Pull 요청
+                    # 모델 Pull 요청 (스트리밍 응답 처리)
                     pull_url = f"http://{ollama_host}:11434/api/pull"
-                    pull_data = {"name": model_name}
+                    pull_data = {"name": model_name, "stream": True}
                     pull_req = urllib.request.Request(
                         pull_url, 
                         data=json.dumps(pull_data).encode("utf-8"),
                         headers={"Content-Type": "application/json"}
                     )
                     
+                    pull_success = False
                     try:
-                        with urllib.request.urlopen(pull_req, timeout=300) as pull_resp:
-                            pull_result = json.loads(pull_resp.read().decode("utf-8"))
-                            print(f"Model pull initiated: {pull_result}")
+                        with urllib.request.urlopen(pull_req, timeout=pull_timeout) as pull_resp:
+                            print(f"Starting model pull for '{model_name}'...")
+                            for line in pull_resp:
+                                line_str = line.decode("utf-8").strip()
+                                if line_str:
+                                    try:
+                                        pull_result = json.loads(line_str)
+                                        if pull_result.get("status") == "success":
+                                            print(f"Model '{model_name}' pulled successfully!")
+                                            pull_success = True
+                                            break
+                                        elif pull_result.get("status"):
+                                            print(f"Pull status: {pull_result.get('status')}")
+                                    except json.JSONDecodeError:
+                                        continue
                     except Exception as pull_e:
                         print(f"Model pull failed: {pull_e}")
+                        # 실패 시 재시도
+                        for retry in range(max_retries):
+                            print(f"Retrying model pull (attempt {retry + 1}/{max_retries})...")
+                            try:
+                                with urllib.request.urlopen(pull_req, timeout=pull_timeout) as pull_resp:
+                                    for line in pull_resp:
+                                        line_str = line.decode("utf-8").strip()
+                                        if line_str:
+                                            try:
+                                                pull_result = json.loads(line_str)
+                                                if pull_result.get("status") == "success":
+                                                    print(f"Model '{model_name}' pulled successfully on retry!")
+                                                    pull_success = True
+                                                    break
+                                            except json.JSONDecodeError:
+                                                continue
+                                    if pull_success:
+                                        break
+                            except Exception as retry_e:
+                                print(f"Retry {retry + 1} failed: {retry_e}")
+                                if retry == max_retries - 1:  # 마지막 시도
+                                    print(f"All pull attempts failed. Restarting service...")
+                                    # 서비스 재시작을 위한 종료 신호
+                                    import signal
+                                    os.kill(os.getpid(), signal.SIGTERM)
+                    
+                    if not pull_success:
+                        print(f"Model pull failed after all attempts. Restarting service...")
+                        import signal
+                        os.kill(os.getpid(), signal.SIGTERM)
+                elif not model_exists:
+                    print(f"Model '{model_name}' not found and auto-pull is disabled.")
+                    print(f"Please manually pull the model: docker exec -it ollama-new-chatbot ollama pull {model_name}")
+                    _warmed = False
+                    return
                 
-                # 3. 모델 로딩 상태 확인 (최대 60초 대기)
-                for attempt in range(30):  # 30번 시도 (2초 간격)
+                # 3. 모델 로딩 상태 확인 (최대 120초 대기)
+                for attempt in range(60):  # 60번 시도 (2초 간격)
                     try:
                         with urllib.request.urlopen(url, timeout=10) as resp:
                             data = json.loads(resp.read().decode("utf-8"))
@@ -300,9 +353,10 @@ if FASTAPI_AVAILABLE:
                         pass
                     time.sleep(2)
                 else:
-                    print(f"Model '{model_name}' not available after pull attempt.")
-                    _warmed = False
-                    return
+                    print(f"Model '{model_name}' not available after pull attempt. Restarting service...")
+                    # 서비스 재시작을 위한 종료 신호
+                    import signal
+                    os.kill(os.getpid(), signal.SIGTERM)
                 
                 # 4. 모델 웜업 (실제 메모리 로딩 및 keep_alive 설정)
                 print(f"Warming up model '{model_name}'...")
