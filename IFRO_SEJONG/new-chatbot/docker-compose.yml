@@ -1,0 +1,178 @@
+# GPU 지원 Docker Compose 설정 - new-chatbot 프로젝트용
+# NVIDIA GPU가 있는 시스템에서 사용
+
+services:
+  # MySQL 데이터베이스 (챗봇 대화 기록 저장)
+  db:
+    image: mysql:8.0
+    container_name: mysql-new-chatbot
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: chatbot_db
+      # 한글 지원 설정
+      LANG: ko_KR.UTF-8
+      LC_ALL: ko_KR.UTF-8
+      LC_CTYPE: ko_KR.UTF-8
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default-authentication-plugin=mysql_native_password --skip-ssl
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Django 백엔드 API (프록시 서버 + 대화 기록 관리)
+  backend:
+    build:
+      context: ./new-chatbot-backend-api
+      dockerfile: Dockerfile
+    container_name: backend-new-chatbot
+    ports:
+      - "8001:8000"
+    environment:
+      - SECRET_KEY=django-insecure-change-this-in-production-key-for-chatbot-backend
+      - DEBUG=True
+      - CHATBOT_URL=http://chatbot:8000
+      - CORS_ALLOW_ALL_ORIGINS=True
+      # MySQL 데이터베이스 설정
+      - MYSQL_DATABASE=chatbot_db
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=1234
+      - MYSQL_HOST=db
+      - MYSQL_PORT=3306
+      # 한글 지원 설정
+      - LANG=ko_KR.UTF-8
+      - LC_ALL=ko_KR.UTF-8
+      - LC_CTYPE=ko_KR.UTF-8
+    depends_on:
+      db:
+        condition: service_healthy
+      chatbot:
+        condition: service_healthy
+    volumes:
+      - ./new-chatbot-backend-api:/app
+
+  # React 프론트엔드
+  frontend:
+    build:
+      context: ./new-chatbot-front
+      dockerfile: Dockerfile
+    container_name: frontend-new-chatbot
+    ports:
+      - "3001:3000"
+    volumes:
+      - ./new-chatbot-front:/app
+      - /app/node_modules
+    environment:
+      - NODE_OPTIONS=--max-old-space-size=4096
+      - REACT_APP_API_URL=http://localhost:8001
+      # 한글 지원 설정
+      - LANG=ko_KR.UTF-8
+      - LC_ALL=ko_KR.UTF-8
+      - LC_CTYPE=ko_KR.UTF-8
+    depends_on:
+      - backend
+    deploy:
+      resources:
+        limits:
+          memory: 4096M
+    stdin_open: true
+    tty: true
+
+  # Ollama 서버 (GPU 최적화)
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama-new-chatbot
+    restart: unless-stopped
+    ports:
+      - "11435:11434"
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      # GPU 최적화 환경 변수
+      - OLLAMA_GPU_LAYERS=-1  # 모든 레이어를 GPU에서 실행
+      - OLLAMA_NUM_PARALLEL=4  # 병렬 처리 수 증가
+      - OLLAMA_MAX_LOADED_MODELS=2  # 동시 로드 모델 수
+      - OLLAMA_FLASH_ATTENTION=1  # Flash Attention 활성화
+    volumes:
+      - ollama_data:/root/.ollama
+    deploy:
+      resources:
+        limits:
+          memory: 16G  # 메모리 제한 증가
+        reservations:
+          memory: 8G
+    # GPU 설정 - 모든 GPU 리소스 활용
+    runtime: nvidia
+    shm_size: 8gb  # 공유 메모리 증가
+    healthcheck:
+      test: ["CMD", "ollama", "ps"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # 챗봇 API 서버 (FastAPI + Ollama)
+  chatbot:
+    build: ./ollama-chatbot-api-ifro
+    container_name: chatbot-new-chatbot
+    ports:
+      - "8009:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONUTF8=1
+      # GPU 최적화된 타임아웃 설정
+      - LLM_TIMEOUT=60
+      - RERANK_TIMEOUT=20
+      - SEARCH_TIMEOUT=10
+      - OLLAMA_HOST=ollama
+      # GPU 활용을 위한 추가 설정
+      - OLLAMA_GPU_LAYERS=-1
+      - BATCH_SIZE=8  # 배치 크기 증가로 GPU 활용도 향상
+      - MAX_CONCURRENT_REQUESTS=4  # 동시 요청 수 증가
+      # 로깅 설정 - Docker Desktop에서 확인하기 쉽도록
+      - LOG_LEVEL=INFO
+      - LOG_FORMAT=detailed
+      - LANG=ko_KR.UTF-8
+      - LC_ALL=ko_KR.UTF-8
+      - LC_CTYPE=ko_KR.UTF-8
+    volumes:
+      - ./ollama-chatbot-api-ifro:/app
+      - ./ollama-chatbot-api-ifro/data:/app/data
+      - ./ollama-chatbot-api-ifro/vector_store:/app/vector_store
+      - ./ollama-chatbot-api-ifro/logs:/app/logs
+    depends_on:
+      ollama:
+        condition: service_healthy
+    restart: unless-stopped
+    # Docker Desktop에서 로그 확인을 위한 설정
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          memory: 8G  # 메모리 제한 증가로 GPU 활용도 향상
+        reservations:
+          memory: 4G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+volumes:
+  mysql_data:
+  ollama_data:
+
+networks:
+  default:
+    driver: bridge
