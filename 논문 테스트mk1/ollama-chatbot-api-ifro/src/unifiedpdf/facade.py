@@ -93,36 +93,16 @@ class UnifiedPDFPipeline:
         guard = guard_check(question, contexts, cfg)
         metrics.update(guard)
 
-        # If hard blocked or no context, attempt fallback path: relax threshold once
+        # Do not perform any fallback/relax-retry; proceed with current contexts only
         fallback_used = "none"
-        if (guard["hard_blocked"] == 1) or not contexts:
-            # Relax threshold by 30% and re-run filter quickly
-            orig_th = cfg.thresholds.confidence_threshold
-            cfg.thresholds.confidence_threshold = max(0.15, orig_th * 0.7)
-            spans2, _ = calibrate_and_filter(spans, cfg)
-            cfg.thresholds.confidence_threshold = orig_th
-            if spans2:
-                contexts = spans2[:k]
-                fallback_used = "low_conf_retry"
-            elif spans:
-                # Single top span fallback with more context
-                contexts = spans[:min(2, len(spans))]
-                fallback_used = "single_span"
         metrics["fallback_used"] = fallback_used
 
-        # Generate
+        # Generate (single attempt only)
         gen_start = now_ms()
         answer_text = generate_answer(question, contexts, cfg, qtype=analysis.qtype)
         metrics["gen_time_ms"] = now_ms() - gen_start
         metrics["model_name"] = cfg.model_name
 
-        # Retry once with shorter context if empty
-        if not answer_text and contexts:
-            answer_text = generate_answer(question, contexts[:1], cfg, qtype=analysis.qtype)
-
-        # If model produced nothing and we have context, do extractive fallback
-        if not answer_text and contexts:
-            answer_text = contexts[0].chunk.text.strip()[:500]
         if not answer_text:
             answer_text = "문서에서 해당 정보를 확인할 수 없습니다."
             metrics["no_answer"] = 1
@@ -156,86 +136,7 @@ class UnifiedPDFPipeline:
         if metrics.get("qa_consistent", 1) == 0:
             confidence = max(0.0, confidence - 0.1)
 
-        # Strong mismatch recovery loop: up to 2 attempts with stricter prompt and reduced context
-        def _detect_mismatch() -> bool:
-            # Do not recover for explicit "no answer" responses
-            if metrics.get("no_answer", 0) == 1:
-                return False
-            # thresholds
-            thr_qa = cfg.thresholds.qa_overlap_min
-            thr_token = cfg.thresholds.qa_token_hit_min_ratio
-            thr_ctx = cfg.thresholds.answer_ctx_min_overlap
-            thr_num = cfg.thresholds.numeric_preservation_min
-            thr_num_sev = cfg.thresholds.numeric_preservation_severe
-            # signals
-            viol = 0
-            # qa overlap
-            if metrics.get("qa_overlap", 0.0) < thr_qa:
-                viol += 1
-            # token coverage ratio
-            from .utils import key_tokens
-            toks = key_tokens(question)
-            if toks:
-                ans = (answer_text or "").lower()
-                hits = sum(1 for t in toks if t in ans)
-                ratio = hits / max(1, len(toks))
-                metrics["qa_token_hit_ratio"] = ratio
-                if ratio < thr_token:
-                    viol += 1
-            # answer-context alignment (max overlap against any context)
-            from .utils import overlap_ratio as _ov
-            if contexts:
-                mx = max((_ov(answer_text, s.chunk.text) for s in contexts), default=0.0)
-            else:
-                mx = 0.0
-            metrics["answer_ctx_overlap_max"] = mx
-            if mx < thr_ctx:
-                viol += 1
-            # numeric preservation
-            num_pres = float(metrics.get("numeric_preservation", 1.0))
-            if num_pres < thr_num:
-                viol += 1
-            # severe condition: numeric very low and answer contains number
-            import re as _re
-            has_num = bool(_re.search(r"\d", answer_text or ""))
-            if has_num and (num_pres < thr_num_sev):
-                viol += 1  # severe -> count extra
-            return viol >= int(getattr(cfg.thresholds, "mismatch_trigger_count", 2))
-
-        recovery_attempts = 0
-        if _detect_mismatch():
-            recovery_attempts += 1
-            # pick stricter contexts: top-1 by highest overlap with question or calibrated_conf
-            def _score_span(sp):
-                return sp.aux_scores.get("ovlp", 0.0) if sp.aux_scores else (sp.calibrated_conf or 0.0)
-            strict_contexts = sorted(contexts, key=_score_span, reverse=True)[:1] or contexts[:1]
-            answer_text = generate_answer(question, strict_contexts, cfg, qtype=analysis.qtype, recovery=True)
-            # recompute QA metrics after recovery
-            q_tokens = key_tokens(question)
-            qa_overlap = overlap_ratio(question, answer_text)
-            qa_token_hit = contains_any_token(answer_text, q_tokens) if q_tokens else True
-            metrics["qa_overlap"] = qa_overlap
-            metrics["qa_token_match"] = 1 if qa_token_hit else 0
-            metrics["qa_consistent"] = 1 if (qa_overlap >= 0.05 and qa_token_hit) else 0
-            ctx_map = build_context_measure_map([s.chunk.text for s in strict_contexts])
-            metrics["numeric_preservation"] = verify_answer_numeric(answer_text, ctx_map, tol_ratio=0.05)
-            metrics["recovery_round"] = 1
-            metrics["fallback_used"] = "qa_recover1"
-
-            if _detect_mismatch() and len(contexts) > 1:
-                recovery_attempts += 1
-                strict_contexts2 = strict_contexts[:1]
-                answer_text = generate_answer(question, strict_contexts2, cfg, qtype=analysis.qtype, recovery=True)
-                q_tokens = key_tokens(question)
-                qa_overlap = overlap_ratio(question, answer_text)
-                qa_token_hit = contains_any_token(answer_text, q_tokens) if q_tokens else True
-                metrics["qa_overlap"] = qa_overlap
-                metrics["qa_token_match"] = 1 if qa_token_hit else 0
-                metrics["qa_consistent"] = 1 if (qa_overlap >= 0.05 and qa_token_hit) else 0
-                ctx_map = build_context_measure_map([s.chunk.text for s in strict_contexts2])
-                metrics["numeric_preservation"] = verify_answer_numeric(answer_text, ctx_map, tol_ratio=0.05)
-                metrics["recovery_round"] = 2
-                metrics["fallback_used"] = "qa_recover2"
+        # No mismatch detection or recovery; return the first-pass answer
 
         return Answer(
             text=answer_text,

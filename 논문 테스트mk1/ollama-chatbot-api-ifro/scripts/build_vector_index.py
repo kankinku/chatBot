@@ -41,6 +41,7 @@ def main():
     ap.add_argument("--corpus", default="data/corpus_v1.jsonl")
     ap.add_argument("--backend", default="faiss", choices=["faiss", "hnsw"]) 
     ap.add_argument("--outdir", default="vector_store")
+    ap.add_argument("--use-gpu", action="store_true", help="Use GPU for embedding if available")
     # 벡터 레벨 중복 제거 (선택적)
     ap.add_argument("--dedup-vectors", action="store_true", help="Remove duplicate vectors before building index")
     ap.add_argument("--vector-similarity-threshold", type=float, default=0.99, help="Cosine similarity threshold for vector deduplication")
@@ -50,7 +51,7 @@ def main():
     outdir.mkdir(parents=True, exist_ok=True)
 
     chunks = load_corpus(args.corpus)
-    embedder = get_embedder(PipelineConfig().embedding_model, use_gpu=False)
+    embedder = get_embedder(PipelineConfig().embedding_model, use_gpu=bool(args.use_gpu))
     if embedder is None:
         print("sentence-transformers not available; cannot build index.")
         return

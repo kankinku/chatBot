@@ -309,8 +309,8 @@ def main():
         return inter / max(1, sum(ca.values()))
 
     for i, it in enumerate(items, 1):
-        q = it["question"]
-        gold = it.get("answer", "")
+        q = it.get("question", it.get("질문", ""))
+        gold = it.get("answer", it.get("정답", ""))
         tags = it.get("tags", []) or []
         res = pipe.ask(q, mode=args.mode)
         # Evaluation policy: fixed 3% tolerance

@@ -71,7 +71,7 @@ def summarize_report(json_path: Path) -> dict:
     paper = obj.get("paper", {})
     if paper and paper.get("global"):
         g = paper["global"]
-        return {
+        out = {
             "EM@5%": float(g.get("em@5%", 0)),
             "UEM@5%": float(g.get("uem@5%", 0)),
             "NCI": float(g.get("nci", 0)),
@@ -79,6 +79,14 @@ def summarize_report(json_path: Path) -> dict:
             "Latency_ms": g.get("latency_mean_ms", {}),
             "ByTag": paper.get("by_tag", {}),
         }
+        # include reference-based metrics if available
+        if "ref_token_f1" in g:
+            out["RefF1"] = float(g.get("ref_token_f1", 0))
+        if "ref_bleu1" in g:
+            out["BLEU1"] = float(g.get("ref_bleu1", 0))
+        if "numeric_preservation" in g:
+            out["NP"] = float(g.get("numeric_preservation", 0))
+        return out
     # Fallback to simple means
     em = mean([r.get("em@5%", 0) for r in rows])
     uem = mean([r.get("uem@5%", 0) for r in rows])
@@ -88,14 +96,24 @@ def summarize_report(json_path: Path) -> dict:
     mean_gen = mean([r.get("gen_time_ms", 0) for r in rows])
     mean_total = mean([r.get("total_time_ms", 0) for r in rows])
     retry_rate = mean([1.0 if (r.get("recovery_round", 0) or 0) > 0 else 0.0 for r in rows])
-    return {
+    # optional reference-based metrics (if rows contain them)
+    ref_f1 = mean([r.get("ref_token_f1", 0) for r in rows])
+    bleu1 = mean([r.get("ref_bleu1", 0) for r in rows])
+    np_avg = mean([r.get("numeric_preservation", 0) for r in rows])
+    obj = {
         "EM@5%": em,
         "UEM@5%": uem,
         "NCI": nci,
+        "NP": np_avg,
         "RetryRate": retry_rate,
         "Latency_ms": {"vec": mean_vec, "bm25": mean_bm, "gen": mean_gen, "total": mean_total},
         "ByTag": {},
     }
+    if ref_f1:
+        obj["RefF1"] = ref_f1
+    if bleu1:
+        obj["BLEU1"] = bleu1
+    return obj
 
 
 def main():
@@ -107,8 +125,8 @@ def main():
     ap.add_argument("--pdf_dir", default="ollama-chatbot-api-ifro/data/pdfs")
     ap.add_argument("--qa", default="ollama-chatbot-api-ifro/data/tests/qa.json")
     ap.add_argument("--force-extract", action="store_true")
-    ap.add_argument("--chunk-size", type=int, default=800)
-    ap.add_argument("--chunk-overlap", type=int, default=200)
+    ap.add_argument("--chunk-size", type=int, default=512)
+    ap.add_argument("--chunk-overlap", type=int, default=128)
     ap.add_argument("--aux-per-doc", type=int, default=50)
     ap.add_argument("--outdir", default="out")
     args = ap.parse_args()
@@ -157,7 +175,8 @@ def main():
     print(f"   📖 A1 코퍼스 구축 (고정 크기 기준)")
     cmd = [sys.executable, str(SCRIPTS / "build_corpus_from_text.py"),
            "--input", str(extracted), "--out", str(corpus_A1),
-           "--chunk-size", str(args.chunk_size), "--chunk-overlap", str(args.chunk_overlap),
+           "--chunk-size", str(args.chunk_size), "--chunk-overlap", "0",
+           "--strategy", "fixed",
            "--disable-numeric-window"]
     run(cmd, step_name="A1 코퍼스 구축")
 
@@ -270,6 +289,61 @@ def main():
                            "A5_vs_A1": {"EM": sum_A5['EM@5%']-sum_A1['EM@5%'], "UEM": sum_A5['UEM@5%']-sum_A1['UEM@5%'], "NCI": sum_A5['NCI']-sum_A1['NCI'], "Retry": sum_A5.get('RetryRate',0.0)-sum_A1.get('RetryRate',0.0)}}}
     with (out_dir / "summary.json").open("w", encoding="utf-8") as f:
         json.dump(combined, f, ensure_ascii=False, indent=2)
+
+    # Extra analysis: Split Error and Retrieval Hit@k (run by default)
+    print("\n== Extra: Split Error & Hit@k ==")
+    # Build additional baseline corpora
+    corpus_SENT = API_DIR / "data" / "corpus_SENT.jsonl"
+    corpus_PARA = API_DIR / "data" / "corpus_PARA.jsonl"
+    corpus_SLID = API_DIR / "data" / "corpus_SLID.jsonl"
+
+    print("   - Building SENT baseline...")
+    cmd = [sys.executable, str(SCRIPTS / "build_corpus_from_text.py"),
+           "--input", str(extracted), "--out", str(corpus_SENT),
+           "--strategy", "sentence", "--chunk-size", str(args.chunk_size), "--chunk-overlap", str(args.chunk_overlap)]
+    run(cmd, step_name="Build SENT")
+
+    print("   - Building PARA baseline...")
+    cmd = [sys.executable, str(SCRIPTS / "build_corpus_from_text.py"),
+           "--input", str(extracted), "--out", str(corpus_PARA),
+           "--strategy", "paragraph", "--chunk-size", str(args.chunk_size), "--chunk-overlap", str(args.chunk_overlap)]
+    run(cmd, step_name="Build PARA")
+
+    print("   - Building SLID baseline...")
+    cmd = [sys.executable, str(SCRIPTS / "build_corpus_from_text.py"),
+           "--input", str(extracted), "--out", str(corpus_SLID),
+           "--strategy", "sliding", "--chunk-size", str(args.chunk_size), "--chunk-overlap", str(args.chunk_overlap)]
+    run(cmd, step_name="Build SLID")
+
+    # Split Error across A1-A4 + baselines
+    split_json = out_dir / "split_error.json"
+    cmd = [sys.executable, str(SCRIPTS / "measure_split_error.py"),
+           "--input", str(extracted),
+           "--corpus", str(corpus_A1), "--corpus", str(corpus_A2), "--corpus", str(corpus_A3), "--corpus", str(corpus_A4),
+           "--corpus", str(corpus_SENT), "--corpus", str(corpus_PARA), "--corpus", str(corpus_SLID),
+           "--names", "A1,A2,A3,A4,SENT,PARA,SLID",
+           "--out", str(split_json)]
+    run(cmd, step_name="Split Error")
+
+    # Retrieval Hit@k: Aux effect (A2 vs A3)
+    import subprocess as _sp
+    hitk_json = out_dir / "hitk_A2_A3.json"
+    r = _sp.run([sys.executable, str(SCRIPTS / "retrieval_hitk.py"),
+                 "--input", str(qa_path),
+                 "--corpus", str(corpus_A2), "--corpus", str(corpus_A3),
+                 "--names", "Base,Base+Aux", "--k", "5"], capture_output=True, text=True)
+    if r.returncode == 0:
+        try:
+            obj = json.loads(r.stdout)
+            hitk_json.write_text(json.dumps(obj, ensure_ascii=False, indent=2), encoding="utf-8")
+            print(f"   -> Wrote {hitk_json}")
+        except Exception:
+            print("   [WARN] Failed to parse Hit@k output; raw follows:")
+            sys.stdout.write(r.stdout)
+    else:
+        print("   [WARN] Hit@k computation failed")
+        sys.stdout.write(r.stdout)
+        sys.stderr.write(r.stderr)
 
     # 전체 완료 메시지
     total_elapsed = time.time() - overall_start

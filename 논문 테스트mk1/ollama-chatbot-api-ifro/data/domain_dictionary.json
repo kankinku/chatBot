@@ -3,7 +3,11 @@
     "kWh", "RPM", "pH", "mg/L", "℃", "m³/h", "kg", "ton", "bar", "MPa",
     "NTU", "ppm", "ppb", "L/min", "m³/day", "gal/min", "psi", "V", "A", "W",
     "Hz", "Pa", "kPa", "GPa", "m/s", "m/s²", "J", "cal", "BTU", "m³", "L",
-    "gal", "ft³", "in³", "mm", "cm", "m", "km", "inch", "ft", "yard"
+    "gal", "ft³", "in³", "mm", "cm", "m", "km", "inch", "ft", "yard",
+    "ms", "s", "sec", "secs", "second", "seconds", "min", "mins", "minute", "minutes",
+    "h", "hr", "hrs", "hour", "hours", "day", "days", "week", "weeks", "wk", "wks",
+    "month", "months", "mon", "year", "years", "yr", "yrs", "초", "밀리초", "분", "시", "시간", "일", "주", "월", "년",
+    "%", "퍼센트", "°C", "명", "인"
   ],
   "keywords": [
     "착수공정", "응집제", "SCADA", "iRDC", "AI플랫폼", "대시보드", "정수장",
@@ -112,6 +116,12 @@
     "상관계수": ["상관계수", "correlation", "상관관계"],
     "잔류염소": ["잔류염소", "잔류염소농도", "잔류염소량"],
     "전차염": ["전차염", "전차염소", "전차염소량"],
-    "R²": ["R²", "R2", "R-squared", "결정계수"]
+    "R²": ["R²", "R2", "R-squared", "결정계수"],
+    "%": ["퍼센트", "percent", "%"],
+    "퍼센트": ["%", "percent", "퍼센트"],
+    "℃": ["°C", "섭씨", "섭씨도", "℃"],
+    "°C": ["℃", "섭씨", "섭씨도", "°C"],
+    "명": ["인", "사람", "인원", "명"],
+    "인": ["명", "사람", "인원", "인"]
   }
 }

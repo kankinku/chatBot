@@ -11,14 +11,16 @@ from .config import PipelineConfig
 @dataclass
 class PDFChunkConfig:
     # 기본 슬라이딩 윈도우(문자 단위)
-    chunk_size: int = 800
-    chunk_overlap: int = 200
+    chunk_size: int = 512
+    chunk_overlap: int = 128
     # 도메인 특화(유지하되 기본은 off)
     enable_wastewater_chunking: bool = False
     wastewater_chunk_size: int = 900
     wastewater_overlap_ratio: float = 0.25
-    # 숫자 앵커 기반 추가 청크
-    enable_numeric_chunking: bool = True
+    # 스냅 없이 완전 고정창 사용 (문장/공백 경계 스냅 비활성화)
+    strict_fixed_window: bool = False
+    # 숫자 앵커 기반 추가 청크 - 기본값 비활성화
+    enable_numeric_chunking: bool = False
 
 
 class PDFProcessor:
@@ -48,15 +50,17 @@ class PDFProcessor:
             cid = 0
             while i < len(text):
                 start = i
-                end = min(len(text), i + size)
-                # 경계 스냅: 문장/공백 경계로 근접 조정 (±5%)
-                snap_margin = max(5, int(size * 0.05))
-                # 뒤로 스냅
-                j = end
-                while j > start and j - end < snap_margin and text[j - 1 : j] not in {" ", "\n", "\t"}:
-                    j -= 1
-                if j > start and end - j <= snap_margin:
-                    end = j
+                end = min(len(text), start + size)
+                # strict 모드가 아니면 경계 스냅 적용
+                if not getattr(self.cfg, "strict_fixed_window", False):
+                    # 경계 스냅: 문장/공백 경계로 근접 조정 (±5%)
+                    snap_margin = max(5, int(size * 0.05))
+                    # 뒤로 스냅
+                    j = end
+                    while j > start and j - end < snap_margin and text[j - 1 : j] not in {" ", "\n", "\t"}:
+                        j -= 1
+                    if j > start and end - j <= snap_margin:
+                        end = j
                 chunk_text = text[start:end]
                 base.append(self._make_chunk(doc_id, filename, start, chunk_text, cid))
                 cid += 1

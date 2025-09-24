@@ -18,7 +18,7 @@ class Thresholds:
     analyzer_threshold_delta: float = -0.02
     # Context quality thresholds
     context_min_overlap: float = 0.07  # drop spans with low overlap to query
-    keyword_filter_min: int = 1        # require >= N key-token hits per span when query has tokens
+    keyword_filter_min: int = 0        # require >= N key-token hits per span when query has tokens (0 to disable)
     # Reranker threshold (applied after min-max normalization per batch)
     rerank_threshold: float = 0.41
     # QA mismatch detection thresholds
@@ -92,10 +92,10 @@ class PipelineConfig:
     vector_store_dir: str = "vector_store"
     llm_retries: int = 3
     llm_retry_backoff_ms: int = 800
-    # Numeric-aware minimal knobs (paper-ready)
-    numeric_enable_dynamic_window: bool = True
-    numeric_aux_per_doc: int = 50
-    numeric_aux_per_paragraph: int = 1
+    # Numeric-aware minimal knobs (paper-ready) - 기본값 모두 비활성화
+    numeric_enable_dynamic_window: bool = False
+    numeric_aux_per_doc: int = 0
+    numeric_aux_per_paragraph: int = 0
     numeric_iou_threshold: float = 0.3
     numeric_max_anchor_len: int = 1000
     # Retrieval numeric bonuses
