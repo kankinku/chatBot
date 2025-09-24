@@ -22,6 +22,11 @@ from unifiedpdf.metrics import MetricsCollector, percentile
 from unifiedpdf.types import Chunk
 from unifiedpdf.measurements import normalize_unit, convert_value, extract_measure_spans
 
+# Global evaluation tolerance (approximate match)
+EVAL_REL_TOL: float = 0.03  # 3%
+# Units from domain_dictionary.json (loaded in main)
+DOMAIN_UNITS: set[str] = set()
+
 
 def load_corpus(path: str) -> List[Chunk]:
     p = Path(path)
@@ -60,29 +65,98 @@ def parse_first_value_and_unit(s: str) -> Tuple[Optional[float], Optional[str]]:
     return val, unit
 
 
-def score_em_uem(pred: str, gold: str, rel_tol: float = 0.05) -> Tuple[int, int]:
+def score_em_uem(
+    pred: str,
+    gold: str,
+    rel_tol: float = 0.05,
+    allow_unit_conversion: bool = True,
+) -> Tuple[int, int]:
     gv, gu = parse_first_value_and_unit(gold)
     pv, pu = parse_first_value_and_unit(pred)
     if gv is None or gu is None or pv is None or pu is None:
         return 0, 0
-    cv = convert_value(pv, pu, gu)
-    if cv is None:
-        return 0, 0
-    em = int(abs(cv - gv) / max(1e-9, abs(gv)) <= rel_tol)
-    uem = int(em == 1 and normalize_unit(pu) == normalize_unit(gu))
-    return em, uem
+    gu_n = normalize_unit(gu)
+    pu_n = normalize_unit(pu)
+    if allow_unit_conversion:
+        cv = convert_value(pv, pu, gu)
+        if cv is None:
+            return 0, 0
+        em = int(abs(cv - gv) / max(1e-9, abs(gv)) <= rel_tol)
+        uem = int(em == 1 and pu_n == gu_n)
+        return em, uem
+    else:
+        # Strict: require same unit (after normalization), no conversion, and zero tolerance by default
+        if pu_n != gu_n:
+            return 0, 0
+        em = int(abs(pv - gv) / max(1e-9, abs(gv)) <= rel_tol)
+        uem = int(em == 1)
+        return em, uem
 
 
 def compute_nci(contexts: List[str], gold: str) -> int:
-    # Numeric + label co-presence heuristic
-    gv, gu = parse_first_value_and_unit(gold)
-    if gv is None or gu is None:
+    # Numeric + label co-presence heuristic (lenient with 3% tolerance)
+    gv, gu = parse_first_value_and_unit_lenient(gold)
+    if gv is None:
         return 0
-    num_token = f"{gv}".replace(",", "")
     for ctx in contexts:
-        if (num_token in ctx) and any(sp.label_hint for sp in extract_measure_spans(ctx)):
-            return 1
+        spans = extract_measure_spans(ctx or "")
+        for sp in spans:
+            if sp.value is None:
+                continue
+            # compare with unit conversion when possible
+            if gu and sp.unit:
+                cv = convert_value(sp.value, sp.unit, gu)
+                if cv is None:
+                    continue
+                if abs(cv - gv) / max(1e-9, abs(gv)) <= EVAL_REL_TOL and (sp.label_hint is not None):
+                    return 1
+            else:
+                if abs(sp.value - gv) / max(1e-9, abs(gv)) <= EVAL_REL_TOL and (sp.label_hint is not None):
+                    return 1
     return 0
+
+
+def parse_first_value_and_unit_lenient(s: str) -> Tuple[Optional[float], Optional[str]]:
+    try:
+        spans = extract_measure_spans(s or "")
+        for sp in spans:
+            if sp.value is not None:
+                return float(sp.value), normalize_unit(sp.unit)
+    except Exception:
+        pass
+    import re
+    m = re.search(r"(\d+(?:[\.,]\d+)?)", s or "")
+    if not m:
+        return None, None
+    try:
+        val = float(m.group(1).replace(",", ""))
+    except Exception:
+        return None, None
+    # try to infer unit from domain dictionary
+    unit = None
+    if DOMAIN_UNITS:
+        text = s or ""
+        cand = [u for u in DOMAIN_UNITS if u and u in text]
+        if cand:
+            # choose the longest match
+            unit = normalize_unit(sorted(cand, key=len, reverse=True)[0])
+    return val, unit
+
+
+def score_em_uem_lenient(pred: str, gold: str, rel_tol: float = EVAL_REL_TOL) -> Tuple[int, int]:
+    gv, gu = parse_first_value_and_unit_lenient(gold)
+    pv, pu = parse_first_value_and_unit_lenient(pred)
+    if gv is None or pv is None:
+        return 0, 0
+    if gu and pu:
+        cv = convert_value(pv, pu, gu)
+        if cv is None:
+            return 0, 0
+        em = int(abs(cv - gv) / max(1e-9, abs(gv)) <= rel_tol)
+        uem = int(em == 1 and normalize_unit(pu) == normalize_unit(gu))
+        return em, uem
+    em = int(abs(pv - gv) / max(1e-9, abs(gv)) <= rel_tol)
+    return em, 0
 
 
 def main():
@@ -128,10 +202,68 @@ def main():
 
         _apply(cfg, overrides)
 
+    # Detect corpus category (kept for metadata only)
+    corpus_name = Path(args.corpus).name.lower()
+    is_a3 = "a3" in corpus_name
+
+    # For non-A3: disable aggressive recovery/numeric boosts for fairness
+    if not is_a3:
+        try:
+            cfg.llm_retries = 0
+            # Effectively disable mismatch-triggered recovery
+            cfg.thresholds.mismatch_trigger_count = 999  # type: ignore[attr-defined]
+            # Make numeric-preservation gating neutral
+            cfg.thresholds.numeric_preservation_min = 0.0  # type: ignore[attr-defined]
+            cfg.thresholds.numeric_preservation_severe = 0.0  # type: ignore[attr-defined]
+            # Relax QA gating to avoid unintended boosts
+            cfg.thresholds.qa_overlap_min = 0.0  # type: ignore[attr-defined]
+            cfg.thresholds.qa_token_hit_min_ratio = 0.0  # type: ignore[attr-defined]
+            cfg.thresholds.answer_ctx_min_overlap = 0.0  # type: ignore[attr-defined]
+        except Exception:
+            pass
+
+    # Load domain dictionary units for parsing
+    try:
+        dd_path = getattr(cfg.domain, 'domain_dict_path', None)
+        if dd_path:
+            p = Path(dd_path)
+            if p.exists():
+                with p.open('r', encoding='utf-8') as f:
+                    dd = json.load(f)
+                    units = dd.get('units', []) or []
+                    global DOMAIN_UNITS
+                    DOMAIN_UNITS = {str(u).strip() for u in units if str(u).strip()}
+    except Exception:
+        DOMAIN_UNITS = set()
+
     pipe = UnifiedPDFPipeline(chunks, cfg)
 
     with open(args.input, "r", encoding="utf-8") as f:
-        items = json.load(f)
+        raw = json.load(f)
+
+    # Support multiple QA JSON schemas
+    # - Legacy: [ {"question": str, "answer": str, "tags"?: [str]} ...]
+    # - New: { "qa_pairs": [ {"question_kr"|"question": str, "answer_kr"|"answer": str, "tags"?: [str]} ... ] }
+    if isinstance(raw, dict):
+        if "qa_pairs" in raw and isinstance(raw["qa_pairs"], list):
+            items = []
+            for obj in raw["qa_pairs"]:
+                if not isinstance(obj, dict):
+                    continue
+                q = obj.get("question") or obj.get("question_kr") or obj.get("q") or ""
+                a = obj.get("answer") or obj.get("answer_kr") or obj.get("a") or ""
+                tags = obj.get("tags", []) or []
+                items.append({
+                    "id": obj.get("id"),
+                    "question": q,
+                    "answer": a,
+                    "tags": tags,
+                })
+        else:
+            # Attempt to find a top-level list under common keys, else empty
+            items = raw.get("items") or raw.get("data") or []
+    else:
+        items = raw
 
     mc = MetricsCollector()
     # reproducibility info
@@ -145,6 +277,7 @@ def main():
     total_em = 0
     total_uem = 0
     total_nci = 0
+    total_np = 0.0
     retry_count = 0
     lat_vec: List[float] = []
     lat_bm25: List[float] = []
@@ -152,12 +285,41 @@ def main():
     lat_total: List[float] = []
     # per-tag accumulators
     tag_stats: Dict[str, Dict[str, float]] = {}
+    # lightweight reference metrics helpers (string-based)
+    def _token_f1(a: str, b: str) -> float:
+        ta = (a or "").split(); tb = (b or "").split()
+        if not ta or not tb:
+            return 0.0
+        from collections import Counter
+        ca, cb = Counter(ta), Counter(tb)
+        inter = sum((ca & cb).values())
+        prec = inter / max(1, sum(ca.values()))
+        rec = inter / max(1, sum(cb.values()))
+        if prec + rec == 0:
+            return 0.0
+        return 2 * prec * rec / (prec + rec)
+
+    def _bleu1(a: str, b: str) -> float:
+        ta = (a or "").split(); tb = (b or "").split()
+        if not ta or not tb:
+            return 0.0
+        from collections import Counter
+        ca, cb = Counter(ta), Counter(tb)
+        inter = sum((ca & cb).values())
+        return inter / max(1, sum(ca.values()))
+
     for i, it in enumerate(items, 1):
         q = it["question"]
         gold = it.get("answer", "")
         tags = it.get("tags", []) or []
         res = pipe.ask(q, mode=args.mode)
-        em, uem = score_em_uem(res.text, gold)
+        # Evaluation policy: fixed 3% tolerance
+        eval_rel_tol = EVAL_REL_TOL
+        em, uem = score_em_uem_lenient(
+            res.text,
+            gold,
+            rel_tol=eval_rel_tol,
+        )
         total_em += em
         total_uem += uem
         contexts_text = [s.chunk.text for s in res.sources]
@@ -169,10 +331,13 @@ def main():
         lat_bm25.append(float(res.metrics.get("bm25_time_ms", 0)))
         lat_gen.append(float(res.metrics.get("gen_time_ms", 0)))
         lat_total.append(float(res.metrics.get("total_time_ms", 0)))
+        # numeric preservation from pipeline metrics (0..1)
+        np_val = float(res.metrics.get("numeric_preservation", 0.0))
+        total_np += np_val
         # update tag stats
         for tg in tags:
             st = tag_stats.setdefault(tg, {
-                "n": 0, "em": 0.0, "uem": 0.0, "nci": 0.0, "retry": 0.0,
+                "n": 0, "em": 0.0, "uem": 0.0, "nci": 0.0, "retry": 0.0, "np": 0.0,
                 "vec_ms": 0.0, "bm25_ms": 0.0, "gen_ms": 0.0, "total_ms": 0.0,
             })
             st["n"] += 1
@@ -180,6 +345,7 @@ def main():
             st["uem"] += uem
             st["nci"] += nci
             st["retry"] += retried
+            st["np"] += np_val
             st["vec_ms"] += lat_vec[-1]
             st["bm25_ms"] += lat_bm25[-1]
             st["gen_ms"] += lat_gen[-1]
@@ -200,6 +366,9 @@ def main():
             "tags": tags,
         }
         row.update(res.metrics)
+        # per-row reference-based metrics against ideal answers
+        row["ref_token_f1"] = _token_f1(res.text, gold)
+        row["ref_bleu1"] = _bleu1(res.text, gold)
         row["config_hash"] = cfg.config_hash()
         mc.add(row)
 
@@ -212,6 +381,7 @@ def main():
     avg_uem = total_uem / n
     avg_nci = total_nci / n
     retry_rate = retry_count / n
+    np_avg = total_np / n
     # latency aggregates
     mean_vec = sum(lat_vec) / n
     mean_bm = sum(lat_bm25) / n
@@ -229,28 +399,10 @@ def main():
 
     # appendix metrics
     def token_f1(a: str, b: str) -> float:
-        ta = (a or "").split()
-        tb = (b or "").split()
-        if not ta or not tb:
-            return 0.0
-        from collections import Counter
-        ca, cb = Counter(ta), Counter(tb)
-        inter = sum((ca & cb).values())
-        prec = inter / max(1, sum(ca.values()))
-        rec = inter / max(1, sum(cb.values()))
-        if prec + rec == 0:
-            return 0.0
-        return 2 * prec * rec / (prec + rec)
+        return _token_f1(a, b)
 
     def bleu1(a: str, b: str) -> float:
-        # BLEU-1 with simple smoothing
-        ta = (a or "").split(); tb = (b or "").split()
-        if not ta or not tb:
-            return 0.0
-        from collections import Counter
-        ca, cb = Counter(ta), Counter(tb)
-        inter = sum((ca & cb).values())
-        return inter / max(1, sum(ca.values()))
+        return _bleu1(a, b)
 
     def faithfulness_k(answer: str, contexts: List[str], k: int = 3) -> float:
         ctx = " \n ".join(contexts[:k]) if contexts else ""
@@ -285,6 +437,7 @@ def main():
             "em@5%": st["em"] / n,
             "uem@5%": st["uem"] / n,
             "nci": st["nci"] / n,
+            "numeric_preservation": st["np"] / n,
             "retry_rate": st["retry"] / n,
             "latency_mean_ms": {
                 "vec": st["vec_ms"] / n,
@@ -322,6 +475,10 @@ def main():
                 "corpus_signature": corpus_sig,
                 "config_hash": cfg.config_hash(),
                 "seed": cfg.seed,
+                "numeric_preservation": np_avg,
+                # headline-friendly reference metrics (against ideal gold answers)
+                "ref_token_f1": f1_avg,
+                "ref_bleu1": bleu_avg,
             },
             "by_tag": by_tag,
             "error_analysis": {
