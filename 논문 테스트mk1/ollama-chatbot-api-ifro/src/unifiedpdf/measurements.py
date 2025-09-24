@@ -1,40 +1,60 @@
 from __future__ import annotations
 
 import re
-from datetime import datetime
+from dataclasses import dataclass
 from typing import Dict, List, Tuple, Optional
 
 
-UNIT_SYNONYMS = {
+@dataclass
+class MeasureSpan:
+    start: int
+    end: int
+    raw: str
+    value: Optional[float]
+    range_: Optional[Tuple[float, float]]
+    unit: str
+    scale: Optional[str]
+    label_hint: Optional[str]
+    modifier: Optional[str] = None  # 평균/최대/최소/기준 등
+
+
+def normalize_number(text: str) -> str:
+    return text.replace(",", "").strip()
+
+
+def normalize_unit(u: str) -> str:
+    if not u:
+        return ""
+    ul = u.strip().replace("μ", "µ").replace(" ", "").lower()
+    # ASCII variants
+    ul = ul.replace("us/cm", "µs/cm").replace("degc", "°c")
+    # Slashes
+    ul = ul.replace("mg|l", "mg/l")
+    return ul
+
+
+# Unit ontology (minimal)
+UNIT_SYNONYMS: Dict[str, set[str]] = {
     "mg/l": {"ppm"},
     "ppm": {"mg/l"},
     "ug/l": {"ppb"},
     "ppb": {"ug/l"},
-    "us/cm": {"µs/cm", "μs/cm"},
-    "°c": {"℃"},
-    "℃": {"°c"},
-    # 정수장 특화 단위 추가
-    "ntu": {"탁도", "turbidity"},
-    "ph": {"산성도", "알칼리도"},
-    "do": {"용존산소", "dissolved oxygen"},
-    "bod": {"생물학적산소요구량", "biological oxygen demand"},
-    "cod": {"화학적산소요구량", "chemical oxygen demand"},
-    "toc": {"총유기탄소", "total organic carbon"},
-    "cfu": {"대장균군", "coliform"},
-    "m³/d": {"m3/d", "m3/day"},
-    "m³/h": {"m3/h", "m3/hour"},
-    "l/s": {"liter/s", "liter/sec"},
+    "µs/cm": {"us/cm", "μs/cm"},
+    "m3/d": {"m³/d"},
+    "m³/d": {"m3/d"},
+    "m3/h": {"m³/h"},
+    "m³/h": {"m3/h"},
 }
 
-# Unit conversion factors (from -> to)
+
+# Simple conversions (from -> to)
 CONVERSIONS: Dict[Tuple[str, str], float] = {
     ("l/s", "m3/d"): 86.4,
     ("m3/d", "l/s"): 1.0 / 86.4,
-    ("mg/l", "ppm"): 1.0,  # water approx
+    ("mg/l", "ppm"): 1.0,
     ("ppm", "mg/l"): 1.0,
     ("ug/l", "ppb"): 1.0,
     ("ppb", "ug/l"): 1.0,
-    # 정수장 특화 단위 변환 추가
     ("m³/d", "l/s"): 1.0 / 86.4,
     ("l/s", "m³/d"): 86.4,
     ("m³/h", "l/s"): 1.0 / 3.6,
@@ -48,34 +68,6 @@ CONVERSIONS: Dict[Tuple[str, str], float] = {
 }
 
 
-def normalize_number(text: str) -> str:
-    return text.replace(",", "")
-
-
-def normalize_unit(u: str) -> str:
-    ul = u.strip().lower().replace("μ", "µ").replace(" ", "")
-    return ul
-
-
-def normalize_date(date_str: str) -> Optional[str]:
-    """날짜 문자열을 표준 형식으로 정규화"""
-    if not date_str:
-        return None
-    
-    # 이미 정규화된 형식인지 확인
-    if re.match(r"\d{4}-\d{2}-\d{2}", date_str):
-        return date_str
-    
-    # 한국어 날짜 형식 (예: 2025년 2월 17일)
-    match = re.match(r"(\d{4})년\s*(\d{1,2})월\s*(\d{1,2})일", date_str)
-    if match:
-        year, month, day = match.groups()
-        return f"{year}-{month.zfill(2)}-{day.zfill(2)}"
-    
-    # 다른 형식들도 추가 가능
-    return date_str
-
-
 def units_equivalent(a: str, b: str) -> bool:
     a, b = normalize_unit(a), normalize_unit(b)
     if a == b:
@@ -83,42 +75,115 @@ def units_equivalent(a: str, b: str) -> bool:
     return b in UNIT_SYNONYMS.get(a, set()) or a in UNIT_SYNONYMS.get(b, set())
 
 
-def convert_value(x: float, unit_from: str, unit_to: str) -> float | None:
+def convert_value(x: float, unit_from: str, unit_to: str) -> Optional[float]:
     uf, ut = normalize_unit(unit_from), normalize_unit(unit_to)
     if (uf, ut) in CONVERSIONS:
         return x * CONVERSIONS[(uf, ut)]
     if units_equivalent(uf, ut):
         return x
+    # scale conversions (% / ‰ / bp)
+    scale_map = {"%": 0.01, "‰": 0.001, "bp": 0.0001}
+    if uf in scale_map and ut in scale_map:
+        return x * (scale_map[uf] / scale_map[ut])
     return None
 
 
+NUM_RE = r"\d{1,3}(?:[\s,]\d{3})*(?:[\.,]\d+)?|\d+(?:[\.,]\d+)?"
+UNIT_RE = r"[A-Za-z°µ/%‰²³\\/]+"
+RANGE_SEP = r"[–~\-]"
+
+
+def _parse_number(s: str) -> Optional[float]:
+    try:
+        return float(s.replace(" ", "").replace(",", "").replace("\u00a0", ""))
+    except Exception:
+        return None
+
+
+def _label_hint(text: str, start: int) -> Optional[str]:
+    # 후보 1: 콜론 패턴
+    left = text[max(0, start - 80):start]
+    m = re.search(r"([\w가-힣A-Za-z/%µ°\s]{1,40})\s*[:：]", left)
+    if m:
+        return m.group(1).strip()[-40:]
+    # 후보 2: 괄호 내 설명
+    right = text[start:start + 80]
+    m2 = re.search(r"\(([^)]+)\)", right)
+    if m2:
+        return m2.group(1)[:40]
+    # 후보 3: 숫자 직전 명사구(한글/영문 단어 1~2개)
+    m3 = re.search(r"([가-힣A-Za-z]{1,20})(?:\s+([가-힣A-Za-z]{1,20}))?\s*$", left)
+    if m3:
+        parts = [p for p in m3.groups() if p]
+        return " ".join(parts)[-40:] if parts else None
+    # 후보 4: 직전 라인의 헤더성 토큰 추정
+    lb = text.rfind("\n", 0, start)
+    if lb != -1:
+        lbb = text.rfind("\n", 0, max(0, lb))
+        prev_line = text[(lbb + 1 if lbb != -1 else 0):lb]
+        prev_line = prev_line.strip()
+        if prev_line:
+            # 구분자 기준 분할 후 숫자 제거, 마지막 토큰 사용
+            cand = prev_line.split("|")[-1].split(":")[-1]
+            cand = re.sub(r"\d+(?:[\.,]\d+)?", "", cand).strip()
+            if len(cand) >= 2:
+                return cand[:40]
+    return None
+
+
+def _modifier_hint(text: str, start: int, end: int) -> Optional[str]:
+    window = text[max(0, start - 40):min(len(text), end + 40)]
+    keywords = [
+        "평균", "최대", "최소", "중앙값", "상한", "하한", "허용", "기준",
+        "mean", "avg", "maximum", "minimum", "median", "limit", "threshold",
+        "min", "max"
+    ]
+    for kw in keywords:
+        if kw in window:
+            return kw
+    return None
+
+
+def extract_measure_spans(text: str) -> List[MeasureSpan]:
+    spans: List[MeasureSpan] = []
+    # Range like 6.5–8.5 pH
+    pat_range = re.compile(fr"(?P<low>({NUM_RE}))\s*{RANGE_SEP}\s*(?P<high>({NUM_RE}))\s*(?P<unit>{UNIT_RE})")
+    for m in pat_range.finditer(text):
+        low = _parse_number(normalize_number(m.group("low")))
+        high = _parse_number(normalize_number(m.group("high")))
+        unit = normalize_unit(m.group("unit"))
+        scale = unit if unit in {"%", "‰", "bp"} else None
+        spans.append(MeasureSpan(
+            start=m.start(), end=m.end(), raw=m.group(0), value=None,
+            range_=(low, high) if (low is not None and high is not None) else None,
+            unit=unit, scale=scale, label_hint=_label_hint(text, m.start()), modifier=_modifier_hint(text, m.start(), m.end())
+        ))
+
+    # Single value like 72.2 %, 0.2 NTU
+    pat_single = re.compile(fr"(?P<num>({NUM_RE}))\s*(?P<unit>{UNIT_RE})")
+    for m in pat_single.finditer(text):
+        num = _parse_number(normalize_number(m.group("num")))
+        unit_raw = m.group("unit")
+        unit = normalize_unit(unit_raw)
+        scale = unit if unit in {"%", "‰", "bp"} else None
+        spans.append(MeasureSpan(
+            start=m.start(), end=m.end(), raw=m.group(0), value=num, range_=None,
+            unit=unit, scale=scale, label_hint=_label_hint(text, m.start()), modifier=_modifier_hint(text, m.start(), m.end())
+        ))
+
+    return spans
+
+
 def extract_measurements(text: str) -> List[Tuple[str, str]]:
-    # Return list of (number, unit)
-    pairs: List[Tuple[str, str]] = []
-    
-    # 기본 수치-단위 패턴
-    for m in re.finditer(r"(\d+(?:[\.,]\d+)?)\s*([A-Za-z%°℃µμ/]+)", text):
-        num = normalize_number(m.group(1))
-        unit = normalize_unit(m.group(2))
-        pairs.append((num, unit))
-    
-    # 상관계수 패턴 (예: 0.72, R²=0.95)
-    for m in re.finditer(r"(?:상관계수|correlation|R²|R2|R-squared)\s*[=:]\s*(\d+(?:\.\d+)?)", text, re.IGNORECASE):
-        num = normalize_number(m.group(1))
-        pairs.append((num, "correlation"))
-    
-    # 날짜 패턴 (예: 2025년 2월 17일)
-    for m in re.finditer(r"(\d{4})년\s*(\d{1,2})월\s*(\d{1,2})일", text):
-        year, month, day = m.group(1), m.group(2), m.group(3)
-        formatted_date = f"{year}-{month.zfill(2)}-{day.zfill(2)}"
-        pairs.append((formatted_date, "date"))
-    
-    # 백분율 패턴 (예: 95%, 72.2%)
-    for m in re.finditer(r"(\d+(?:\.\d+)?)\s*%", text):
-        num = normalize_number(m.group(1))
-        pairs.append((num, "percent"))
-    
-    return pairs
+    # Backward-compat: return (number, unit) pairs from spans
+    out: List[Tuple[str, str]] = []
+    for sp in extract_measure_spans(text):
+        if sp.value is not None and sp.unit:
+            out.append((str(sp.value), sp.unit))
+        elif sp.range_ is not None and sp.unit:
+            out.append((str(sp.range_[0]), sp.unit))
+            out.append((str(sp.range_[1]), sp.unit))
+    return out
 
 
 def build_context_measure_map(contexts: List[str]) -> Dict[str, List[str]]:
@@ -151,8 +216,7 @@ def verify_answer_numeric(answer: str, context_map: Dict[str, List[str]], tol_ra
             x = float(num)
         except Exception:
             continue
-        matched = any((abs(x - y) / abs(y) <= tol_ratio) for y in candidates if y != 0)
+        matched = any((abs(x - y) / max(1e-9, abs(y)) <= tol_ratio) for y in candidates if y != 0)
         if matched:
             ok += 1
     return ok / len(ans)
-

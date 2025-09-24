@@ -102,3 +102,28 @@ def apply_llm_post_correction(texts: List[str], model_name: str, threshold: floa
     for k, i in enumerate(idx):
         out[i] = fixed[k]
     return out
+
+
+# Basic rule-based corrections (fast, deterministic)
+def apply_basic_corrections(texts: List[str]) -> List[str]:
+    repl = [
+        ("rn", "m"),
+        ("mg|L", "mg/L"),
+        ("us/cm", "µS/cm"),
+        ("μs/cm", "µS/cm"),
+        ("m3/d", "m³/d"),
+        ("m3/h", "m³/h"),
+        (" deg c", " °C"),
+        ("degc", "°C"),
+        ("ppm ", "ppm "),
+        (" ppb", " ppb"),
+    ]
+    out: List[str] = []
+    for t in texts:
+        s = t
+        for a, b in repl:
+            s = s.replace(a, b)
+        # unify micro symbol
+        s = s.replace("μ", "µ")
+        out.append(s)
+    return out

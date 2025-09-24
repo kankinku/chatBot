@@ -354,7 +354,49 @@ class HybridRetriever:
         spans: List[RetrievedSpan] = []
         aux_v = {i: s for i, s in v_hits}
         aux_b = {i: s for i, s in b_hits}
-        ranked = sorted(merged_scores.items(), key=lambda x: x[1], reverse=True)
+        # Apply simple numeric bonuses and tie-break priority when question is numeric
+        aux_bonus = 0.08
+        density_bonus = 0.04
+        is_numeric_q = (question_type.value == "numeric") if hasattr(question_type, 'value') else (question_type == "numeric")
+        # Build priority map: base_numeric(2) > aux_numeric(1) > non_numeric(0)
+        priority: Dict[int, int] = {}
+        adjusted: Dict[int, float] = {}
+        for idx, sc in merged_scores.items():
+            ch = self.chunks[idx]
+            pri = 0
+            if ch.extra.get("numeric_anchor"):
+                pri = 2
+            if ch.extra.get("aux_numeric"):
+                pri = 1 if pri == 0 else 2  # aux only -> 1, anchor has priority
+            priority[idx] = pri
+            bonus = 0.0
+            if is_numeric_q:
+                if ch.extra.get("aux_numeric"):
+                    bonus += aux_bonus
+                den = float(ch.extra.get("anchor_density", 0.0) or 0.0)
+                # scale density to a reasonable range
+                bonus += density_bonus * min(1.0, den * 500.0)
+            adjusted[idx] = sc + bonus
+
+        # Read bonuses from config
+        try:
+            aux_bns = float(getattr(self.cfg, "retriever_aux_bonus", 0.08))
+            dens_bns = float(getattr(self.cfg, "retriever_density_bonus", 0.04))
+        except Exception:
+            aux_bns, dens_bns = 0.08, 0.04
+
+        adjusted2: Dict[int, float] = {}
+        for idx, sc in merged_scores.items():
+            ch = self.chunks[idx]
+            bonus = 0.0
+            if is_numeric_q:
+                if ch.extra.get("aux_numeric"):
+                    bonus += aux_bns
+                den = float(ch.extra.get("anchor_density", 0.0) or 0.0)
+                bonus += dens_bns * min(1.0, den * 500.0)
+            adjusted2[idx] = sc + bonus
+
+        ranked = sorted(adjusted2.items(), key=lambda x: (x[1], priority.get(x[0], 0)), reverse=True)
         for rank, (idx, merged_score) in enumerate(ranked, start=1):
             ch = self.chunks[idx]
             spans.append(

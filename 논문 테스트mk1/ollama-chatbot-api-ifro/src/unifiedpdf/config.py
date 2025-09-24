@@ -92,6 +92,15 @@ class PipelineConfig:
     vector_store_dir: str = "vector_store"
     llm_retries: int = 3
     llm_retry_backoff_ms: int = 800
+    # Numeric-aware minimal knobs (paper-ready)
+    numeric_enable_dynamic_window: bool = True
+    numeric_aux_per_doc: int = 50
+    numeric_aux_per_paragraph: int = 1
+    numeric_iou_threshold: float = 0.3
+    numeric_max_anchor_len: int = 1000
+    # Retrieval numeric bonuses
+    retriever_aux_bonus: float = 0.08
+    retriever_density_bonus: float = 0.04
 
     def to_dict(self) -> Dict:
         return asdict(self)
