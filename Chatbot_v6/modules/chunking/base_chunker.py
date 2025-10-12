@@ -13,9 +13,17 @@ from typing import List
 from config.constants import (
     DEFAULT_CHUNK_SIZE,
     DEFAULT_CHUNK_OVERLAP,
+    DEFAULT_WASTEWATER_CHUNK_SIZE,
+    DEFAULT_WASTEWATER_OVERLAP_RATIO,
+    DEFAULT_NUMERIC_CONTEXT_WINDOW,
+    DEFAULT_ENABLE_NUMERIC_CHUNKING,
+    DEFAULT_PRESERVE_TABLE_CONTEXT,
+    DEFAULT_ENABLE_BOUNDARY_SNAP,
+    DEFAULT_BOUNDARY_SNAP_MARGIN_RATIO,
 )
 from modules.core.types import Chunk
 from modules.core.logger import get_logger
+from modules.preprocessing.normalizer import MeasurementNormalizer
 
 logger = get_logger(__name__)
 
@@ -29,13 +37,17 @@ class ChunkingConfig:
     
     # 정수장 특화 설정
     enable_wastewater_mode: bool = False
-    wastewater_chunk_size: int = 900
-    wastewater_overlap_ratio: float = 0.25
+    wastewater_chunk_size: int = DEFAULT_WASTEWATER_CHUNK_SIZE
+    wastewater_overlap_ratio: float = DEFAULT_WASTEWATER_OVERLAP_RATIO
     
     # 숫자 중심 청킹
-    enable_numeric_chunking: bool = True
-    numeric_context_window: int = 3
-    preserve_table_context: bool = True
+    enable_numeric_chunking: bool = DEFAULT_ENABLE_NUMERIC_CHUNKING
+    numeric_context_window: int = DEFAULT_NUMERIC_CONTEXT_WINDOW
+    preserve_table_context: bool = DEFAULT_PRESERVE_TABLE_CONTEXT
+    
+    # 경계 스냅 설정 (개선된 기능)
+    enable_boundary_snap: bool = DEFAULT_ENABLE_BOUNDARY_SNAP
+    boundary_snap_margin_ratio: float = DEFAULT_BOUNDARY_SNAP_MARGIN_RATIO
     
     def get_effective_size_and_overlap(self) -> tuple[int, int]:
         """실제 사용할 chunk_size와 overlap 반환"""
@@ -65,6 +77,7 @@ class BaseChunker(ABC):
             config: 청킹 설정
         """
         self.config = config
+        self.measurement_normalizer = MeasurementNormalizer()
         logger.info(f"{self.__class__.__name__} initialized", config=config.__dict__)
     
     @abstractmethod
@@ -99,7 +112,7 @@ class BaseChunker(ABC):
         extra: dict | None = None,
     ) -> Chunk:
         """
-        청크 객체 생성
+        청크 객체 생성 (측정값 자동 추출 포함)
         
         Args:
             doc_id: 문서 ID
@@ -112,6 +125,14 @@ class BaseChunker(ABC):
         Returns:
             Chunk 객체
         """
+        final_extra = extra or {}
+        
+        # 측정값 자동 추출 및 저장 (One Source of Truth)
+        if not final_extra.get('measurements'):
+            measurements = self.measurement_normalizer.extract_measurements(text)
+            if measurements:
+                final_extra['measurements'] = measurements
+        
         return Chunk(
             doc_id=doc_id,
             filename=filename,
@@ -119,6 +140,6 @@ class BaseChunker(ABC):
             start_offset=start,
             length=len(text),
             text=text.strip(),
-            extra=extra or {},
+            extra=final_extra,
         )
 

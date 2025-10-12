@@ -1,0 +1,4345 @@
+{
+  "stats": {
+    "total_questions": 30,
+    "successful": 30,
+    "failed": 0,
+    "total_time_seconds": 0,
+    "timestamp": "2025-10-13T03:00:58.454140",
+    "avg_time_ms": 6465.466666666666,
+    "min_time_ms": 3524,
+    "max_time_ms": 11279,
+    "avg_basic_v5_score": 0.8568133333333332,
+    "min_basic_v5_score": 0.0,
+    "max_basic_v5_score": 1.0,
+    "avg_domain_total_score": 0.9133333333333333,
+    "min_domain_total_score": 0.0,
+    "max_domain_total_score": 1.0,
+    "avg_numeric_accuracy": 0.23333333333333334,
+    "min_numeric_accuracy": 0.0,
+    "max_numeric_accuracy": 1.0,
+    "avg_unit_accuracy": 0.0,
+    "min_unit_accuracy": 0.0,
+    "max_unit_accuracy": 0.0,
+    "avg_keyword_accuracy": 0.9333333333333333,
+    "min_keyword_accuracy": 0.0,
+    "max_keyword_accuracy": 1.0,
+    "avg_faithfulness": 0.4245600000000001,
+    "min_faithfulness": 0.0,
+    "max_faithfulness": 1.0,
+    "avg_answer_correctness": 0.72108,
+    "min_answer_correctness": 0.18,
+    "max_answer_correctness": 0.9133,
+    "avg_context_precision": 0.21916666666666668,
+    "min_context_precision": 0.0,
+    "max_context_precision": 1.0,
+    "avg_rag_overall": 0.5020833333333333,
+    "min_rag_overall": 0.072,
+    "max_rag_overall": 0.7969,
+    "avg_token_f1": 0.29039000000000004,
+    "min_token_f1": 0.0,
+    "max_token_f1": 0.75,
+    "avg_rouge_l": 0.26622666666666667,
+    "min_rouge_l": 0.0,
+    "max_rouge_l": 0.75,
+    "avg_bleu_2": 0.15618666666666667,
+    "min_bleu_2": 0.0,
+    "max_bleu_2": 0.75,
+    "avg_exact_match": 0.0,
+    "min_exact_match": 0.0,
+    "max_exact_match": 0.0
+  },
+  "results": [
+    {
+      "id": 1,
+      "question": "고산 정수장 시스템 사용자 설명서의 발주기관과 사업명은 무엇인가요?",
+      "gold_answer": "고산 정수장 시스템 사용자 설명서의 발주기관은 한국수자원공사이며, 사업명은 금강 유역 남부 스마트 정수장 확대 구축 용역입니다.",
+      "prediction": "발주기관은 한국수자원공사이며, 사업명은 금강 유역남부스마트 정수장 확대 구축 용역입니다.",
+      "keywords": [
+        "한국수자원공사",
+        "금강 유역 남부 스마트 정수장 확대 구축 용역"
+      ],
+      "confidence": 0.7158912663620772,
+      "num_sources": 2,
+      "time_ms": 6700,
+      "evaluation": {
+        "basic_score": {
+          "score": 1.0,
+          "type": "weighted",
+          "numeric_hit": 0.0,
+          "unit_hit": 0.0,
+          "keyword_hit": 1.0,
+          "details": {
+            "nums": [],
+            "units": [],
+            "keywords": [
+              "발주기관은",
+              "정수장",
+              "사업명은",
+              "금강",
+              "사용자"
+            ]
+          }
+        },
+        "domain_specific": {
+          "total_score": 1.0,
+          "numeric_score": 0.0,
+          "unit_score": 0.0,
+          "keyword_score": 1.0,
+          "details": {
+            "gold_nums": [],
+            "gold_units": [],
+            "gold_keywords": [
+              "발주기관은",
+              "정수장",
+              "사업명은",
+              "금강",
+              "사용자"
+            ],
+            "pred_nums": [],
+            "pred_units": []
+          }
+        },
+        "rag_metrics": {
+          "faithfulness": {
+            "score": 0.0,
+            "supported_claims": 0,
+            "total_claims": 1,
+            "support_ratio": 0.0
+          },
+          "answer_correctness": {
+            "score": 0.7573,
+            "semantic_similarity": 0.5333,
+            "factual_correctness": 0.9067,
+            "details": {
+              "num_match_ratio": 1.0,
+              "unit_match_ratio": 1.0,
+              "truth_nums": [],
+              "answer_nums": []
+            }
+          },
+          "context_precision": {
+            "score": 0.5,
+            "relevant_contexts": 1,
+            "total_contexts": 2,
+            "precision": 0.5
+          },
+          "overall_score": 0.4029
+        },
+        "academic_metrics": {
+          "exact_match": 0.0,
+          "token_f1": {
+            "precision": 0.8889,
+            "recall": 0.5,
+            "f1": 0.64
+          },
+          "rouge_l": {
+            "precision": 0.8889,
+            "recall": 0.5,
+            "f1": 0.64
+          },
+          "bleu_1": 0.8889,
+          "bleu_2": 0.75
+        },
+        "summary": {
+          "basic_v5_score": 1.0,
+          "domain_total_score": 1.0,
+          "numeric_accuracy": 0.0,
+          "unit_accuracy": 0.0,
+          "keyword_accuracy": 1.0,
+          "token_f1": 0.64,
+          "rouge_l": 0.64,
+          "bleu_2": 0.75,
+          "exact_match": 0.0,
+          "faithfulness": 0.0,
+          "answer_correctness": 0.7573,
+          "context_precision": 0.5,
+          "rag_overall": 0.4029
+        }
+      },
+      "pipeline_metrics": {
+        "vector_time_ms": 42,
+        "bm25_time_ms": 140,
+        "vector_results": 50,
+        "bm25_results": 50,
+        "merged_results": 72,
+        "pre_filter_in": 72,
+        "pre_filter_out": 0,
+        "filter_in": 72,
+        "filter_out": 0,
+        "filter_pass_rate": 1.0,
+        "hard_blocked": 0,
+        "overlap_ratio": 0.4411764705882353,
+        "key_token_coverage": 0.5,
+        "generation_time_ms": 6283,
+        "rerank_time_ms": 1,
+        "total_time_ms": 6699,
+        "num_contexts_used": 2,
+        "question_type": "definition",
+        "config_hash": "f49a272e8520"
+      }
+    },
+    {
+      "id": 2,
+      "question": "이 시스템 사용자 설명서의 발행일은 언제이며, 어떤 컨소시엄에서 작성했나요?",
+      "gold_answer": "이 시스템 사용자 설명서는 2025년 2월 17일에 발행되었고, (주)에셈블 컨소시엄에서 작성했습니다.",
+      "prediction": "문서의 발행일과 컨소시엄에 대한 정보는 문서 내에서 확인할 수 없습니다.",
+      "keywords": [
+        "2025.02.17",
+        "(주)에셈블 컨소시엄"
+      ],
+      "confidence": 0.47850192589793006,
+      "num_sources": 6,
+      "time_ms": 3524,
+      "evaluation": {
+        "basic_score": {
+          "score": 0.0,
+          "type": "weighted",
+          "numeric_hit": 0.0,
+          "unit_hit": 0.0,
+          "keyword_hit": 0.0,
+          "details": {
+            "nums": [
+              "2025",
+              "17",
+              "2"
+            ],
+            "units": [],
+            "keywords": [
+              "2월",
+              "사용자",
+              "시스템",
+              "컨소시엄에서",
+              "에셈블"
+            ]
+          }
+        },
+        "domain_specific": {
+          "total_score": 0.0,
+          "numeric_score": 0.0,
+          "unit_score": 0.0,
+          "keyword_score": 0.0,
+          "details": {
+            "gold_nums": [
+              "2025",
+              "17",
+              "2"
+            ],
+            "gold_units": [],
+            "gold_keywords": [
+              "2월",
+              "사용자",
+              "시스템",
+              "컨소시엄에서",
+              "에셈블"
+            ],
+            "pred_nums": [],
+            "pred_units": []
+          }
+        },
+        "rag_metrics": {
+          "faithfulness": {
+            "score": 0.0,
+            "supported_claims": 0,
+            "total_claims": 1,
+            "support_ratio": 0.0
+          },
+          "answer_correctness": {
+            "score": 0.18,
+            "semantic_similarity": 0.0,
+            "factual_correctness": 0.3,
+            "details": {
+              "num_match_ratio": 0.0,
+              "unit_match_ratio": 1.0,
+              "truth_nums": [
+                "2025",
+                "17",
+                "2"
+              ],
+              "answer_nums": []
+            }
+          },
+          "context_precision": {
+            "score": 0.0,
+            "relevant_contexts": 0,
+            "total_contexts": 6,
+            "precision": 0.0
+          },
+          "overall_score": 0.072
+        },
+        "academic_metrics": {
+          "exact_match": 0.0,
+          "token_f1": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0
+          },
+          "rouge_l": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0
+          },
+          "bleu_1": 0.0,
+          "bleu_2": 0.0
+        },
+        "summary": {
+          "basic_v5_score": 0.0,
+          "domain_total_score": 0.0,
+          "numeric_accuracy": 0.0,
+          "unit_accuracy": 0.0,
+          "keyword_accuracy": 0.0,
+          "token_f1": 0.0,
+          "rouge_l": 0.0,
+          "bleu_2": 0.0,
+          "exact_match": 0.0,
+          "faithfulness": 0.0,
+          "answer_correctness": 0.18,
+          "context_precision": 0.0,
+          "rag_overall": 0.072
+        }
+      },
+      "pipeline_metrics": {
+        "vector_time_ms": 54,
+        "bm25_time_ms": 113,
+        "vector_results": 50,
+        "bm25_results": 50,
+        "merged_results": 83,
+        "pre_filter_in": 83,
+        "pre_filter_out": 1,
+        "filter_in": 82,
+        "filter_out": 0,
+        "filter_pass_rate": 1.0,
+        "hard_blocked": 1,
+        "overlap_ratio": 0.28205128205128205,
+        "key_token_coverage": 0.25,
+        "generation_time_ms": 2980,
+        "rerank_time_ms": 0,
+        "total_time_ms": 3524,
+        "num_contexts_used": 6,
+        "question_type": "definition",
+        "config_hash": "f49a272e8520"
+      }
+    },
+    {
+      "id": 3,
+      "question": "이 시스템 사용자 설명서의 주요 목적은 무엇인가요?",
+      "gold_answer": "고산 정수장에 대한 단계별 시운전 및 성능 검증 시험 운전 완료에 따라 지사 중심의 AI 자율 운영과 전 공정 선택적 자율 운영 등 시스템의 활용성 강화 및 안정적인 운영을 위한 전반적인 정보를 제공하는 것입니다.",
+      "prediction": "이 시스템 사용자 설명서의 주요 목적은 금강 유역 남부 스마트 정수장 확대 구축 용역에 대한 AI 플랫폼 및 관련 기능을 이해하고 활용할 수 있도록 돕는 것입니다. 이를 위해 다음과 같은 내용이 포함되어 있습니다 1. 장애 유형에 따른 처리 방안 플랫폼 화면 오류, 공정 운영관련 알람, 데이터 수집 및 제어전송 오류, 네트워크 오류 및 과부하, 알고리즘 모듈 오류 등 다양한 장애 유형에 대한 대응 방법이 제공되어 있습니다. 2. 플랫폼 화면오류에 따른 대응 방안 AI 플랫폼 화면에서 값이 표시되는 경우, 운영모드가 반복적으로 변경되는 경우, 플랫폼 화면이 정지되는 경우 등 다양한 상황에 대한 대응 방법이 설명되어 있습니다. 3. 공정 운영관련 알람에 따른 대응 방안 SCADA 플랫폼 공정별 알람에 대한 대응 방법과 AI 플랫폼 공정별 알람에 대한 대응 방법이 제공됩니다. 4.",
+      "keywords": [
+        "AI 자율 운영",
+        "활용성 강화",
+        "안정적인 운영",
+        "전반적인 정보 제공"
+      ],
+      "confidence": 0.5189030178972089,
+      "num_sources": 6,
+      "time_ms": 11279,
+      "evaluation": {
+        "basic_score": {
+          "score": 1.0,
+          "type": "weighted",
+          "numeric_hit": 0.0,
+          "unit_hit": 1.0,
+          "keyword_hit": 1.0,
+          "details": {
+            "nums": [],
+            "units": [
+              "ai"
+            ],
+            "keywords": [
+              "지사",
+              "시스템의",
+              "고산",
+              "안정적인",
+              "선택적"
+            ]
+          }
+        },
+        "domain_specific": {
+          "total_score": 1.0,
+          "numeric_score": 0.0,
+          "unit_score": 0.0,
+          "keyword_score": 1.0,
+          "details": {
+            "gold_nums": [],
+            "gold_units": [],
+            "gold_keywords": [
+              "ai",
+              "지사",
+              "시스템의",
+              "고산",
+              "안정적인"
+            ],
+            "pred_nums": [
+              "2",
+              "4",
+              "3",
+              "1"
+            ],
+            "pred_units": []
+          }
+        },
+        "rag_metrics": {
+          "faithfulness": {
+            "score": 0.6,
+            "supported_claims": 3,
+            "total_claims": 5,
+            "support_ratio": 0.6
+          },
+          "answer_correctness": {
+            "score": 0.5517,
+            "semantic_similarity": 0.1379,
+            "factual_correctness": 0.8276,
+            "details": {
+              "num_match_ratio": 1.0,
+              "unit_match_ratio": 1.0,
+              "truth_nums": [],
+              "answer_nums": [
+                "2",
+                "4",
+                "3",
+                "1"
+              ]
+            }
+          },
+          "context_precision": {
+            "score": 0.8333,
+            "relevant_contexts": 5,
+            "total_contexts": 6,
+            "precision": 0.8333
+          },
+          "overall_score": 0.6273
+        },
+        "academic_metrics": {
+          "exact_match": 0.0,
+          "token_f1": {
+            "precision": 0.0598,
+            "recall": 0.2059,
+            "f1": 0.0927
+          },
+          "rouge_l": {
+            "precision": 0.0342,
+            "recall": 0.1176,
+            "f1": 0.053
+          },
+          "bleu_1": 0.0598,
+          "bleu_2": 0.0
+        },
+        "summary": {
+          "basic_v5_score": 1.0,
+          "domain_total_score": 1.0,
+          "numeric_accuracy": 0.0,
+          "unit_accuracy": 0.0,
+          "keyword_accuracy": 1.0,
+          "token_f1": 0.0927,
+          "rouge_l": 0.053,
+          "bleu_2": 0.0,
+          "exact_match": 0.0,
+          "faithfulness": 0.6,
+          "answer_correctness": 0.5517,
+          "context_precision": 0.8333,
+          "rag_overall": 0.6273
+        }
+      },
+      "pipeline_metrics": {
+        "vector_time_ms": 32,
+        "bm25_time_ms": 110,
+        "vector_results": 50,
+        "bm25_results": 50,
+        "merged_results": 82,
+        "pre_filter_in": 82,
+        "pre_filter_out": 0,
+        "filter_in": 82,
+        "filter_out": 0,
+        "filter_pass_rate": 1.0,
+        "hard_blocked": 0,
+        "overlap_ratio": 0.44,
+        "key_token_coverage": 0.5,
+        "generation_time_ms": 10743,
+        "rerank_time_ms": 0,
+        "total_time_ms": 11277,
+        "num_contexts_used": 6,
+        "question_type": "definition",
+        "config_hash": "f49a272e8520"
+      }
+    },
+    {
+      "id": 4,
+      "question": "AI 플랫폼 대시보드에 접속하기 위한 주소(URL)는 무엇인가요?",
+      "gold_answer": "AI 플랫폼 대시보드 주소는 http://waio-portal-vip:10011 또는 http://10.103.11.112:10011 입니다.",
+      "prediction": "AI 플랫폼 대시보드에 접속하기 위한 주소(URL)는 다음과 같습니다 1. AI 1 http10.103.11.11210011 2. AI 2 http10.103.11.11410011",
+      "keywords": [
+        "http://waio-portal-vip:10011",
+        "http://10.103.11.112:10011"
+      ],
+      "confidence": 0.798541814736774,
+      "num_sources": 5,
+      "time_ms": 5601,
+      "evaluation": {
+        "basic_score": {
+          "score": 1.0,
+          "type": "weighted",
+          "numeric_hit": 1.0,
+          "unit_hit": 1.0,
+          "keyword_hit": 1.0,
+          "details": {
+            "nums": [
+              "10.103",
+              "11.112",
+              "10011"
+            ],
+            "units": [
+              "ai",
+              "vip",
+              "http",
+              "portal",
+              "//waio",
+              "//"
+            ],
+            "keywords": [
+              "//waio-portal-vip",
+              "대시보드",
+              "//10",
+              "103",
+              "11"
+            ]
+          }
+        },
+        "domain_specific": {
+          "total_score": 1.0,
+          "numeric_score": 1.0,
+          "unit_score": 0.0,
+          "keyword_score": 1.0,
+          "details": {
+            "gold_nums": [
+              "10.103",
+              "11.112",
+              "10011"
+            ],
+            "gold_units": [],
+            "gold_keywords": [
+              "ai",
+              "//waio-portal-vip",
+              "대시보드",
+              "//10",
+              "103"
+            ],
+            "pred_nums": [
+              "2",
+              "10.103",
+              "11.11410011",
+              "11.11210011",
+              "1"
+            ],
+            "pred_units": []
+          }
+        },
+        "rag_metrics": {
+          "faithfulness": {
+            "score": 0.3333,
+            "supported_claims": 1,
+            "total_claims": 3,
+            "support_ratio": 0.3333
+          },
+          "answer_correctness": {
+            "score": 0.4187,
+            "semantic_similarity": 0.2667,
+            "factual_correctness": 0.52,
+            "details": {
+              "num_match_ratio": 0.3333,
+              "unit_match_ratio": 1.0,
+              "truth_nums": [
+                "10.103",
+                "11.112",
+                "10011"
+              ],
+              "answer_nums": [
+                "2",
+                "10.103",
+                "11.11410011",
+                "11.11210011",
+                "1"
+              ]
+            }
+          },
+          "context_precision": {
+            "score": 0.0,
+            "relevant_contexts": 0,
+            "total_contexts": 5,
+            "precision": 0.0
+          },
+          "overall_score": 0.3008
+        },
+        "academic_metrics": {
+          "exact_match": 0.0,
+          "token_f1": {
+            "precision": 0.1333,
+            "recall": 0.2353,
+            "f1": 0.1702
+          },
+          "rouge_l": {
+            "precision": 0.1333,
+            "recall": 0.2353,
+            "f1": 0.1702
+          },
+          "bleu_1": 0.1333,
+          "bleu_2": 0.069
+        },
+        "summary": {
+          "basic_v5_score": 1.0,
+          "domain_total_score": 1.0,
+          "numeric_accuracy": 1.0,
+          "unit_accuracy": 0.0,
+          "keyword_accuracy": 1.0,
+          "token_f1": 0.1702,
+          "rouge_l": 0.1702,
+          "bleu_2": 0.069,
+          "exact_match": 0.0,
+          "faithfulness": 0.3333,
+          "answer_correctness": 0.4187,
+          "context_precision": 0.0,
+          "rag_overall": 0.3008
+        }
+      },
+      "pipeline_metrics": {
+        "vector_time_ms": 36,
+        "bm25_time_ms": 111,
+        "vector_results": 50,
+        "bm25_results": 50,
+        "merged_results": 74,
+        "pre_filter_in": 74,
+        "pre_filter_out": 20,
+        "filter_in": 54,
+        "filter_out": 2,
+        "filter_pass_rate": 0.9629629629629629,
+        "hard_blocked": 0,
+        "overlap_ratio": 0.43434343434343436,
+        "key_token_coverage": 0.625,
+        "generation_time_ms": 5008,
+        "rerank_time_ms": 1,
+        "total_time_ms": 5601,
+        "num_contexts_used": 5,
+        "question_type": "numeric",
+        "config_hash": "f49a272e8520"
+      }
+    },
+    {
+      "id": 5,
+      "question": "AI 플랫폼에 로그인할 때 사용할 수 있는 기본 관리자 계정의 아이디와 비밀번호는 무엇인가요?",
+      "gold_answer": "기본 관리자 계정의 아이디와 비밀번호는 모두 KWATER입니다.",
+      "prediction": "아이디와 비밀번호는 모두 KWATER입니다.",
+      "keywords": [
+        "KWATER",
+        "KWATER"
+      ],
+      "confidence": 0.7699415526462147,
+      "num_sources": 3,
+      "time_ms": 3943,
+      "evaluation": {
+        "basic_score": {
+          "score": 1.0,
+          "type": "weighted",
+          "numeric_hit": 0.0,
+          "unit_hit": 1.0,
+          "keyword_hit": 1.0,
+          "details": {
+            "nums": [],
+            "units": [
+              "kwater"
+            ],
+            "keywords": [
+              "모두",
+              "기본",
+              "계정의",
+              "아이디와",
+              "관리자"
+            ]
+          }
+        },
+        "domain_specific": {
+          "total_score": 1.0,
+          "numeric_score": 0.0,
+          "unit_score": 0.0,
+          "keyword_score": 1.0,
+          "details": {
+            "gold_nums": [],
+            "gold_units": [],
+            "gold_keywords": [
+              "모두",
+              "기본",
+              "계정의",
+              "아이디와",
+              "관리자"
+            ],
+            "pred_nums": [],
+            "pred_units": []
+          }
+        },
+        "rag_metrics": {
+          "faithfulness": {
+            "score": 0.0,
+            "supported_claims": 0,
+            "total_claims": 2,
+            "support_ratio": 0.0
+          },
+          "answer_correctness": {
+            "score": 0.7771,
+            "semantic_similarity": 0.5714,
+            "factual_correctness": 0.9143,
+            "details": {
+              "num_match_ratio": 1.0,
+              "unit_match_ratio": 1.0,
+              "truth_nums": [],
+              "answer_nums": []
+            }
+          },
+          "context_precision": {
+            "score": 0.0,
+            "relevant_contexts": 0,
+            "total_contexts": 3,
+            "precision": 0.0
+          },
+          "overall_score": 0.3108
+        },
+        "academic_metrics": {
+          "exact_match": 0.0,
+          "token_f1": {
+            "precision": 0.4,
+            "recall": 0.5714,
+            "f1": 0.4706
+          },
+          "rouge_l": {
+            "precision": 0.4,
+            "recall": 0.5714,
+            "f1": 0.4706
+          },
+          "bleu_1": 0.4,
+          "bleu_2": 0.3333
+        },
+        "summary": {
+          "basic_v5_score": 1.0,
+          "domain_total_score": 1.0,
+          "numeric_accuracy": 0.0,
+          "unit_accuracy": 0.0,
+          "keyword_accuracy": 1.0,
+          "token_f1": 0.4706,
+          "rouge_l": 0.4706,
+          "bleu_2": 0.3333,
+          "exact_match": 0.0,
+          "faithfulness": 0.0,
+          "answer_correctness": 0.7771,
+          "context_precision": 0.0,
+          "rag_overall": 0.3108
+        }
+      },
+      "pipeline_metrics": {
+        "vector_time_ms": 32,
+        "bm25_time_ms": 120,
+        "vector_results": 50,
+        "bm25_results": 50,
+        "merged_results": 77,
+        "pre_filter_in": 77,
+        "pre_filter_out": 44,
+        "filter_in": 33,
+        "filter_out": 1,
+        "filter_pass_rate": 0.9696969696969697,
+        "hard_blocked": 0,
+        "overlap_ratio": 0.5374149659863946,
+        "key_token_coverage": 0.6363636363636364,
+        "generation_time_ms": 3253,
+        "rerank_time_ms": 0,
+        "total_time_ms": 3942,
+        "num_contexts_used": 3,
+        "question_type": "numeric",
+        "config_hash": "f49a272e8520"
+      }
+    },
+    {
+      "id": 6,
+      "question": "AI 플랫폼의 자율 운영 대시보드는 크게 몇 가지 영역으로 나누어지나요?",
+      "gold_answer": "자율 운영 대시보드는 상단 영역, 좌측 사이드바 영역, 중앙 콘텐츠 영역, 우측 메뉴 영역의 4가지 영역으로 구성됩니다.",
+      "prediction": "AI 플랫폼의 자율 운영 대시보드는 크게 4 가지 영역으로 나누어집니다. 이 영역들은 상단 영역, 좌측 사이드바 영역, 중앙 콘텐츠 영역, 우측 메뉴 영역으로 구성되어 있습니다",
+      "keywords": [
+        "4가지 영역",
+        "상단 영역",
+        "좌측 사이드바 영역",
+        "중앙 콘텐츠 영역",
+        "우측 메뉴 영역"
+      ],
+      "confidence": 0.8729729729729729,
+      "num_sources": 1,
+      "time_ms": 4385,
+      "evaluation": {
+        "basic_score": {
+          "score": 1.0,
+          "type": "weighted",
+          "numeric_hit": 1.0,
+          "unit_hit": 0.0,
+          "keyword_hit": 1.0,
+          "details": {
+            "nums": [
+              "4"
+            ],
+            "units": [],
+            "keywords": [
+              "사이드바",
+              "4가지",
+              "영역",
+              "상단",
+              "콘텐츠"
+            ]
+          }
+        },
+        "domain_specific": {
+          "total_score": 1.0,
+          "numeric_score": 1.0,
+          "unit_score": 0.0,
+          "keyword_score": 1.0,
+          "details": {
+            "gold_nums": [
+              "4"
+            ],
+            "gold_units": [],
+            "gold_keywords": [
+              "사이드바",
+              "4가지",
+              "영역",
+              "상단",
+              "콘텐츠"
+            ],
+            "pred_nums": [
+              "4"
+            ],
+            "pred_units": []
+          }
+        },
+        "rag_metrics": {
+          "faithfulness": {
+            "score": 1.0,
+            "supported_claims": 2,
+            "total_claims": 2,
+            "support_ratio": 1.0
+          },
+          "answer_correctness": {
+            "score": 0.896,
+            "semantic_similarity": 0.8,
+            "factual_correctness": 0.96,
+            "details": {
+              "num_match_ratio": 1.0,
+              "unit_match_ratio": 1.0,
+              "truth_nums": [
+                "4"
+              ],
+              "answer_nums": [
+                "4"
+              ]
+            }
+          },
+          "context_precision": {
+            "score": 0.0,
+            "relevant_contexts": 0,
+            "total_contexts": 1,
+            "precision": 0.0
+          },
+          "overall_score": 0.7584
+        },
+        "academic_metrics": {
+          "exact_match": 0.0,
+          "token_f1": {
+            "precision": 0.56,
+            "recall": 0.8235,
+            "f1": 0.6667
+          },
+          "rouge_l": {
+            "precision": 0.56,
+            "recall": 0.8235,
+            "f1": 0.6667
+          },
+          "bleu_1": 0.56,
+          "bleu_2": 0.4583
+        },
+        "summary": {
+          "basic_v5_score": 1.0,
+          "domain_total_score": 1.0,
+          "numeric_accuracy": 1.0,
+          "unit_accuracy": 0.0,
+          "keyword_accuracy": 1.0,
+          "token_f1": 0.6667,
+          "rouge_l": 0.6667,
+          "bleu_2": 0.4583,
+          "exact_match": 0.0,
+          "faithfulness": 1.0,
+          "answer_correctness": 0.896,
+          "context_precision": 0.0,
+          "rag_overall": 0.7584
+        }
+      },
+      "pipeline_metrics": {
+        "vector_time_ms": 34,
+        "bm25_time_ms": 115,
+        "vector_results": 50,
+        "bm25_results": 50,
+        "merged_results": 77,
+        "pre_filter_in": 77,
+        "pre_filter_out": 34,
+        "filter_in": 43,
+        "filter_out": 0,
+        "filter_pass_rate": 1.0,
+        "hard_blocked": 0,
+        "overlap_ratio": 0.5765765765765766,
+        "key_token_coverage": 0.7777777777777778,
+        "generation_time_ms": 3696,
+        "rerank_time_ms": 0,
+        "total_time_ms": 4385,
+        "num_contexts_used": 1,
+        "question_type": "numeric",
+        "config_hash": "f49a272e8520"
+      }
+    },
+    {
+      "id": 7,
+      "question": "착수 공정에서 AI 모델은 어떤 목표 수위를 결정하고 원수 유입 밸브 개도율을 예측하기 위해 활용되나요?",
+      "gold_answer": "정수 수요량과 정수지 수위를 참고하여 목표 수위를 결정하고, 원수 유입 밸브 개도율을 예측하는 데 활용됩니다.",
+      "prediction": "AI 모델은 정수지 수위밴드 생성과 예측으로 구성되어 있습니다. 이 모델은 과거 데이터와 정수지 수위유출 유량, 원수 유입 유량을 활용하여 밸브 개도율 예측에 사용됩니다. 목표 수위는 정수지 수위밴드를 통해 결정되며, 이를 통해 원수 유입 밸브 개도율이 예측됩니다.",
+      "keywords": [
+        "정수 수요량",
+        "정수지 수위",
+        "목표 수위 결정",
+        "원수 유입 밸브 개도율 예측"
+      ],
+      "confidence": 0.7260993204585585,
+      "num_sources": 3,
+      "time_ms": 5024,
+      "evaluation": {
+        "basic_score": {
+          "score": 1.0,
+          "type": "weighted",
+          "numeric_hit": 0.0,
+          "unit_hit": 0.0,
+          "keyword_hit": 1.0,
+          "details": {
+            "nums": [],
+            "units": [],
+            "keywords": [
+              "결정하고",
+              "원수",
+              "참고하여",
+              "정수",
+              "활용됩니다"
+            ]
+          }
+        },
+        "domain_specific": {
+          "total_score": 1.0,
+          "numeric_score": 0.0,
+          "unit_score": 0.0,
+          "keyword_score": 1.0,
+          "details": {
+            "gold_nums": [],
+            "gold_units": [],
+            "gold_keywords": [
+              "결정하고",
+              "원수",
+              "참고하여",
+              "정수",
+              "활용됩니다"
+            ],
+            "pred_nums": [],
+            "pred_units": []
+          }
+        },
+        "rag_metrics": {
+          "faithfulness": {
+            "score": 0.6667,
+            "supported_claims": 2,
+            "total_claims": 3,
+            "support_ratio": 0.6667
+          },
+          "answer_correctness": {
+            "score": 0.68,
+            "semantic_similarity": 0.3846,
+            "factual_correctness": 0.8769,
+            "details": {
+              "num_match_ratio": 1.0,
+              "unit_match_ratio": 1.0,
+              "truth_nums": [],
+              "answer_nums": []
+            }
+          },
+          "context_precision": {
+            "score": 0.3333,
+            "relevant_contexts": 1,
+            "total_contexts": 3,
+            "precision": 0.3333
+          },
+          "overall_score": 0.6053
+        },
+        "academic_metrics": {
+          "exact_match": 0.0,
+          "token_f1": {
+            "precision": 0.1389,
+            "recall": 0.3333,
+            "f1": 0.1961
+          },
+          "rouge_l": {
+            "precision": 0.1389,
+            "recall": 0.3333,
+            "f1": 0.1961
+          },
+          "bleu_1": 0.1389,
+          "bleu_2": 0.0571
+        },
+        "summary": {
+          "basic_v5_score": 1.0,
+          "domain_total_score": 1.0,
+          "numeric_accuracy": 0.0,
+          "unit_accuracy": 0.0,
+          "keyword_accuracy": 1.0,
+          "token_f1": 0.1961,
+          "rouge_l": 0.1961,
+          "bleu_2": 0.0571,
+          "exact_match": 0.0,
+          "faithfulness": 0.6667,
+          "answer_correctness": 0.68,
+          "context_precision": 0.3333,
+          "rag_overall": 0.6053
+        }
+      },
+      "pipeline_metrics": {
+        "vector_time_ms": 33,
+        "bm25_time_ms": 118,
+        "vector_results": 50,
+        "bm25_results": 50,
+        "merged_results": 76,
+        "pre_filter_in": 76,
+        "pre_filter_out": 37,
+        "filter_in": 39,
+        "filter_out": 0,
+        "filter_pass_rate": 1.0,
+        "hard_blocked": 0,
+        "overlap_ratio": 0.4666666666666667,
+        "key_token_coverage": 0.6,
+        "generation_time_ms": 4355,
+        "rerank_time_ms": 0,
+        "total_time_ms": 5024,
+        "num_contexts_used": 3,
+        "question_type": "numeric",
+        "config_hash": "f49a272e8520"
+      }
+    },
+    {
+      "id": 8,
+      "question": "착수 공정의 유입 밸브 개도 예측 알고리즘 선정 시 고려 사항은 무엇인가요?",
+      "gold_answer": "제어 임계치 설정, 채터링 방지 설정, 제어 스텝 설정, 1지 2지 군집 유량 분배 등을 고려합니다.",
+      "prediction": "착수 공정의 유입 밸브 개도 예측 알고리즘 선정 시 고려 사항은 다음과 같습니다 1. 유입 밸브 개도율과 관련성이 높은 순서는 원수 유입 유량 (0.89), 정수지 수위 (0.14)입니다. 2. AI 모델은 정수지 수위밴드 생성과 예측으로 구성되어 있습니다. 3. 데이터 전처리 단계를 포함하는 클러스터링, 목표 수위 생성, 수위밴드 생성 단계가 수행됩니다. 4. 예측은 과거 데이터와 정수지 수위유출 유량, 원수 유입 유량을 활용하여 밸브 개도율 예측이 이루어집니다. 5. 모델 선정 시 고려 사항으로 제어 임계치 설정, 채터링 방지 설정, 스텝 설정 등이 포함됩니다. 6. 데이터 로드 단계를 포함하는 데이터 전처리 과정이 수행됩니다. 7. 최종 원수 조절밸브 개도율 산출을 위한 모델 선정 시 주요 고려 사항으로 유입 밸브 예측 모델이 제시됩니다. 이러한 정보는 문서에서 직접 확인할 수 있습니다.",
+      "keywords": [
+        "제어 임계치 설정",
+        "채터링 방지 설정",
+        "제어 스텝 설정",
+        "군집 유량 분배 고려"
+      ],
+      "confidence": 0.8288338925156755,
+      "num_sources": 6,
+      "time_ms": 8468,
+      "evaluation": {
+        "basic_score": {
+          "score": 1.0,
+          "type": "weighted",
+          "numeric_hit": 1.0,
+          "unit_hit": 0.0,
+          "keyword_hit": 1.0,
+          "details": {
+            "nums": [
+              "2",
+              "1"
+            ],
+            "units": [],
+            "keywords": [
+              "등을",
+              "고려합니다",
+              "유량",
+              "1지",
+              "설정"
+            ]
+          }
+        },
+        "domain_specific": {
+          "total_score": 1.0,
+          "numeric_score": 1.0,
+          "unit_score": 0.0,
+          "keyword_score": 1.0,
+          "details": {
+            "gold_nums": [
+              "2",
+              "1"
+            ],
+            "gold_units": [],
+            "gold_keywords": [
+              "등을",
+              "고려합니다",
+              "유량",
+              "1지",
+              "설정"
+            ],
+            "pred_nums": [
+              "2",
+              "0.14",
+              "4",
+              "5",
+              "6",
+              "7",
+              "3",
+              "1",
+              "0.89"
+            ],
+            "pred_units": []
+          }
+        },
+        "rag_metrics": {
+          "faithfulness": {
+            "score": 0.6667,
+            "supported_claims": 6,
+            "total_claims": 9,
+            "support_ratio": 0.6667
+          },
+          "answer_correctness": {
+            "score": 0.76,
+            "semantic_similarity": 0.5385,
+            "factual_correctness": 0.9077,
+            "details": {
+              "num_match_ratio": 1.0,
+              "unit_match_ratio": 1.0,
+              "truth_nums": [
+                "2",
+                "1"
+              ],
+              "answer_nums": [
+                "2",
+                "0.14",
+                "4",
+                "5",
+                "6",
+                "7",
+                "3",
+                "1",
+                "0.89"
+              ]
+            }
+          },
+          "context_precision": {
+            "score": 0.5,
+            "relevant_contexts": 3,
+            "total_contexts": 6,
+            "precision": 0.5
+          },
+          "overall_score": 0.6707
+        },
+        "academic_metrics": {
+          "exact_match": 0.0,
+          "token_f1": {
+            "precision": 0.0769,
+            "recall": 0.5625,
+            "f1": 0.1353
+          },
+          "rouge_l": {
+            "precision": 0.0684,
+            "recall": 0.5,
+            "f1": 0.1203
+          },
+          "bleu_1": 0.0769,
+          "bleu_2": 0.0517
+        },
+        "summary": {
+          "basic_v5_score": 1.0,
+          "domain_total_score": 1.0,
+          "numeric_accuracy": 1.0,
+          "unit_accuracy": 0.0,
+          "keyword_accuracy": 1.0,
+          "token_f1": 0.1353,
+          "rouge_l": 0.1203,
+          "bleu_2": 0.0517,
+          "exact_match": 0.0,
+          "faithfulness": 0.6667,
+          "answer_correctness": 0.76,
+          "context_precision": 0.5,
+          "rag_overall": 0.6707
+        }
+      },
+      "pipeline_metrics": {
+        "vector_time_ms": 35,
+        "bm25_time_ms": 115,
+        "vector_results": 50,
+        "bm25_results": 50,
+        "merged_results": 74,
+        "pre_filter_in": 74,
+        "pre_filter_out": 36,
+        "filter_in": 38,
+        "filter_out": 0,
+        "filter_pass_rate": 1.0,
+        "hard_blocked": 0,
+        "overlap_ratio": 0.6837606837606838,
+        "key_token_coverage": 0.8181818181818182,
+        "generation_time_ms": 7845,
+        "rerank_time_ms": 0,
+        "total_time_ms": 8468,
+        "num_contexts_used": 6,
+        "question_type": "definition",
+        "config_hash": "f49a272e8520"
+      }
+    },
+    {
+      "id": 9,
+      "question": "착수 공정의 AI 운영 모드 중 '분석' 모드의 특징은 무엇인가요?",
+      "gold_answer": "‘분석’ 모드에서는 예측값이 실제 SCADA에 적용되지 않습니다.",
+      "prediction": "금강 유역남부스마트 정수장 확대 구축 용역\n(\n) \n시스템 사용자 설명서\n에셈블 컨소시엄\n㈜\n- 23 -\n❍착수 공정\n플랫폼 및 기능\n운전모드\n-AI \n_AI \n❍착수 공정\n플랫폼 및 기능 상세\n운영 모드\n-AI \n_AI \n예측값이 \n상에 적용됨\n- AI : \nSCADA \n추천\n사용자가 제어 팝업창을 보고 판단하여 예측값의 적용 여부를 선택할 수 있음\n- AI \n: \n분석\n예측값이 실제 \n상에 적용되지 않음\n- AI \n: \nSCADA \n모드 변경 완료 시간 약 \n분 \n2~3\n※.",
+      "keywords": [
+        "예측값",
+        "실제 SCADA에 적용되지 않음"
+      ],
+      "confidence": 0.65345571645692,
+      "num_sources": 8,
+      "time_ms": 6548,
+      "evaluation": {
+        "basic_score": {
+          "score": 1.0,
+          "type": "weighted",
+          "numeric_hit": 0.0,
+          "unit_hit": 1.0,
+          "keyword_hit": 1.0,
+          "details": {
+            "nums": [],
+            "units": [
+              "scada"
+            ],
+            "keywords": [
+              "scada에",
+              "예측값이",
+              "적용되지",
+              "모드에서는",
+              "않습니다"
+            ]
+          }
+        },
+        "domain_specific": {
+          "total_score": 1.0,
+          "numeric_score": 0.0,
+          "unit_score": 0.0,
+          "keyword_score": 1.0,
+          "details": {
+            "gold_nums": [],
+            "gold_units": [],
+            "gold_keywords": [
+              "scada에",
+              "예측값이",
+              "적용되지",
+              "모드에서는",
+              "않습니다"
+            ],
+            "pred_nums": [
+              "23",
+              "2",
+              "3"
+            ],
+            "pred_units": []
+          }
+        },
+        "rag_metrics": {
+          "faithfulness": {
+            "score": 1.0,
+            "supported_claims": 1,
+            "total_claims": 1,
+            "support_ratio": 1.0
+          },
+          "answer_correctness": {
+            "score": 0.7771,
+            "semantic_similarity": 0.5714,
+            "factual_correctness": 0.9143,
+            "details": {
+              "num_match_ratio": 1.0,
+              "unit_match_ratio": 1.0,
+              "truth_nums": [],
+              "answer_nums": [
+                "23",
+                "2",
+                "3"
+              ]
+            }
+          },
+          "context_precision": {
+            "score": 0.25,
+            "relevant_contexts": 2,
+            "total_contexts": 8,
+            "precision": 0.25
+          },
+          "overall_score": 0.7608
+        },
+        "academic_metrics": {
+          "exact_match": 0.0,
+          "token_f1": {
+            "precision": 0.0625,
+            "recall": 0.5714,
+            "f1": 0.1127
+          },
+          "rouge_l": {
+            "precision": 0.0625,
+            "recall": 0.5714,
+            "f1": 0.1127
+          },
+          "bleu_1": 0.0625,
+          "bleu_2": 0.0159
+        },
+        "summary": {
+          "basic_v5_score": 1.0,
+          "domain_total_score": 1.0,
+          "numeric_accuracy": 0.0,
+          "unit_accuracy": 0.0,
+          "keyword_accuracy": 1.0,
+          "token_f1": 0.1127,
+          "rouge_l": 0.1127,
+          "bleu_2": 0.0159,
+          "exact_match": 0.0,
+          "faithfulness": 1.0,
+          "answer_correctness": 0.7771,
+          "context_precision": 0.25,
+          "rag_overall": 0.7608
+        }
+      },
+      "pipeline_metrics": {
+        "vector_time_ms": 35,
+        "bm25_time_ms": 133,
+        "vector_results": 50,
+        "bm25_results": 50,
+        "merged_results": 76,
+        "pre_filter_in": 76,
+        "pre_filter_out": 52,
+        "filter_in": 24,
+        "filter_out": 0,
+        "filter_pass_rate": 1.0,
+        "hard_blocked": 0,
+        "overlap_ratio": 0.25742574257425743,
+        "key_token_coverage": 0.6666666666666666,
+        "generation_time_ms": 5807,
+        "rerank_time_ms": 0,
+        "total_time_ms": 6548,
+        "num_contexts_used": 8,
+        "question_type": "numeric",
+        "config_hash": "f49a272e8520"
+      }
+    },
+    {
+      "id": 10,
+      "question": "약품 공정 AI 모델의 입력변수로 사용되는 원수 수질 인자들은 무엇인가요?",
+      "gold_answer": "원수 알칼리도, pH, 온도, 전기전도도, 탁도 등이 입력변수로 사용됩니다.",
+      "prediction": "원수 수질 인자로 사용되는 입력변수는 다음과 같습니다 1. 알칼리도 (pH) 25 2. 전기전도도 (EC) , mgL 3. 온도 4. 탁도 m³day",
+      "keywords": [
+        "원수 알칼리도",
+        "pH",
+        "온도",
+        "전기전도도",
+        "탁도"
+      ],
+      "confidence": 0.700366702200454,
+      "num_sources": 4,
+      "time_ms": 5112,
+      "evaluation": {
+        "basic_score": {
+          "score": 1.0,
+          "type": "weighted",
+          "numeric_hit": 0.0,
+          "unit_hit": 1.0,
+          "keyword_hit": 1.0,
+          "details": {
+            "nums": [],
+            "units": [
+              "ph"
+            ],
+            "keywords": [
+              "원수",
+              "탁도",
+              "사용됩니다",
+              "입력변수로",
+              "등이"
+            ]
+          }
+        },
+        "domain_specific": {
+          "total_score": 1.0,
+          "numeric_score": 0.0,
+          "unit_score": 0.0,
+          "keyword_score": 1.0,
+          "details": {
+            "gold_nums": [],
+            "gold_units": [],
+            "gold_keywords": [
+              "원수",
+              "탁도",
+              "ph",
+              "입력변수로",
+              "등이"
+            ],
+            "pred_nums": [
+              "2",
+              "4",
+              "25",
+              "3",
+              "1"
+            ],
+            "pred_units": []
+          }
+        },
+        "rag_metrics": {
+          "faithfulness": {
+            "score": 0.3333,
+            "supported_claims": 1,
+            "total_claims": 3,
+            "support_ratio": 0.3333
+          },
+          "answer_correctness": {
+            "score": 0.8267,
+            "semantic_similarity": 0.6667,
+            "factual_correctness": 0.9333,
+            "details": {
+              "num_match_ratio": 1.0,
+              "unit_match_ratio": 1.0,
+              "truth_nums": [],
+              "answer_nums": [
+                "2",
+                "4",
+                "25",
+                "3",
+                "1"
+              ]
+            }
+          },
+          "context_precision": {
+            "score": 0.0,
+            "relevant_contexts": 0,
+            "total_contexts": 4,
+            "precision": 0.0
+          },
+          "overall_score": 0.464
+        },
+        "academic_metrics": {
+          "exact_match": 0.0,
+          "token_f1": {
+            "precision": 0.3,
+            "recall": 0.6667,
+            "f1": 0.4138
+          },
+          "rouge_l": {
+            "precision": 0.25,
+            "recall": 0.5556,
+            "f1": 0.3448
+          },
+          "bleu_1": 0.3,
+          "bleu_2": 0.0526
+        },
+        "summary": {
+          "basic_v5_score": 1.0,
+          "domain_total_score": 1.0,
+          "numeric_accuracy": 0.0,
+          "unit_accuracy": 0.0,
+          "keyword_accuracy": 1.0,
+          "token_f1": 0.4138,
+          "rouge_l": 0.3448,
+          "bleu_2": 0.0526,
+          "exact_match": 0.0,
+          "faithfulness": 0.3333,
+          "answer_correctness": 0.8267,
+          "context_precision": 0.0,
+          "rag_overall": 0.464
+        }
+      },
+      "pipeline_metrics": {
+        "vector_time_ms": 52,
+        "bm25_time_ms": 159,
+        "vector_results": 50,
+        "bm25_results": 50,
+        "merged_results": 76,
+        "pre_filter_in": 76,
+        "pre_filter_out": 33,
+        "filter_in": 43,
+        "filter_out": 0,
+        "filter_pass_rate": 1.0,
+        "hard_blocked": 0,
+        "overlap_ratio": 0.40350877192982454,
+        "key_token_coverage": 0.6,
+        "generation_time_ms": 4229,
+        "rerank_time_ms": 0,
+        "total_time_ms": 5112,
+        "num_contexts_used": 4,
+        "question_type": "numeric",
+        "config_hash": "f49a272e8520"
+      }
+    },
+    {
+      "id": 11,
+      "question": "약품 공정에서 응집제 주입률 예측 모델로 최종 선정된 모델과 그 선정 사유는 무엇인가요?",
+      "gold_answer": "최종 선정된 모델은 N-beats이며, LSTM, GRU, GBR 모델들과 비교했을 때 R² Score가 더 높았기 때문입니다.",
+      "prediction": "약품 공정에서 응집제 주입률 예측 모델로 최종 선정된 모델은 N-beats입니다. 선정 사유는 다음과 같습니다 모델 선정 단계에서 사용된 데이터는 원수 수질 탁도, 알칼리도, 전기전도도, 온도 등이었습니다. 이 모델과 LSTM, GRU, GBR 모델을 비교한 결과, N-beats 모델의 R² 값이 가장 높게 나타났습니다. N-beats 모델은 회귀모델 성능평가에서 LSTM, GRU, GBR 모델보다 더 좋은 결과를 보였으며, 이는 예측값과 실제값 간의 차이가 가장 작았기 때문입니다. 또한 N-beats 모델의 MAE(절대 오차 평균), MSE(평균 제곱 오차), RMSE(루트 평균 제곱 오차) 값도 LSTM, GRU, GBR 모델보다 낮게 나타났습니다. 따라서 N-beats 모델이 최종 선정되었습니다.",
+      "keywords": [
+        "N-beats",
+        "R² Score",
+        "LSTM, GRU, GBR 모델들과 비교"
+      ],
+      "confidence": 0.765773315419989,
+      "num_sources": 6,
+      "time_ms": 8456,
+      "evaluation": {
+        "basic_score": {
+          "score": 1.0,
+          "type": "weighted",
+          "numeric_hit": 0.0,
+          "unit_hit": 1.0,
+          "keyword_hit": 1.0,
+          "details": {
+            "nums": [],
+            "units": [
+              "score",
+              "n",
+              "lstm",
+              "gbr",
+              "gru",
+              "r",
+              "beats"
+            ],
+            "keywords": [
+              "때문입니다",
+              "비교했을",
+              "선정된",
+              "모델들과",
+              "최종"
+            ]
+          }
+        },
+        "domain_specific": {
+          "total_score": 1.0,
+          "numeric_score": 0.0,
+          "unit_score": 0.0,
+          "keyword_score": 1.0,
+          "details": {
+            "gold_nums": [],
+            "gold_units": [],
+            "gold_keywords": [
+              "때문입니다",
+              "비교했을",
+              "선정된",
+              "모델들과",
+              "최종"
+            ],
+            "pred_nums": [],
+            "pred_units": []
+          }
+        },
+        "rag_metrics": {
+          "faithfulness": {
+            "score": 0.3333,
+            "supported_claims": 2,
+            "total_claims": 6,
+            "support_ratio": 0.3333
+          },
+          "answer_correctness": {
+            "score": 0.8,
+            "semantic_similarity": 0.6154,
+            "factual_correctness": 0.9231,
+            "details": {
+              "num_match_ratio": 1.0,
+              "unit_match_ratio": 1.0,
+              "truth_nums": [],
+              "answer_nums": []
+            }
+          },
+          "context_precision": {
+            "score": 0.0,
+            "relevant_contexts": 0,
+            "total_contexts": 6,
+            "precision": 0.0
+          },
+          "overall_score": 0.4533
+        },
+        "academic_metrics": {
+          "exact_match": 0.0,
+          "token_f1": {
+            "precision": 0.1064,
+            "recall": 0.625,
+            "f1": 0.1818
+          },
+          "rouge_l": {
+            "precision": 0.1064,
+            "recall": 0.625,
+            "f1": 0.1818
+          },
+          "bleu_1": 0.1064,
+          "bleu_2": 0.0538
+        },
+        "summary": {
+          "basic_v5_score": 1.0,
+          "domain_total_score": 1.0,
+          "numeric_accuracy": 0.0,
+          "unit_accuracy": 0.0,
+          "keyword_accuracy": 1.0,
+          "token_f1": 0.1818,
+          "rouge_l": 0.1818,
+          "bleu_2": 0.0538,
+          "exact_match": 0.0,
+          "faithfulness": 0.3333,
+          "answer_correctness": 0.8,
+          "context_precision": 0.0,
+          "rag_overall": 0.4533
+        }
+      },
+      "pipeline_metrics": {
+        "vector_time_ms": 50,
+        "bm25_time_ms": 166,
+        "vector_results": 50,
+        "bm25_results": 50,
+        "merged_results": 70,
+        "pre_filter_in": 70,
+        "pre_filter_out": 30,
+        "filter_in": 40,
+        "filter_out": 1,
+        "filter_pass_rate": 0.975,
+        "hard_blocked": 0,
+        "overlap_ratio": 0.4632352941176471,
+        "key_token_coverage": 0.5833333333333334,
+        "generation_time_ms": 7485,
+        "rerank_time_ms": 0,
+        "total_time_ms": 8456,
+        "num_contexts_used": 6,
+        "question_type": "definition",
+        "config_hash": "f49a272e8520"
+      }
+    },
+    {
+      "id": 12,
+      "question": "혼화응집 공정 AI의 목표는 무엇이며, 어떤 값을 산출하는 것인가요?",
+      "gold_answer": "응집지별 각 교반기의 회전속도 설정값(RPM)을 산출하고 적용하는 것이 목표입니다.",
+      "prediction": "혼화응집 공정 AI의 목표는 응집지 별 각 교반기의 회전속도 설정값 산출 및 적용입니다. 이를 위해, AI 모델은 주요 데이터와 설비 기본 자료를 활용하여 응집지 별 최적의 교반강도 값을 계산합니다. 이 값은 응집지 분당 회전수(G(RPM))로 변환되어 적용됩니다. 따라서 혼화응집 공정 AI는 응집지 별 각 교반기의 회전속도 설정값을 산출하고 적용하는 역할을 합니다.",
+      "keywords": [
+        "교반기 회전속도 설정값",
+        "RPM 산출 및 적용"
+      ],
+      "confidence": 0.5114095322017179,
+      "num_sources": 6,
+      "time_ms": 6687,
+      "evaluation": {
+        "basic_score": {
+          "score": 1.0,
+          "type": "weighted",
+          "numeric_hit": 0.0,
+          "unit_hit": 1.0,
+          "keyword_hit": 1.0,
+          "details": {
+            "nums": [],
+            "units": [
+              "rpm"
+            ],
+            "keywords": [
+              "목표입니다",
+              "회전속도",
+              "교반기의",
+              "산출하고",
+              "설정값"
+            ]
+          }
+        },
+        "domain_specific": {
+          "total_score": 1.0,
+          "numeric_score": 0.0,
+          "unit_score": 0.0,
+          "keyword_score": 1.0,
+          "details": {
+            "gold_nums": [],
+            "gold_units": [],
+            "gold_keywords": [
+              "목표입니다",
+              "rpm",
+              "회전속도",
+              "교반기의",
+              "산출하고"
+            ],
+            "pred_nums": [],
+            "pred_units": []
+          }
+        },
+        "rag_metrics": {
+          "faithfulness": {
+            "score": 0.25,
+            "supported_claims": 1,
+            "total_claims": 4,
+            "support_ratio": 0.25
+          },
+          "answer_correctness": {
+            "score": 0.8267,
+            "semantic_similarity": 0.6667,
+            "factual_correctness": 0.9333,
+            "details": {
+              "num_match_ratio": 1.0,
+              "unit_match_ratio": 1.0,
+              "truth_nums": [],
+              "answer_nums": []
+            }
+          },
+          "context_precision": {
+            "score": 0.0,
+            "relevant_contexts": 0,
+            "total_contexts": 6,
+            "precision": 0.0
+          },
+          "overall_score": 0.4307
+        },
+        "academic_metrics": {
+          "exact_match": 0.0,
+          "token_f1": {
+            "precision": 0.1321,
+            "recall": 0.6364,
+            "f1": 0.2188
+          },
+          "rouge_l": {
+            "precision": 0.1321,
+            "recall": 0.6364,
+            "f1": 0.2188
+          },
+          "bleu_1": 0.1321,
+          "bleu_2": 0.0769
+        },
+        "summary": {
+          "basic_v5_score": 1.0,
+          "domain_total_score": 1.0,
+          "numeric_accuracy": 0.0,
+          "unit_accuracy": 0.0,
+          "keyword_accuracy": 1.0,
+          "token_f1": 0.2188,
+          "rouge_l": 0.2188,
+          "bleu_2": 0.0769,
+          "exact_match": 0.0,
+          "faithfulness": 0.25,
+          "answer_correctness": 0.8267,
+          "context_precision": 0.0,
+          "rag_overall": 0.4307
+        }
+      },
+      "pipeline_metrics": {
+        "vector_time_ms": 53,
+        "bm25_time_ms": 155,
+        "vector_results": 50,
+        "bm25_results": 50,
+        "merged_results": 89,
+        "pre_filter_in": 89,
+        "pre_filter_out": 70,
+        "filter_in": 19,
+        "filter_out": 1,
+        "filter_pass_rate": 0.9473684210526315,
+        "hard_blocked": 1,
+        "overlap_ratio": 0.18095238095238095,
+        "key_token_coverage": 0.2222222222222222,
+        "generation_time_ms": 5477,
+        "rerank_time_ms": 0,
+        "total_time_ms": 6686,
+        "num_contexts_used": 6,
+        "question_type": "numeric",
+        "config_hash": "f49a272e8520"
+      }
+    },
+    {
+      "id": 13,
+      "question": "침전 공정 AI 모델의 초기 입력변수는 무엇인가요?",
+      "gold_answer": "원수 탁도, 유입 총 유량, 응집제 주입률, NaOH 주입률, 활성탄 투입률이 초기 입력변수로 사용됩니다.",
+      "prediction": "침전 공정 AI 모델의 초기 입력변수는 다음과 같습니다 1. 원수 탁도 (, , mgL) 2. 유입 총 유량 (m³day) 3. 응집제 주입률 (, m³day) 4. 활성탄 주입률 (, m³day)",
+      "keywords": [
+        "원수 탁도",
+        "유입 총 유량",
+        "응집제 주입률",
+        "NaOH 주입률",
+        "활성탄 투입률"
+      ],
+      "confidence": 0.7405886394200191,
+      "num_sources": 8,
+      "time_ms": 5463,
+      "evaluation": {
+        "basic_score": {
+          "score": 0.4348,
+          "type": "weighted",
+          "numeric_hit": 0.0,
+          "unit_hit": 0.0,
+          "keyword_hit": 1.0,
+          "details": {
+            "nums": [],
+            "units": [
+              "naoh"
+            ],
+            "keywords": [
+              "주입률",
+              "원수",
+              "응집제",
+              "탁도",
+              "유량"
+            ]
+          }
+        },
+        "domain_specific": {
+          "total_score": 1.0,
+          "numeric_score": 0.0,
+          "unit_score": 0.0,
+          "keyword_score": 1.0,
+          "details": {
+            "gold_nums": [],
+            "gold_units": [],
+            "gold_keywords": [
+              "주입률",
+              "원수",
+              "응집제",
+              "naoh",
+              "탁도"
+            ],
+            "pred_nums": [
+              "2",
+              "4",
+              "3",
+              "1"
+            ],
+            "pred_units": []
+          }
+        },
+        "rag_metrics": {
+          "faithfulness": {
+            "score": 0.0,
+            "supported_claims": 0,
+            "total_claims": 5,
+            "support_ratio": 0.0
+          },
+          "answer_correctness": {
+            "score": 0.8267,
+            "semantic_similarity": 0.6667,
+            "factual_correctness": 0.9333,
+            "details": {
+              "num_match_ratio": 1.0,
+              "unit_match_ratio": 1.0,
+              "truth_nums": [],
+              "answer_nums": [
+                "2",
+                "4",
+                "3",
+                "1"
+              ]
+            }
+          },
+          "context_precision": {
+            "score": 0.0,
+            "relevant_contexts": 0,
+            "total_contexts": 8,
+            "precision": 0.0
+          },
+          "overall_score": 0.3307
+        },
+        "academic_metrics": {
+          "exact_match": 0.0,
+          "token_f1": {
+            "precision": 0.4,
+            "recall": 0.7143,
+            "f1": 0.5128
+          },
+          "rouge_l": {
+            "precision": 0.32,
+            "recall": 0.5714,
+            "f1": 0.4103
+          },
+          "bleu_1": 0.4,
+          "bleu_2": 0.1667
+        },
+        "summary": {
+          "basic_v5_score": 0.4348,
+          "domain_total_score": 1.0,
+          "numeric_accuracy": 0.0,
+          "unit_accuracy": 0.0,
+          "keyword_accuracy": 1.0,
+          "token_f1": 0.5128,
+          "rouge_l": 0.4103,
+          "bleu_2": 0.1667,
+          "exact_match": 0.0,
+          "faithfulness": 0.0,
+          "answer_correctness": 0.8267,
+          "context_precision": 0.0,
+          "rag_overall": 0.3307
+        }
+      },
+      "pipeline_metrics": {
+        "vector_time_ms": 49,
+        "bm25_time_ms": 162,
+        "vector_results": 50,
+        "bm25_results": 50,
+        "merged_results": 76,
+        "pre_filter_in": 76,
+        "pre_filter_out": 36,
+        "filter_in": 40,
+        "filter_out": 0,
+        "filter_pass_rate": 1.0,
+        "hard_blocked": 0,
+        "overlap_ratio": 0.48,
+        "key_token_coverage": 0.5714285714285714,
+        "generation_time_ms": 4546,
+        "rerank_time_ms": 0,
+        "total_time_ms": 5462,
+        "num_contexts_used": 8,
+        "question_type": "numeric",
+        "config_hash": "f49a272e8520"
+      }
+    },
+    {
+      "id": 14,
+      "question": "슬러지 발생량과 가장 높은 양의 상관관계를 보이는 변수는 무엇이며, 그 상관계수는 얼마인가요?",
+      "gold_answer": "슬러지 발생량은 원수 탁도(0.72)와 응집제 주입률(0.7)과 가장 높은 양의 상관관계를 보입니다.",
+      "prediction": "슬러지 발생량과 가장 높은 양의 상관관계를 보이는 변수는 원수 탁도이며, 그 상관계수는 0.72입니다",
+      "keywords": [
+        "원수 탁도 (0.72)",
+        "응집제 주입률 (0.7)"
+      ],
+      "confidence": 0.6628305635284072,
+      "num_sources": 3,
+      "time_ms": 4786,
+      "evaluation": {
+        "basic_score": {
+          "score": 1.0,
+          "type": "weighted",
+          "numeric_hit": 1.0,
+          "unit_hit": 0.0,
+          "keyword_hit": 1.0,
+          "details": {
+            "nums": [
+              "0.7",
+              "0.72"
+            ],
+            "units": [],
+            "keywords": [
+              "주입률",
+              "원수",
+              "상관관계를",
+              "72",
+              "응집제"
+            ]
+          }
+        },
+        "domain_specific": {
+          "total_score": 1.0,
+          "numeric_score": 1.0,
+          "unit_score": 0.0,
+          "keyword_score": 1.0,
+          "details": {
+            "gold_nums": [
+              "0.7",
+              "0.72"
+            ],
+            "gold_units": [],
+            "gold_keywords": [
+              "주입률",
+              "원수",
+              "상관관계를",
+              "72",
+              "응집제"
+            ],
+            "pred_nums": [
+              "0.72"
+            ],
+            "pred_units": []
+          }
+        },
+        "rag_metrics": {
+          "faithfulness": {
+            "score": 0.0,
+            "supported_claims": 0,
+            "total_claims": 1,
+            "support_ratio": 0.0
+          },
+          "answer_correctness": {
+            "score": 0.59,
+            "semantic_similarity": 0.5,
+            "factual_correctness": 0.65,
+            "details": {
+              "num_match_ratio": 0.5,
+              "unit_match_ratio": 1.0,
+              "truth_nums": [
+                "0.7",
+                "0.72"
+              ],
+              "answer_nums": [
+                "0.72"
+              ]
+            }
+          },
+          "context_precision": {
+            "score": 0.0,
+            "relevant_contexts": 0,
+            "total_contexts": 3,
+            "precision": 0.0
+          },
+          "overall_score": 0.236
+        },
+        "academic_metrics": {
+          "exact_match": 0.0,
+          "token_f1": {
+            "precision": 0.5,
+            "recall": 0.4118,
+            "f1": 0.4516
+          },
+          "rouge_l": {
+            "precision": 0.3571,
+            "recall": 0.2941,
+            "f1": 0.3226
+          },
+          "bleu_1": 0.5,
+          "bleu_2": 0.2308
+        },
+        "summary": {
+          "basic_v5_score": 1.0,
+          "domain_total_score": 1.0,
+          "numeric_accuracy": 1.0,
+          "unit_accuracy": 0.0,
+          "keyword_accuracy": 1.0,
+          "token_f1": 0.4516,
+          "rouge_l": 0.3226,
+          "bleu_2": 0.2308,
+          "exact_match": 0.0,
+          "faithfulness": 0.0,
+          "answer_correctness": 0.59,
+          "context_precision": 0.0,
+          "rag_overall": 0.236
+        }
+      },
+      "pipeline_metrics": {
+        "vector_time_ms": 54,
+        "bm25_time_ms": 161,
+        "vector_results": 50,
+        "bm25_results": 50,
+        "merged_results": 71,
+        "pre_filter_in": 71,
+        "pre_filter_out": 55,
+        "filter_in": 16,
+        "filter_out": 1,
+        "filter_pass_rate": 0.9375,
+        "hard_blocked": 0,
+        "overlap_ratio": 0.5517241379310345,
+        "key_token_coverage": 0.6363636363636364,
+        "generation_time_ms": 3756,
+        "rerank_time_ms": 0,
+        "total_time_ms": 4786,
+        "num_contexts_used": 3,
+        "question_type": "definition",
+        "config_hash": "f49a272e8520"
+      }
+    },
+    {
+      "id": 15,
+      "question": "여과 공정 AI 모델의 목표는 무엇인가요?",
+      "gold_answer": "여과 공정 운영 지수 예측, 여과지별 수위 예측, 역세척 스케줄 결정을 목표로 합니다.",
+      "prediction": "여과 공정 AI 모델의 목표는 다음과 같습니다 1. 여과 공정 운영 지수 예측을 통해 여과지별 수위를 예측합니다. 2. 여과지별 수위를 기반으로 여과지 운영 지수를 계산하고, 여과 속도 등을 활용하여 운영 횟수를 예측합니다. 3. 여과지별 수위와 여과지 운영 지수를 통해 여과지 상태를 통한 운영 지수 및 유출 유량을 예측합니다. 4. 유입 유량에 따른 운영 횟수, 여과 속도 등을 계산하여 유동적인 여과 공정을 수행할 수 있습니다. 5. 여과지별 수위와 여과지 운영 지수를 통해 여과지 상태를 통한 운영 지수 및 유출 유량 예측을 위해 여과지 여과 및 역세척 자동 운영을 목표로 합니다. 이 모델은 초기 입력변수로 원수 유입 유량, 여과지 운영 지수, 여과지별 수위 등을 활용합니다. 또한 pH, 알칼리도, 전기전도도, 온도 등 다양한 변수를 AI 모델의 입력변수로 사용하여 적정 응집제 주입률 예측 및 침전지 탁도 변화에 따른 약품 주입률을 판단하고 보정합니다.",
+      "keywords": [
+        "운영 지수 예측",
+        "수위 예측",
+        "역세척 스케줄 결정"
+      ],
+      "confidence": 0.6271892790491725,
+      "num_sources": 8,
+      "time_ms": 8598,
+      "evaluation": {
+        "basic_score": {
+          "score": 1.0,
+          "type": "weighted",
+          "numeric_hit": 0.0,
+          "unit_hit": 0.0,
+          "keyword_hit": 1.0,
+          "details": {
+            "nums": [],
+            "units": [],
+            "keywords": [
+              "여과지별",
+              "여과",
+              "스케줄",
+              "역세척",
+              "지수"
+            ]
+          }
+        },
+        "domain_specific": {
+          "total_score": 1.0,
+          "numeric_score": 0.0,
+          "unit_score": 0.0,
+          "keyword_score": 1.0,
+          "details": {
+            "gold_nums": [],
+            "gold_units": [],
+            "gold_keywords": [
+              "여과지별",
+              "여과",
+              "스케줄",
+              "역세척",
+              "지수"
+            ],
+            "pred_nums": [
+              "2",
+              "4",
+              "5",
+              "3",
+              "1"
+            ],
+            "pred_units": []
+          }
+        },
+        "rag_metrics": {
+          "faithfulness": {
+            "score": 0.625,
+            "supported_claims": 5,
+            "total_claims": 8,
+            "support_ratio": 0.625
+          },
+          "answer_correctness": {
+            "score": 0.9133,
+            "semantic_similarity": 0.8333,
+            "factual_correctness": 0.9667,
+            "details": {
+              "num_match_ratio": 1.0,
+              "unit_match_ratio": 1.0,
+              "truth_nums": [],
+              "answer_nums": [
+                "2",
+                "4",
+                "5",
+                "3",
+                "1"
+              ]
+            }
+          },
+          "context_precision": {
+            "score": 0.25,
+            "relevant_contexts": 2,
+            "total_contexts": 8,
+            "precision": 0.25
+          },
+          "overall_score": 0.6653
+        },
+        "academic_metrics": {
+          "exact_match": 0.0,
+          "token_f1": {
+            "precision": 0.0781,
+            "recall": 0.7692,
+            "f1": 0.1418
+          },
+          "rouge_l": {
+            "precision": 0.0625,
+            "recall": 0.6154,
+            "f1": 0.1135
+          },
+          "bleu_1": 0.0781,
+          "bleu_2": 0.0394
+        },
+        "summary": {
+          "basic_v5_score": 1.0,
+          "domain_total_score": 1.0,
+          "numeric_accuracy": 0.0,
+          "unit_accuracy": 0.0,
+          "keyword_accuracy": 1.0,
+          "token_f1": 0.1418,
+          "rouge_l": 0.1135,
+          "bleu_2": 0.0394,
+          "exact_match": 0.0,
+          "faithfulness": 0.625,
+          "answer_correctness": 0.9133,
+          "context_precision": 0.25,
+          "rag_overall": 0.6653
+        }
+      },
+      "pipeline_metrics": {
+        "vector_time_ms": 42,
+        "bm25_time_ms": 160,
+        "vector_results": 50,
+        "bm25_results": 50,
+        "merged_results": 73,
+        "pre_filter_in": 73,
+        "pre_filter_out": 29,
+        "filter_in": 44,
+        "filter_out": 0,
+        "filter_pass_rate": 1.0,
+        "hard_blocked": 0,
+        "overlap_ratio": 0.35,
+        "key_token_coverage": 0.5,
+        "generation_time_ms": 7770,
+        "rerank_time_ms": 0,
+        "total_time_ms": 8597,
+        "num_contexts_used": 8,
+        "question_type": "numeric",
+        "config_hash": "f49a272e8520"
+      }
+    },
+    {
+      "id": 16,
+      "question": "여과 공정의 운영 지수 및 여과지 수위 예측 모델로 선정된 모델과 선정 사유는 무엇인가요?",
+      "gold_answer": "LSTM(Long Short-Term Memory Network)이 선정되었으며, R² 성능이 가장 높고 시계열 데이터 모델링에 적합하기 때문입니다.",
+      "prediction": "여과 공정의 운영 지수 및 여과지 수위 예측 모델로 선정된 모델은 LSTM(Long Short-Term Memory Network)와 GRU(Gated Recurrent Unit) 모델입니다. 선정 사유는 다음과 같습니다 1. LSTM 모델은 자연어 처리 작업에서 높은 성능을 보이며, 시계열 데이터 모델링에 적합합니다. 2. LSTM 모델의 R²(test) 값이 0.95로 가장 높았습니다. 3. GRU 모델의 R²(test) 값은 LSTM 모델보다 0.1 정도 낮아졌지만 여전히 높은 성능을 보였습니다. 4. MAE, MSE, RMSE 등 다른 성능 지표에서도 LSTM 모델이 GRU 모델에 비해 우수한 성능을 보였습니다. 따라서, LSTM 모델과 GRU 모델 모두 여과지 운영 지수 예측 및 여과지 수위 예측에서 뛰어난 성능을 보여 선정되었습니다.",
+      "keywords": [
+        "LSTM (Long Short-Term Memory Network)",
+        "R² 성능 가장 높음",
+        "시계열 데이터 모델링에 적합"
+      ],
+      "confidence": 0.8147602836376442,
+      "num_sources": 6,
+      "time_ms": 8135,
+      "evaluation": {
+        "basic_score": {
+          "score": 1.0,
+          "type": "weighted",
+          "numeric_hit": 0.0,
+          "unit_hit": 1.0,
+          "keyword_hit": 1.0,
+          "details": {
+            "nums": [],
+            "units": [
+              "network",
+              "term",
+              "lstm",
+              "long",
+              "memory",
+              "r",
+              "short"
+            ],
+            "keywords": [
+              "때문입니다",
+              "short-term",
+              "성능이",
+              "적합하기",
+              "r²"
+            ]
+          }
+        },
+        "domain_specific": {
+          "total_score": 1.0,
+          "numeric_score": 0.0,
+          "unit_score": 0.0,
+          "keyword_score": 1.0,
+          "details": {
+            "gold_nums": [],
+            "gold_units": [],
+            "gold_keywords": [
+              "때문입니다",
+              "short-term",
+              "성능이",
+              "network",
+              "적합하기"
+            ],
+            "pred_nums": [
+              "2",
+              "4",
+              "0.95",
+              "0.1",
+              "3",
+              "1"
+            ],
+            "pred_units": []
+          }
+        },
+        "rag_metrics": {
+          "faithfulness": {
+            "score": 0.5714,
+            "supported_claims": 4,
+            "total_claims": 7,
+            "support_ratio": 0.5714
+          },
+          "answer_correctness": {
+            "score": 0.8375,
+            "semantic_similarity": 0.6875,
+            "factual_correctness": 0.9375,
+            "details": {
+              "num_match_ratio": 1.0,
+              "unit_match_ratio": 1.0,
+              "truth_nums": [],
+              "answer_nums": [
+                "2",
+                "4",
+                "0.95",
+                "0.1",
+                "3",
+                "1"
+              ]
+            }
+          },
+          "context_precision": {
+            "score": 0.1667,
+            "relevant_contexts": 1,
+            "total_contexts": 6,
+            "precision": 0.1667
+          },
+          "overall_score": 0.5969
+        },
+        "academic_metrics": {
+          "exact_match": 0.0,
+          "token_f1": {
+            "precision": 0.11,
+            "recall": 0.6471,
+            "f1": 0.188
+          },
+          "rouge_l": {
+            "precision": 0.09,
+            "recall": 0.5294,
+            "f1": 0.1538
+          },
+          "bleu_1": 0.11,
+          "bleu_2": 0.0707
+        },
+        "summary": {
+          "basic_v5_score": 1.0,
+          "domain_total_score": 1.0,
+          "numeric_accuracy": 0.0,
+          "unit_accuracy": 0.0,
+          "keyword_accuracy": 1.0,
+          "token_f1": 0.188,
+          "rouge_l": 0.1538,
+          "bleu_2": 0.0707,
+          "exact_match": 0.0,
+          "faithfulness": 0.5714,
+          "answer_correctness": 0.8375,
+          "context_precision": 0.1667,
+          "rag_overall": 0.5969
+        }
+      },
+      "pipeline_metrics": {
+        "vector_time_ms": 38,
+        "bm25_time_ms": 135,
+        "vector_results": 50,
+        "bm25_results": 50,
+        "merged_results": 71,
+        "pre_filter_in": 71,
+        "pre_filter_out": 32,
+        "filter_in": 39,
+        "filter_out": 0,
+        "filter_pass_rate": 1.0,
+        "hard_blocked": 0,
+        "overlap_ratio": 0.49640287769784175,
+        "key_token_coverage": 0.6153846153846154,
+        "generation_time_ms": 7402,
+        "rerank_time_ms": 0,
+        "total_time_ms": 8135,
+        "num_contexts_used": 6,
+        "question_type": "definition",
+        "config_hash": "f49a272e8520"
+      }
+    },
+    {
+      "id": 17,
+      "question": "소독 공정 AI 모델의 목표는 무엇인가요?",
+      "gold_answer": "체류시간 내 잔류염소 예측, 잔류염소 농도 유지를 위한 투입량 예측, 전차염 주입량 결정을 목표로 합니다.",
+      "prediction": "소독 공정 AI 모델의 목표는 다음과 같습니다 1. 체류시간 내 잔류염소 예측을 위한 투입량 예측 2. 잔류염소 농도 유지를 위한 투입량 예측 이를 위해 다음 변수가 사용됩니다 - 수온 25 - 탁도 100,000 mgL - 염소요구량 30 ppm - 침전지 잔류염소 5 mgL",
+      "keywords": [
+        "잔류염소 예측",
+        "투입량 예측",
+        "전차염 주입량 결정"
+      ],
+      "confidence": 0.6776920336060622,
+      "num_sources": 8,
+      "time_ms": 5649,
+      "evaluation": {
+        "basic_score": {
+          "score": 1.0,
+          "type": "weighted",
+          "numeric_hit": 0.0,
+          "unit_hit": 0.0,
+          "keyword_hit": 1.0,
+          "details": {
+            "nums": [],
+            "units": [],
+            "keywords": [
+              "체류시간",
+              "전차염",
+              "농도",
+              "주입량",
+              "투입량"
+            ]
+          }
+        },
+        "domain_specific": {
+          "total_score": 1.0,
+          "numeric_score": 0.0,
+          "unit_score": 0.0,
+          "keyword_score": 1.0,
+          "details": {
+            "gold_nums": [],
+            "gold_units": [],
+            "gold_keywords": [
+              "체류시간",
+              "전차염",
+              "농도",
+              "주입량",
+              "투입량"
+            ],
+            "pred_nums": [
+              "2",
+              "25",
+              "5",
+              "100,000",
+              "30",
+              "1"
+            ],
+            "pred_units": []
+          }
+        },
+        "rag_metrics": {
+          "faithfulness": {
+            "score": 0.3333,
+            "supported_claims": 1,
+            "total_claims": 3,
+            "support_ratio": 0.3333
+          },
+          "answer_correctness": {
+            "score": 0.7833,
+            "semantic_similarity": 0.5833,
+            "factual_correctness": 0.9167,
+            "details": {
+              "num_match_ratio": 1.0,
+              "unit_match_ratio": 1.0,
+              "truth_nums": [],
+              "answer_nums": [
+                "2",
+                "25",
+                "5",
+                "100,000",
+                "30",
+                "1"
+              ]
+            }
+          },
+          "context_precision": {
+            "score": 0.0,
+            "relevant_contexts": 0,
+            "total_contexts": 8,
+            "precision": 0.0
+          },
+          "overall_score": 0.4466
+        },
+        "academic_metrics": {
+          "exact_match": 0.0,
+          "token_f1": {
+            "precision": 0.25,
+            "recall": 0.6667,
+            "f1": 0.3636
+          },
+          "rouge_l": {
+            "precision": 0.25,
+            "recall": 0.6667,
+            "f1": 0.3636
+          },
+          "bleu_1": 0.25,
+          "bleu_2": 0.1795
+        },
+        "summary": {
+          "basic_v5_score": 1.0,
+          "domain_total_score": 1.0,
+          "numeric_accuracy": 0.0,
+          "unit_accuracy": 0.0,
+          "keyword_accuracy": 1.0,
+          "token_f1": 0.3636,
+          "rouge_l": 0.3636,
+          "bleu_2": 0.1795,
+          "exact_match": 0.0,
+          "faithfulness": 0.3333,
+          "answer_correctness": 0.7833,
+          "context_precision": 0.0,
+          "rag_overall": 0.4466
+        }
+      },
+      "pipeline_metrics": {
+        "vector_time_ms": 28,
+        "bm25_time_ms": 111,
+        "vector_results": 50,
+        "bm25_results": 50,
+        "merged_results": 75,
+        "pre_filter_in": 75,
+        "pre_filter_out": 32,
+        "filter_in": 43,
+        "filter_out": 0,
+        "filter_pass_rate": 1.0,
+        "hard_blocked": 0,
+        "overlap_ratio": 0.36666666666666664,
+        "key_token_coverage": 0.5,
+        "generation_time_ms": 5059,
+        "rerank_time_ms": 0,
+        "total_time_ms": 5649,
+        "num_contexts_used": 8,
+        "question_type": "numeric",
+        "config_hash": "f49a272e8520"
+      }
+    },
+    {
+      "id": 18,
+      "question": "소독 공정 전차염 주입률 예측 모델의 성능평가 결과, R² 값은 얼마인가요?",
+      "gold_answer": "소독 공정 전차염 주입률 예측 모델(LSTM)의 R² 값은 0.95입니다.",
+      "prediction": "소독 공정 전차염 주입률 예측 모델의 성능평가 결과에서, R² 값은 0.95입니다.",
+      "keywords": [
+        "LSTM",
+        "R²",
+        "0.95"
+      ],
+      "confidence": 0.7779617132534928,
+      "num_sources": 6,
+      "time_ms": 4325,
+      "evaluation": {
+        "basic_score": {
+          "score": 1.0,
+          "type": "weighted",
+          "numeric_hit": 1.0,
+          "unit_hit": 1.0,
+          "keyword_hit": 1.0,
+          "details": {
+            "nums": [
+              "0.95"
+            ],
+            "units": [
+              "lstm",
+              "r"
+            ],
+            "keywords": [
+              "주입률",
+              "전차염",
+              "소독",
+              "r²",
+              "모델"
+            ]
+          }
+        },
+        "domain_specific": {
+          "total_score": 1.0,
+          "numeric_score": 1.0,
+          "unit_score": 0.0,
+          "keyword_score": 1.0,
+          "details": {
+            "gold_nums": [
+              "0.95"
+            ],
+            "gold_units": [],
+            "gold_keywords": [
+              "주입률",
+              "전차염",
+              "소독",
+              "r²",
+              "모델"
+            ],
+            "pred_nums": [
+              "0.95"
+            ],
+            "pred_units": []
+          }
+        },
+        "rag_metrics": {
+          "faithfulness": {
+            "score": 1.0,
+            "supported_claims": 1,
+            "total_claims": 1,
+            "support_ratio": 1.0
+          },
+          "answer_correctness": {
+            "score": 0.896,
+            "semantic_similarity": 0.8,
+            "factual_correctness": 0.96,
+            "details": {
+              "num_match_ratio": 1.0,
+              "unit_match_ratio": 1.0,
+              "truth_nums": [
+                "0.95"
+              ],
+              "answer_nums": [
+                "0.95"
+              ]
+            }
+          },
+          "context_precision": {
+            "score": 0.0,
+            "relevant_contexts": 0,
+            "total_contexts": 6,
+            "precision": 0.0
+          },
+          "overall_score": 0.7584
+        },
+        "academic_metrics": {
+          "exact_match": 0.0,
+          "token_f1": {
+            "precision": 0.75,
+            "recall": 0.75,
+            "f1": 0.75
+          },
+          "rouge_l": {
+            "precision": 0.75,
+            "recall": 0.75,
+            "f1": 0.75
+          },
+          "bleu_1": 0.75,
+          "bleu_2": 0.6364
+        },
+        "summary": {
+          "basic_v5_score": 1.0,
+          "domain_total_score": 1.0,
+          "numeric_accuracy": 1.0,
+          "unit_accuracy": 0.0,
+          "keyword_accuracy": 1.0,
+          "token_f1": 0.75,
+          "rouge_l": 0.75,
+          "bleu_2": 0.6364,
+          "exact_match": 0.0,
+          "faithfulness": 1.0,
+          "answer_correctness": 0.896,
+          "context_precision": 0.0,
+          "rag_overall": 0.7584
+        }
+      },
+      "pipeline_metrics": {
+        "vector_time_ms": 34,
+        "bm25_time_ms": 115,
+        "vector_results": 50,
+        "bm25_results": 50,
+        "merged_results": 71,
+        "pre_filter_in": 71,
+        "pre_filter_out": 33,
+        "filter_in": 38,
+        "filter_out": 0,
+        "filter_pass_rate": 1.0,
+        "hard_blocked": 0,
+        "overlap_ratio": 0.6153846153846154,
+        "key_token_coverage": 0.9,
+        "generation_time_ms": 3693,
+        "rerank_time_ms": 0,
+        "total_time_ms": 4325,
+        "num_contexts_used": 6,
+        "question_type": "technical_spec",
+        "config_hash": "f49a272e8520"
+      }
+    },
+    {
+      "id": 19,
+      "question": "착수 공정에서 AI 제어 알람 발생 시 비상시에 운영 모드를 어떻게 변경할 수 있나요?",
+      "gold_answer": "비상시에는 AI 추천 모드 등으로 운영 모드를 변경할 수 있습니다.",
+      "prediction": "착수 공정에서 AI 제어 알람 발생 시, 비상시에 운영 모드를 변경하려면 다음과 같은 단계를 따르세요 1. AI - AI 운전모드 변경 요청 알람 이 알람이 발생하면, 해당 알람을 확인하고 운전모드 변경요청 완료 알람으로 전환합니다. 2. 운영 모드 변경 - 공정별 운영 모드를 확인할 수 있으며, 이를 통해 필요한 공정에 대한 일괄 변경을 수행할 수 있습니다. - 전체 운영 모드 버튼 클릭 시 모든 공정에 대한 일괄 변경이 가능합니다. 3. 운영 이력 확인 - 운영 이력 팝업으로 이동하여 AI와 같이 확인 가능한 운영 정보를 볼 수 있습니다. 따라서, 착수 공정에서 AI 제어 알람 발생 시 비상시에 운영 모드를 변경하려면 위 단계를 따르는 것이 필요합니다.",
+      "keywords": [
+        "AI 추천 모드",
+        "운영 모드 변경"
+      ],
+      "confidence": 0.7995184611341275,
+      "num_sources": 8,
+      "time_ms": 7178,
+      "evaluation": {
+        "basic_score": {
+          "score": 1.0,
+          "type": "weighted",
+          "numeric_hit": 0.0,
+          "unit_hit": 1.0,
+          "keyword_hit": 1.0,
+          "details": {
+            "nums": [],
+            "units": [
+              "ai"
+            ],
+            "keywords": [
+              "있습니다",
+              "추천",
+              "비상시에는",
+              "등으로",
+              "변경할"
+            ]
+          }
+        },
+        "domain_specific": {
+          "total_score": 1.0,
+          "numeric_score": 0.0,
+          "unit_score": 0.0,
+          "keyword_score": 1.0,
+          "details": {
+            "gold_nums": [],
+            "gold_units": [],
+            "gold_keywords": [
+              "있습니다",
+              "ai",
+              "추천",
+              "비상시에는",
+              "등으로"
+            ],
+            "pred_nums": [
+              "2",
+              "3",
+              "1"
+            ],
+            "pred_units": []
+          }
+        },
+        "rag_metrics": {
+          "faithfulness": {
+            "score": 0.3333,
+            "supported_claims": 2,
+            "total_claims": 6,
+            "support_ratio": 0.3333
+          },
+          "answer_correctness": {
+            "score": 0.7689,
+            "semantic_similarity": 0.5556,
+            "factual_correctness": 0.9111,
+            "details": {
+              "num_match_ratio": 1.0,
+              "unit_match_ratio": 1.0,
+              "truth_nums": [],
+              "answer_nums": [
+                "2",
+                "3",
+                "1"
+              ]
+            }
+          },
+          "context_precision": {
+            "score": 0.75,
+            "relevant_contexts": 6,
+            "total_contexts": 8,
+            "precision": 0.75
+          },
+          "overall_score": 0.5909
+        },
+        "academic_metrics": {
+          "exact_match": 0.0,
+          "token_f1": {
+            "precision": 0.0606,
+            "recall": 0.6,
+            "f1": 0.1101
+          },
+          "rouge_l": {
+            "precision": 0.0606,
+            "recall": 0.6,
+            "f1": 0.1101
+          },
+          "bleu_1": 0.0606,
+          "bleu_2": 0.0204
+        },
+        "summary": {
+          "basic_v5_score": 1.0,
+          "domain_total_score": 1.0,
+          "numeric_accuracy": 0.0,
+          "unit_accuracy": 0.0,
+          "keyword_accuracy": 1.0,
+          "token_f1": 0.1101,
+          "rouge_l": 0.1101,
+          "bleu_2": 0.0204,
+          "exact_match": 0.0,
+          "faithfulness": 0.3333,
+          "answer_correctness": 0.7689,
+          "context_precision": 0.75,
+          "rag_overall": 0.5909
+        }
+      },
+      "pipeline_metrics": {
+        "vector_time_ms": 34,
+        "bm25_time_ms": 122,
+        "vector_results": 50,
+        "bm25_results": 50,
+        "merged_results": 69,
+        "pre_filter_in": 69,
+        "pre_filter_out": 21,
+        "filter_in": 48,
+        "filter_out": 1,
+        "filter_pass_rate": 0.9791666666666666,
+        "hard_blocked": 0,
+        "overlap_ratio": 0.5259259259259259,
+        "key_token_coverage": 0.6666666666666666,
+        "generation_time_ms": 6606,
+        "rerank_time_ms": 0,
+        "total_time_ms": 7178,
+        "num_contexts_used": 8,
+        "question_type": "numeric",
+        "config_hash": "f49a272e8520"
+      }
+    },
+    {
+      "id": 20,
+      "question": "EMS 대시보드에서 전력 소비현황과 탄소 절감 현황은 어떤 단위로 표시되나요?",
+      "gold_answer": "전력 소비현황은 kWh, 탄소 절감 현황은 kg 단위로 표시됩니다.",
+      "prediction": "EMS 대시보드에서 전력 소비현황과 탄소 절감 현황은 다음과 같이 표시됩니다 1. 전력 소비현황 - 일별, 월별, 연간 단위로 표시되며, 각각의 값이 백분율 형태로 표시됩니다. 2. 탄소 절감 현황 - 일별, 월별, 연간 단위로 표시되며, 각각의 값은 kg으로 표시됩니다. 따라서 EMS 대시보드에서 전력 소비현황과 탄소 절감 현황은 다음과 같은 단위로 표시됩니다 - 전력 소비현황 (백분율) - 탄소 절감 현황 kg",
+      "keywords": [
+        "전력 소비현황 (kWh)",
+        "탄소 절감 현황 (kg)"
+      ],
+      "confidence": 0.5973005303393302,
+      "num_sources": 5,
+      "time_ms": 6629,
+      "evaluation": {
+        "basic_score": {
+          "score": 1.0,
+          "type": "weighted",
+          "numeric_hit": 0.0,
+          "unit_hit": 1.0,
+          "keyword_hit": 1.0,
+          "details": {
+            "nums": [],
+            "units": [
+              "kg",
+              "kwh"
+            ],
+            "keywords": [
+              "탄소",
+              "소비현황은",
+              "현황은",
+              "단위로",
+              "표시됩니다"
+            ]
+          }
+        },
+        "domain_specific": {
+          "total_score": 1.0,
+          "numeric_score": 0.0,
+          "unit_score": 0.0,
+          "keyword_score": 1.0,
+          "details": {
+            "gold_nums": [],
+            "gold_units": [],
+            "gold_keywords": [
+              "kwh",
+              "kg",
+              "탄소",
+              "소비현황은",
+              "현황은"
+            ],
+            "pred_nums": [
+              "2",
+              "1"
+            ],
+            "pred_units": []
+          }
+        },
+        "rag_metrics": {
+          "faithfulness": {
+            "score": 0.0,
+            "supported_claims": 0,
+            "total_claims": 4,
+            "support_ratio": 0.0
+          },
+          "answer_correctness": {
+            "score": 0.8844,
+            "semantic_similarity": 0.7778,
+            "factual_correctness": 0.9556,
+            "details": {
+              "num_match_ratio": 1.0,
+              "unit_match_ratio": 1.0,
+              "truth_nums": [],
+              "answer_nums": [
+                "2",
+                "1"
+              ]
+            }
+          },
+          "context_precision": {
+            "score": 0.0,
+            "relevant_contexts": 0,
+            "total_contexts": 5,
+            "precision": 0.0
+          },
+          "overall_score": 0.3538
+        },
+        "academic_metrics": {
+          "exact_match": 0.0,
+          "token_f1": {
+            "precision": 0.1273,
+            "recall": 0.7778,
+            "f1": 0.2187
+          },
+          "rouge_l": {
+            "precision": 0.1091,
+            "recall": 0.6667,
+            "f1": 0.1875
+          },
+          "bleu_1": 0.1273,
+          "bleu_2": 0.0556
+        },
+        "summary": {
+          "basic_v5_score": 1.0,
+          "domain_total_score": 1.0,
+          "numeric_accuracy": 0.0,
+          "unit_accuracy": 0.0,
+          "keyword_accuracy": 1.0,
+          "token_f1": 0.2187,
+          "rouge_l": 0.1875,
+          "bleu_2": 0.0556,
+          "exact_match": 0.0,
+          "faithfulness": 0.0,
+          "answer_correctness": 0.8844,
+          "context_precision": 0.0,
+          "rag_overall": 0.3538
+        }
+      },
+      "pipeline_metrics": {
+        "vector_time_ms": 32,
+        "bm25_time_ms": 116,
+        "vector_results": 50,
+        "bm25_results": 50,
+        "merged_results": 71,
+        "pre_filter_in": 71,
+        "pre_filter_out": 60,
+        "filter_in": 11,
+        "filter_out": 0,
+        "filter_pass_rate": 1.0,
+        "hard_blocked": 0,
+        "overlap_ratio": 0.43333333333333335,
+        "key_token_coverage": 0.5,
+        "generation_time_ms": 6064,
+        "rerank_time_ms": 0,
+        "total_time_ms": 6628,
+        "num_contexts_used": 5,
+        "question_type": "numeric",
+        "config_hash": "f49a272e8520"
+      }
+    },
+    {
+      "id": 21,
+      "question": "EMS의 송수 펌프 세부 현황에서 '자동 모드'와 '부분 모드'의 차이점은 무엇인가요?",
+      "gold_answer": "자동 모드는 AI 알고리즘이 분석한 최적 펌프제어 운전으로 가동하며, 부분 모드는 AI 최적 운영 결과 변경 시 사용자 확인 후 계속 가동할지를 묻고 동작합니다.",
+      "prediction": "문서에서 관련 정보를 찾을 수 없습니다.",
+      "keywords": [
+        "자동 모드 (AI 알고리즘)",
+        "부분 모드 (사용자 확인 후 동작)"
+      ],
+      "confidence": 0.6632457334573294,
+      "num_sources": 2,
+      "time_ms": 3560,
+      "evaluation": {
+        "basic_score": {
+          "score": 0.0,
+          "type": "weighted",
+          "numeric_hit": 0.0,
+          "unit_hit": 0.0,
+          "keyword_hit": 0.0,
+          "details": {
+            "nums": [],
+            "units": [
+              "ai"
+            ],
+            "keywords": [
+              "가동하며",
+              "변경",
+              "확인",
+              "동작합니다",
+              "사용자"
+            ]
+          }
+        },
+        "domain_specific": {
+          "total_score": 0.0,
+          "numeric_score": 0.0,
+          "unit_score": 0.0,
+          "keyword_score": 0.0,
+          "details": {
+            "gold_nums": [],
+            "gold_units": [],
+            "gold_keywords": [
+              "ai",
+              "동작합니다",
+              "사용자",
+              "최적",
+              "펌프제어"
+            ],
+            "pred_nums": [],
+            "pred_units": []
+          }
+        },
+        "rag_metrics": {
+          "faithfulness": {
+            "score": 0.0,
+            "supported_claims": 0,
+            "total_claims": 1,
+            "support_ratio": 0.0
+          },
+          "answer_correctness": {
+            "score": 0.48,
+            "semantic_similarity": 0.0,
+            "factual_correctness": 0.8,
+            "details": {
+              "num_match_ratio": 1.0,
+              "unit_match_ratio": 1.0,
+              "truth_nums": [],
+              "answer_nums": []
+            }
+          },
+          "context_precision": {
+            "score": 0.0,
+            "relevant_contexts": 0,
+            "total_contexts": 2,
+            "precision": 0.0
+          },
+          "overall_score": 0.192
+        },
+        "academic_metrics": {
+          "exact_match": 0.0,
+          "token_f1": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0
+          },
+          "rouge_l": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0
+          },
+          "bleu_1": 0.0,
+          "bleu_2": 0.0
+        },
+        "summary": {
+          "basic_v5_score": 0.0,
+          "domain_total_score": 0.0,
+          "numeric_accuracy": 0.0,
+          "unit_accuracy": 0.0,
+          "keyword_accuracy": 0.0,
+          "token_f1": 0.0,
+          "rouge_l": 0.0,
+          "bleu_2": 0.0,
+          "exact_match": 0.0,
+          "faithfulness": 0.0,
+          "answer_correctness": 0.48,
+          "context_precision": 0.0,
+          "rag_overall": 0.192
+        }
+      },
+      "pipeline_metrics": {
+        "vector_time_ms": 35,
+        "bm25_time_ms": 117,
+        "vector_results": 50,
+        "bm25_results": 50,
+        "merged_results": 74,
+        "pre_filter_in": 74,
+        "pre_filter_out": 59,
+        "filter_in": 15,
+        "filter_out": 0,
+        "filter_pass_rate": 1.0,
+        "hard_blocked": 0,
+        "overlap_ratio": 0.2878787878787879,
+        "key_token_coverage": 0.6,
+        "generation_time_ms": 2983,
+        "rerank_time_ms": 0,
+        "total_time_ms": 3560,
+        "num_contexts_used": 2,
+        "question_type": "numeric",
+        "config_hash": "f49a272e8520"
+      }
+    },
+    {
+      "id": 22,
+      "question": "PMS 대시보드에서 펌프 모터의 자율 진단 기능은 어떤 정보를 표시하나요?",
+      "gold_answer": "펌프의 세부 진동 값과 온도를 표시합니다.",
+      "prediction": "PMS 대시보드에서 펌프 모터의 자율 진단 기능은 다음 정보를 표시합니다 1. 펌프 동작 여부 - 빨간색 동작 중, 파란색 동작 안함. 2. 펌프모터 임계값 및 펌프 부하 이 값이 표시됩니다. 3. 반부하 모터 부하 이 값이 표시됩니다. 4. 시간별 펌프 및 모터의 부하반부하 값 그래프가 표시됩니다.",
+      "keywords": [
+        "세부 진동 값",
+        "온도"
+      ],
+      "confidence": 0.6864649242259151,
+      "num_sources": 8,
+      "time_ms": 5521,
+      "evaluation": {
+        "basic_score": {
+          "score": 1.0,
+          "type": "weighted",
+          "numeric_hit": 0.0,
+          "unit_hit": 0.0,
+          "keyword_hit": 1.0,
+          "details": {
+            "nums": [],
+            "units": [],
+            "keywords": [
+              "세부",
+              "펌프의",
+              "진동",
+              "표시합니다",
+              "값과"
+            ]
+          }
+        },
+        "domain_specific": {
+          "total_score": 1.0,
+          "numeric_score": 0.0,
+          "unit_score": 0.0,
+          "keyword_score": 1.0,
+          "details": {
+            "gold_nums": [],
+            "gold_units": [],
+            "gold_keywords": [
+              "세부",
+              "펌프의",
+              "진동",
+              "표시합니다",
+              "값과"
+            ],
+            "pred_nums": [
+              "2",
+              "4",
+              "3",
+              "1"
+            ],
+            "pred_units": []
+          }
+        },
+        "rag_metrics": {
+          "faithfulness": {
+            "score": 0.0,
+            "supported_claims": 0,
+            "total_claims": 5,
+            "support_ratio": 0.0
+          },
+          "answer_correctness": {
+            "score": 0.5667,
+            "semantic_similarity": 0.1667,
+            "factual_correctness": 0.8333,
+            "details": {
+              "num_match_ratio": 1.0,
+              "unit_match_ratio": 1.0,
+              "truth_nums": [],
+              "answer_nums": [
+                "2",
+                "4",
+                "3",
+                "1"
+              ]
+            }
+          },
+          "context_precision": {
+            "score": 0.125,
+            "relevant_contexts": 1,
+            "total_contexts": 8,
+            "precision": 0.125
+          },
+          "overall_score": 0.2517
+        },
+        "academic_metrics": {
+          "exact_match": 0.0,
+          "token_f1": {
+            "precision": 0.0222,
+            "recall": 0.1667,
+            "f1": 0.0392
+          },
+          "rouge_l": {
+            "precision": 0.0222,
+            "recall": 0.1667,
+            "f1": 0.0392
+          },
+          "bleu_1": 0.0222,
+          "bleu_2": 0.0
+        },
+        "summary": {
+          "basic_v5_score": 1.0,
+          "domain_total_score": 1.0,
+          "numeric_accuracy": 0.0,
+          "unit_accuracy": 0.0,
+          "keyword_accuracy": 1.0,
+          "token_f1": 0.0392,
+          "rouge_l": 0.0392,
+          "bleu_2": 0.0,
+          "exact_match": 0.0,
+          "faithfulness": 0.0,
+          "answer_correctness": 0.5667,
+          "context_precision": 0.125,
+          "rag_overall": 0.2517
+        }
+      },
+      "pipeline_metrics": {
+        "vector_time_ms": 32,
+        "bm25_time_ms": 112,
+        "vector_results": 50,
+        "bm25_results": 50,
+        "merged_results": 78,
+        "pre_filter_in": 78,
+        "pre_filter_out": 60,
+        "filter_in": 18,
+        "filter_out": 0,
+        "filter_pass_rate": 1.0,
+        "hard_blocked": 0,
+        "overlap_ratio": 0.47368421052631576,
+        "key_token_coverage": 0.6,
+        "generation_time_ms": 4878,
+        "rerank_time_ms": 0,
+        "total_time_ms": 5521,
+        "num_contexts_used": 8,
+        "question_type": "numeric",
+        "config_hash": "f49a272e8520"
+      }
+    },
+    {
+      "id": 23,
+      "question": "PMS 송수 펌프 모터 상세 정보 화면에서 선택한 펌프별로 확인할 수 있는 펌프 및 모터의 결함 정보는 무엇인가요?",
+      "gold_answer": "펌프의 부하/반부하, 총 진동량, 베어링 결함, 임펠러 결함, 캐비테이션 발생과 모터의 회전자 결함, 권선 온도, 축 정렬 불량, 질량 불평형, 베어링 온도 등을 확인할 수 있습니다.",
+      "prediction": "PMS 송수 펌프 모터 상세 정보 화면에서 선택한 펌프별로 확인할 수 있는 결함 정보는 다음과 같습니다 1. 송수 펌프 부하반부하 총 진동량 2. 베어링 결함 3. 임펠러 결함 4. 캐비테이션 발생 이 정보들은 선택한 펌프별로 확인할 수 있으며, 각 항목에 대한 상세 정보는 다음과 같습니다 1-1. 선택한 펌프별 모터 부하반부하 총 진동량 베어링 결함, 회전자 결함 2-1. 선택한 펌프별 모터 부하반부하 총 진동량 베어링 결함, 회전자 결함 3-1. 선택한 펌프별 모터 부하반부하 총 진동량 베어링 결함, 회전자 결함",
+      "keywords": [
+        "펌프 부하/반부하",
+        "총 진동량",
+        "베어링 결함",
+        "임펠러 결함",
+        "캐비테이션 발생",
+        "회전자 결함",
+        "권선 온도",
+        "축 정렬 불량",
+        "질량 불평형",
+        "베어링 온도"
+      ],
+      "confidence": 0.7920060386976364,
+      "num_sources": 6,
+      "time_ms": 7354,
+      "evaluation": {
+        "basic_score": {
+          "score": 0.4348,
+          "type": "weighted",
+          "numeric_hit": 0.0,
+          "unit_hit": 0.0,
+          "keyword_hit": 1.0,
+          "details": {
+            "nums": [],
+            "units": [
+              "/"
+            ],
+            "keywords": [
+              "임펠러",
+              "정렬",
+              "펌프의",
+              "회전자",
+              "캐비테이션"
+            ]
+          }
+        },
+        "domain_specific": {
+          "total_score": 1.0,
+          "numeric_score": 0.0,
+          "unit_score": 0.0,
+          "keyword_score": 1.0,
+          "details": {
+            "gold_nums": [],
+            "gold_units": [],
+            "gold_keywords": [
+              "임펠러",
+              "정렬",
+              "펌프의",
+              "회전자",
+              "캐비테이션"
+            ],
+            "pred_nums": [
+              "2",
+              "4",
+              "3",
+              "1"
+            ],
+            "pred_units": []
+          }
+        },
+        "rag_metrics": {
+          "faithfulness": {
+            "score": 0.6667,
+            "supported_claims": 4,
+            "total_claims": 6,
+            "support_ratio": 0.6667
+          },
+          "answer_correctness": {
+            "score": 0.662,
+            "semantic_similarity": 0.35,
+            "factual_correctness": 0.87,
+            "details": {
+              "num_match_ratio": 1.0,
+              "unit_match_ratio": 1.0,
+              "truth_nums": [],
+              "answer_nums": [
+                "2",
+                "4",
+                "3",
+                "1"
+              ]
+            }
+          },
+          "context_precision": {
+            "score": 0.1667,
+            "relevant_contexts": 1,
+            "total_contexts": 6,
+            "precision": 0.1667
+          },
+          "overall_score": 0.5648
+        },
+        "academic_metrics": {
+          "exact_match": 0.0,
+          "token_f1": {
+            "precision": 0.1481,
+            "recall": 0.4444,
+            "f1": 0.2222
+          },
+          "rouge_l": {
+            "precision": 0.1235,
+            "recall": 0.3704,
+            "f1": 0.1852
+          },
+          "bleu_1": 0.1481,
+          "bleu_2": 0.075
+        },
+        "summary": {
+          "basic_v5_score": 0.4348,
+          "domain_total_score": 1.0,
+          "numeric_accuracy": 0.0,
+          "unit_accuracy": 0.0,
+          "keyword_accuracy": 1.0,
+          "token_f1": 0.2222,
+          "rouge_l": 0.1852,
+          "bleu_2": 0.075,
+          "exact_match": 0.0,
+          "faithfulness": 0.6667,
+          "answer_correctness": 0.662,
+          "context_precision": 0.1667,
+          "rag_overall": 0.5648
+        }
+      },
+      "pipeline_metrics": {
+        "vector_time_ms": 40,
+        "bm25_time_ms": 130,
+        "vector_results": 50,
+        "bm25_results": 50,
+        "merged_results": 77,
+        "pre_filter_in": 77,
+        "pre_filter_out": 46,
+        "filter_in": 31,
+        "filter_out": 0,
+        "filter_pass_rate": 1.0,
+        "hard_blocked": 0,
+        "overlap_ratio": 0.4689265536723164,
+        "key_token_coverage": 0.6,
+        "generation_time_ms": 6562,
+        "rerank_time_ms": 0,
+        "total_time_ms": 7354,
+        "num_contexts_used": 6,
+        "question_type": "numeric",
+        "config_hash": "f49a272e8520"
+      }
+    },
+    {
+      "id": 24,
+      "question": "iRDC(iWater Real-time Data Center) 프로그램의 시스템 요구사항 중 최소 OS와 권장 OS는 무엇인가요?",
+      "gold_answer": "최소 OS는 Windows 7·32bit 또는 Windows Server 2008 Std 32bit 이상이며, 권장 OS는 Windows 10·64bit 또는 Windows Server 2016 Std 64bit 이상입니다.",
+      "prediction": "iRDC(iWater Real-time Data Center) 프로그램의 시스템 요구사항 중 최소 OS는 Windows 732bit 또는 Windows Server 2008 Std 32bit 이상, 권장 OS는 Windows 1064bit 또는 Windows Server 2016 Std 64bit 이상입니다.",
+      "keywords": [
+        "Windows 7·32bit",
+        "Windows Server 2008 Std 32bit",
+        "Windows 10·64bit",
+        "Windows Server 2016 Std 64bit"
+      ],
+      "confidence": 0.829165191846998,
+      "num_sources": 3,
+      "time_ms": 4888,
+      "evaluation": {
+        "basic_score": {
+          "score": 1.0,
+          "type": "weighted",
+          "numeric_hit": 1.0,
+          "unit_hit": 1.0,
+          "keyword_hit": 1.0,
+          "details": {
+            "nums": [
+              "64",
+              "32",
+              "2016",
+              "10",
+              "2008",
+              "7"
+            ],
+            "units": [
+              "bit",
+              "os",
+              "server",
+              "std",
+              "windows"
+            ],
+            "keywords": [
+              "이상이며",
+              "32bit",
+              "권장",
+              "최소",
+              "이상입니다"
+            ]
+          }
+        },
+        "domain_specific": {
+          "total_score": 1.0,
+          "numeric_score": 1.0,
+          "unit_score": 0.0,
+          "keyword_score": 1.0,
+          "details": {
+            "gold_nums": [
+              "64",
+              "32",
+              "2016",
+              "10",
+              "2008",
+              "7"
+            ],
+            "gold_units": [],
+            "gold_keywords": [
+              "이상이며",
+              "32bit",
+              "권장",
+              "server",
+              "최소"
+            ],
+            "pred_nums": [
+              "732",
+              "2016",
+              "32",
+              "1064",
+              "2008",
+              "64"
+            ],
+            "pred_units": []
+          }
+        },
+        "rag_metrics": {
+          "faithfulness": {
+            "score": 1.0,
+            "supported_claims": 1,
+            "total_claims": 1,
+            "support_ratio": 1.0
+          },
+          "answer_correctness": {
+            "score": 0.8257,
+            "semantic_similarity": 0.8571,
+            "factual_correctness": 0.8048,
+            "details": {
+              "num_match_ratio": 0.6667,
+              "unit_match_ratio": 1.0,
+              "truth_nums": [
+                "64",
+                "32",
+                "2016",
+                "10",
+                "2008",
+                "7"
+              ],
+              "answer_nums": [
+                "732",
+                "2016",
+                "32",
+                "1064",
+                "2008",
+                "64"
+              ]
+            }
+          },
+          "context_precision": {
+            "score": 0.3333,
+            "relevant_contexts": 1,
+            "total_contexts": 3,
+            "precision": 0.3333
+          },
+          "overall_score": 0.7969
+        },
+        "academic_metrics": {
+          "exact_match": 0.0,
+          "token_f1": {
+            "precision": 0.5938,
+            "recall": 0.7917,
+            "f1": 0.6786
+          },
+          "rouge_l": {
+            "precision": 0.5938,
+            "recall": 0.7917,
+            "f1": 0.6786
+          },
+          "bleu_1": 0.5938,
+          "bleu_2": 0.4839
+        },
+        "summary": {
+          "basic_v5_score": 1.0,
+          "domain_total_score": 1.0,
+          "numeric_accuracy": 1.0,
+          "unit_accuracy": 0.0,
+          "keyword_accuracy": 1.0,
+          "token_f1": 0.6786,
+          "rouge_l": 0.6786,
+          "bleu_2": 0.4839,
+          "exact_match": 0.0,
+          "faithfulness": 1.0,
+          "answer_correctness": 0.8257,
+          "context_precision": 0.3333,
+          "rag_overall": 0.7969
+        }
+      },
+      "pipeline_metrics": {
+        "vector_time_ms": 38,
+        "bm25_time_ms": 127,
+        "vector_results": 50,
+        "bm25_results": 50,
+        "merged_results": 71,
+        "pre_filter_in": 71,
+        "pre_filter_out": 44,
+        "filter_in": 27,
+        "filter_out": 1,
+        "filter_pass_rate": 0.9629629629629629,
+        "hard_blocked": 0,
+        "overlap_ratio": 0.6536585365853659,
+        "key_token_coverage": 0.7692307692307693,
+        "generation_time_ms": 4060,
+        "rerank_time_ms": 1,
+        "total_time_ms": 4888,
+        "num_contexts_used": 3,
+        "question_type": "numeric",
+        "config_hash": "f49a272e8520"
+      }
+    },
+    {
+      "id": 25,
+      "question": "iRDC 프로그램의 이중화 구성은 어떤 구조로 이루어져 있나요?",
+      "gold_answer": "iWater SCADA 시스템의 이중화 구성을 기반으로 Active-Standby 구조로 독립적으로 구성됩니다.",
+      "prediction": "iRDC 프로그램의 이중화 구성은 Active-Standby 구조로 이루어져 있습니다. 이 중에서, Active 상태의 프로그램만 시각화 연동 제어 신호를 에 전송합니다. Active-Standby 구조는 두 개의 iRDC 프로그램이 존재하며, 하나가 항상 활성화된 (Active) 상태이고 다른 하나는 비활성화된 (StandBy) 상태입니다. Active-Standby 구조에서는 Active 상태의 프로그램만 시각화 연동 제어 신호를 SCADA로 전송합니다. 이중화 대상 설정 항목에는 주소, 포트 번호, 프로그램 역할, 이중화 상태, 제어신호 전송 기능, 이중화 시작 기간 등이 포함되어 있습니다. Active-Standby 구조는 시스템의 이중화 구성에 기반하여 독립적으로 구축됩니다.",
+      "keywords": [
+        "Active-Standby 구조",
+        "iWater SCADA 시스템 이중화"
+      ],
+      "confidence": 0.6592743517665267,
+      "num_sources": 5,
+      "time_ms": 7097,
+      "evaluation": {
+        "basic_score": {
+          "score": 1.0,
+          "type": "weighted",
+          "numeric_hit": 0.0,
+          "unit_hit": 1.0,
+          "keyword_hit": 1.0,
+          "details": {
+            "nums": [],
+            "units": [
+              "standby",
+              "iwater",
+              "active",
+              "scada"
+            ],
+            "keywords": [
+              "구성을",
+              "시스템의",
+              "이중화",
+              "독립적으로",
+              "active-standby"
+            ]
+          }
+        },
+        "domain_specific": {
+          "total_score": 1.0,
+          "numeric_score": 0.0,
+          "unit_score": 0.0,
+          "keyword_score": 1.0,
+          "details": {
+            "gold_nums": [],
+            "gold_units": [],
+            "gold_keywords": [
+              "구성을",
+              "시스템의",
+              "scada",
+              "이중화",
+              "독립적으로"
+            ],
+            "pred_nums": [],
+            "pred_units": []
+          }
+        },
+        "rag_metrics": {
+          "faithfulness": {
+            "score": 0.5,
+            "supported_claims": 3,
+            "total_claims": 6,
+            "support_ratio": 0.5
+          },
+          "answer_correctness": {
+            "score": 0.7636,
+            "semantic_similarity": 0.5455,
+            "factual_correctness": 0.9091,
+            "details": {
+              "num_match_ratio": 1.0,
+              "unit_match_ratio": 1.0,
+              "truth_nums": [],
+              "answer_nums": []
+            }
+          },
+          "context_precision": {
+            "score": 0.2,
+            "relevant_contexts": 1,
+            "total_contexts": 5,
+            "precision": 0.2
+          },
+          "overall_score": 0.5454
+        },
+        "academic_metrics": {
+          "exact_match": 0.0,
+          "token_f1": {
+            "precision": 0.0759,
+            "recall": 0.5455,
+            "f1": 0.1333
+          },
+          "rouge_l": {
+            "precision": 0.0633,
+            "recall": 0.4545,
+            "f1": 0.1111
+          },
+          "bleu_1": 0.0759,
+          "bleu_2": 0.0385
+        },
+        "summary": {
+          "basic_v5_score": 1.0,
+          "domain_total_score": 1.0,
+          "numeric_accuracy": 0.0,
+          "unit_accuracy": 0.0,
+          "keyword_accuracy": 1.0,
+          "token_f1": 0.1333,
+          "rouge_l": 0.1111,
+          "bleu_2": 0.0385,
+          "exact_match": 0.0,
+          "faithfulness": 0.5,
+          "answer_correctness": 0.7636,
+          "context_precision": 0.2,
+          "rag_overall": 0.5454
+        }
+      },
+      "pipeline_metrics": {
+        "vector_time_ms": 64,
+        "bm25_time_ms": 125,
+        "vector_results": 50,
+        "bm25_results": 50,
+        "merged_results": 77,
+        "pre_filter_in": 77,
+        "pre_filter_out": 57,
+        "filter_in": 20,
+        "filter_out": 0,
+        "filter_pass_rate": 1.0,
+        "hard_blocked": 0,
+        "overlap_ratio": 0.5,
+        "key_token_coverage": 0.5,
+        "generation_time_ms": 6178,
+        "rerank_time_ms": 0,
+        "total_time_ms": 7097,
+        "num_contexts_used": 5,
+        "question_type": "general",
+        "config_hash": "f49a272e8520"
+      }
+    },
+    {
+      "id": 26,
+      "question": "AI 플랫폼 서버에서 Docker 컨테이너의 서비스 상태를 확인하는 명령어는 무엇인가요?",
+      "gold_answer": "Docker 컨테이너의 서비스 상태 확인 명령어는 `docker ps -a`이며, 성공적으로 실행 중이면 \"Up\", 실패 시 \"Exited\" 등으로 표시됩니다.",
+      "prediction": "AI 플랫폼 서버에서 Docker 컨테이너의 서비스 상태를 확인하는 명령어는 다음과 같습니다 1. Kafka 컨테이너의 상태 확인 - AI 1 docker ps --filter nameDGSWGC_AOS_KAFKA_001 - AI 2 docker ps --filter nameDGSWGC_AOS_KAFKA_001 2. AOS_API 컨테이너의 상태 확인 - AI 1 docker ps --filter nameDGSWGC_AOS_API_001 - AI 2 docker ps --filter nameDGSWGC_AOS_API_001 3.",
+      "keywords": [
+        "`docker ps -a`",
+        "Up",
+        "Exited"
+      ],
+      "confidence": 0.6398797744144904,
+      "num_sources": 8,
+      "time_ms": 11010,
+      "evaluation": {
+        "basic_score": {
+          "score": 1.0,
+          "type": "weighted",
+          "numeric_hit": 0.0,
+          "unit_hit": 1.0,
+          "keyword_hit": 1.0,
+          "details": {
+            "nums": [],
+            "units": [
+              "docker",
+              "ps",
+              "up",
+              "a",
+              "exited"
+            ],
+            "keywords": [
+              "컨테이너의",
+              "확인",
+              "성공적으로",
+              "-a",
+              "등으로"
+            ]
+          }
+        },
+        "domain_specific": {
+          "total_score": 1.0,
+          "numeric_score": 0.0,
+          "unit_score": 0.0,
+          "keyword_score": 1.0,
+          "details": {
+            "gold_nums": [],
+            "gold_units": [],
+            "gold_keywords": [
+              "docker",
+              "컨테이너의",
+              "확인",
+              "성공적으로",
+              "ps"
+            ],
+            "pred_nums": [
+              "2",
+              "001",
+              "3",
+              "1"
+            ],
+            "pred_units": []
+          }
+        },
+        "rag_metrics": {
+          "faithfulness": {
+            "score": 0.6667,
+            "supported_claims": 2,
+            "total_claims": 3,
+            "support_ratio": 0.6667
+          },
+          "answer_correctness": {
+            "score": 0.7075,
+            "semantic_similarity": 0.4375,
+            "factual_correctness": 0.8875,
+            "details": {
+              "num_match_ratio": 1.0,
+              "unit_match_ratio": 1.0,
+              "truth_nums": [],
+              "answer_nums": [
+                "2",
+                "001",
+                "3",
+                "1"
+              ]
+            }
+          },
+          "context_precision": {
+            "score": 0.0,
+            "relevant_contexts": 0,
+            "total_contexts": 8,
+            "precision": 0.0
+          },
+          "overall_score": 0.5497
+        },
+        "academic_metrics": {
+          "exact_match": 0.0,
+          "token_f1": {
+            "precision": 0.1739,
+            "recall": 0.4211,
+            "f1": 0.2462
+          },
+          "rouge_l": {
+            "precision": 0.1522,
+            "recall": 0.3684,
+            "f1": 0.2154
+          },
+          "bleu_1": 0.1739,
+          "bleu_2": 0.0889
+        },
+        "summary": {
+          "basic_v5_score": 1.0,
+          "domain_total_score": 1.0,
+          "numeric_accuracy": 0.0,
+          "unit_accuracy": 0.0,
+          "keyword_accuracy": 1.0,
+          "token_f1": 0.2462,
+          "rouge_l": 0.2154,
+          "bleu_2": 0.0889,
+          "exact_match": 0.0,
+          "faithfulness": 0.6667,
+          "answer_correctness": 0.7075,
+          "context_precision": 0.0,
+          "rag_overall": 0.5497
+        }
+      },
+      "pipeline_metrics": {
+        "vector_time_ms": 34,
+        "bm25_time_ms": 133,
+        "vector_results": 50,
+        "bm25_results": 50,
+        "merged_results": 63,
+        "pre_filter_in": 63,
+        "pre_filter_out": 13,
+        "filter_in": 50,
+        "filter_out": 2,
+        "filter_pass_rate": 0.96,
+        "hard_blocked": 0,
+        "overlap_ratio": 0.34057971014492755,
+        "key_token_coverage": 0.4,
+        "generation_time_ms": 10335,
+        "rerank_time_ms": 0,
+        "total_time_ms": 11010,
+        "num_contexts_used": 8,
+        "question_type": "numeric",
+        "config_hash": "f49a272e8520"
+      }
+    },
+    {
+      "id": 27,
+      "question": "AI 플랫폼 서버에서 MariaDB 재시작 후 갈레라 클러스터 동기화 장애 발생 시 재기동 순서는 어떻게 되나요?",
+      "gold_answer": "반드시 AI 플랫폼 서버 #2 MariaDB부터, 그 다음 AI 플랫폼 서버 #1 MariaDB 순서로 재기동해야 합니다.",
+      "prediction": "AI 플랫폼 서버에서 MariaDB 재시작 후 갈레라 클러스터 동기화 장애 발생 시, 다음과 같은 순서로 재기동을 수행해야 합니다 1. ① 플랫폼 서버에서 해당 파일들이 없으면 (skip) 2. ② 플랫폼 서버에서 AI 1 MariaDB 시작 3. ③ 클러스터링 완료 확인 후 접속하여 MariaDB(DB sql) 실행 4. ④ 실행 결과의 wsrep_cluster_size가 2면 클러스터링 완료 5. ⑤ 실행 결과의 wsrep_local_state_comment가 DonerDesynced, Synced면 동기화 중 이후, 다음과 같은 단계를 수행합니다 6. 플랫폼 서버에서 AI 1 MariaDB 서비스 중지 (docker stop DGSWGC_AOS_MARIADB1_001) 7. 플랫폼 서버에서 AI 1 MariaDB 시작 (docker start DGSWGC_AOS_MARIADB1_001)",
+      "keywords": [
+        "AI 플랫폼 서버 #2 MariaDB",
+        "AI 플랫폼 서버 #1 MariaDB"
+      ],
+      "confidence": 0.8916666666666666,
+      "num_sources": 1,
+      "time_ms": 7350,
+      "evaluation": {
+        "basic_score": {
+          "score": 1.0,
+          "type": "weighted",
+          "numeric_hit": 1.0,
+          "unit_hit": 1.0,
+          "keyword_hit": 1.0,
+          "details": {
+            "nums": [
+              "2",
+              "1"
+            ],
+            "units": [
+              "ai",
+              "mariadb"
+            ],
+            "keywords": [
+              "mariadb부터",
+              "순서로",
+              "서버",
+              "합니다",
+              "다음"
+            ]
+          }
+        },
+        "domain_specific": {
+          "total_score": 1.0,
+          "numeric_score": 1.0,
+          "unit_score": 0.0,
+          "keyword_score": 1.0,
+          "details": {
+            "gold_nums": [
+              "2",
+              "1"
+            ],
+            "gold_units": [],
+            "gold_keywords": [
+              "ai",
+              "mariadb부터",
+              "순서로",
+              "서버",
+              "합니다"
+            ],
+            "pred_nums": [
+              "2",
+              "4",
+              "5",
+              "6",
+              "7",
+              "001",
+              "3",
+              "1"
+            ],
+            "pred_units": []
+          }
+        },
+        "rag_metrics": {
+          "faithfulness": {
+            "score": 0.5,
+            "supported_claims": 4,
+            "total_claims": 8,
+            "support_ratio": 0.5
+          },
+          "answer_correctness": {
+            "score": 0.74,
+            "semantic_similarity": 0.5,
+            "factual_correctness": 0.9,
+            "details": {
+              "num_match_ratio": 1.0,
+              "unit_match_ratio": 1.0,
+              "truth_nums": [
+                "2",
+                "1"
+              ],
+              "answer_nums": [
+                "2",
+                "4",
+                "5",
+                "6",
+                "7",
+                "001",
+                "3",
+                "1"
+              ]
+            }
+          },
+          "context_precision": {
+            "score": 1.0,
+            "relevant_contexts": 1,
+            "total_contexts": 1,
+            "precision": 1.0
+          },
+          "overall_score": 0.696
+        },
+        "academic_metrics": {
+          "exact_match": 0.0,
+          "token_f1": {
+            "precision": 0.1023,
+            "recall": 0.5625,
+            "f1": 0.1731
+          },
+          "rouge_l": {
+            "precision": 0.0795,
+            "recall": 0.4375,
+            "f1": 0.1346
+          },
+          "bleu_1": 0.1023,
+          "bleu_2": 0.023
+        },
+        "summary": {
+          "basic_v5_score": 1.0,
+          "domain_total_score": 1.0,
+          "numeric_accuracy": 1.0,
+          "unit_accuracy": 0.0,
+          "keyword_accuracy": 1.0,
+          "token_f1": 0.1731,
+          "rouge_l": 0.1346,
+          "bleu_2": 0.023,
+          "exact_match": 0.0,
+          "faithfulness": 0.5,
+          "answer_correctness": 0.74,
+          "context_precision": 1.0,
+          "rag_overall": 0.696
+        }
+      },
+      "pipeline_metrics": {
+        "vector_time_ms": 50,
+        "bm25_time_ms": 184,
+        "vector_results": 50,
+        "bm25_results": 50,
+        "merged_results": 68,
+        "pre_filter_in": 68,
+        "pre_filter_out": 22,
+        "filter_in": 46,
+        "filter_out": 1,
+        "filter_pass_rate": 0.9782608695652174,
+        "hard_blocked": 0,
+        "overlap_ratio": 0.6388888888888888,
+        "key_token_coverage": 0.7857142857142857,
+        "generation_time_ms": 6345,
+        "rerank_time_ms": 1,
+        "total_time_ms": 7350,
+        "num_contexts_used": 1,
+        "question_type": "numeric",
+        "config_hash": "f49a272e8520"
+      }
+    },
+    {
+      "id": 28,
+      "question": "탄소중립 모니터링 시스템의 주요 기능은 무엇인가요?",
+      "gold_answer": "정수장 센서의 실시간 에너지 데이터를 활용해 일일·월별·연간 단위로 탄소 배출량/절감량을 분석하고, 결과를 시각화해 제공합니다.",
+      "prediction": "탄소중립 모니터링 시스템의 주요 기능은 다음과 같습니다 1. 정수장 별 타이틀 표시를 통해 정수장별로 분리된 화면을 제공합니다. 2. 현재 시각을 실시간으로 표시하여 운영 상태를 즉시 확인할 수 있습니다. 3. 정수장과 사무실의 전일, 금일, 전월, 금월, 연간 누계 에너지 소비 데이터를 표시하여 에너지 사용량을 분석하고 관리합니다. 이 외에도 시스템은 다음과 같은 기능을 제공합니다 - 정수장에서 발생하는 탄소 배출량 절감량을 일월연 단위로 분석하고 결과를 시각화하여 사용자에게 제공합니다. - 에너지 소비와 탄소 배출 관리를 통해 운영 효율성을 향상시키고 비용을 절감할 수 있습니다. - 환경에 미치는 영향을 최소화하고 지속 가능한 환경 관리 실현을 도와줍니다.",
+      "keywords": [
+        "실시간 에너지 데이터",
+        "탄소 배출량/절감량 분석",
+        "결과 시각화"
+      ],
+      "confidence": 0.8246501826221588,
+      "num_sources": 4,
+      "time_ms": 8499,
+      "evaluation": {
+        "basic_score": {
+          "score": 0.4348,
+          "type": "weighted",
+          "numeric_hit": 0.0,
+          "unit_hit": 0.0,
+          "keyword_hit": 1.0,
+          "details": {
+            "nums": [],
+            "units": [
+              "/"
+            ],
+            "keywords": [
+              "정수장",
+              "일일",
+              "연간",
+              "분석하고",
+              "월별"
+            ]
+          }
+        },
+        "domain_specific": {
+          "total_score": 1.0,
+          "numeric_score": 0.0,
+          "unit_score": 0.0,
+          "keyword_score": 1.0,
+          "details": {
+            "gold_nums": [],
+            "gold_units": [],
+            "gold_keywords": [
+              "정수장",
+              "일일",
+              "연간",
+              "분석하고",
+              "월별"
+            ],
+            "pred_nums": [
+              "2",
+              "3",
+              "1"
+            ],
+            "pred_units": []
+          }
+        },
+        "rag_metrics": {
+          "faithfulness": {
+            "score": 0.2857,
+            "supported_claims": 2,
+            "total_claims": 7,
+            "support_ratio": 0.2857
+          },
+          "answer_correctness": {
+            "score": 0.8165,
+            "semantic_similarity": 0.6471,
+            "factual_correctness": 0.9294,
+            "details": {
+              "num_match_ratio": 1.0,
+              "unit_match_ratio": 1.0,
+              "truth_nums": [],
+              "answer_nums": [
+                "2",
+                "3",
+                "1"
+              ]
+            }
+          },
+          "context_precision": {
+            "score": 0.5,
+            "relevant_contexts": 2,
+            "total_contexts": 4,
+            "precision": 0.5
+          },
+          "overall_score": 0.5409
+        },
+        "academic_metrics": {
+          "exact_match": 0.0,
+          "token_f1": {
+            "precision": 0.1264,
+            "recall": 0.6471,
+            "f1": 0.2115
+          },
+          "rouge_l": {
+            "precision": 0.1034,
+            "recall": 0.5294,
+            "f1": 0.1731
+          },
+          "bleu_1": 0.1264,
+          "bleu_2": 0.0349
+        },
+        "summary": {
+          "basic_v5_score": 0.4348,
+          "domain_total_score": 1.0,
+          "numeric_accuracy": 0.0,
+          "unit_accuracy": 0.0,
+          "keyword_accuracy": 1.0,
+          "token_f1": 0.2115,
+          "rouge_l": 0.1731,
+          "bleu_2": 0.0349,
+          "exact_match": 0.0,
+          "faithfulness": 0.2857,
+          "answer_correctness": 0.8165,
+          "context_precision": 0.5,
+          "rag_overall": 0.5409
+        }
+      },
+      "pipeline_metrics": {
+        "vector_time_ms": 46,
+        "bm25_time_ms": 160,
+        "vector_results": 50,
+        "bm25_results": 50,
+        "merged_results": 84,
+        "pre_filter_in": 84,
+        "pre_filter_out": 49,
+        "filter_in": 35,
+        "filter_out": 0,
+        "filter_pass_rate": 1.0,
+        "hard_blocked": 0,
+        "overlap_ratio": 0.68,
+        "key_token_coverage": 0.6666666666666666,
+        "generation_time_ms": 7129,
+        "rerank_time_ms": 0,
+        "total_time_ms": 8499,
+        "num_contexts_used": 4,
+        "question_type": "definition",
+        "config_hash": "f49a272e8520"
+      }
+    },
+    {
+      "id": 29,
+      "question": "탄소중립 모니터링에서 '오늘 탄소저감량'과 '오늘 탄소배출량'은 각각 어떻게 계산되나요?",
+      "gold_answer": "오늘 탄소저감량은 전력 절감량에 전력 탄소 계수(0.4663)를 곱한 값, 오늘 탄소배출량은 전력 사용량에 전력 탄소 계수(0.4663)를 곱한 값으로 계산됩니다.",
+      "prediction": "오늘 탄소저감량은 전력 탄소 계수 20 kgCO2e를 곱한 값으로 계산됩니다. 반면, 오늘 탄소배출량은 전력 탄소 계수 2 kgCO2e을 곱한 값으로 계산됩니다.",
+      "keywords": [
+        "전력 절감량",
+        "전력 사용량",
+        "전력 탄소 계수 (0.4663)"
+      ],
+      "confidence": 0.5404626632896447,
+      "num_sources": 3,
+      "time_ms": 5089,
+      "evaluation": {
+        "basic_score": {
+          "score": 0.4,
+          "type": "weighted",
+          "numeric_hit": 0.0,
+          "unit_hit": 0.0,
+          "keyword_hit": 1.0,
+          "details": {
+            "nums": [
+              "0.4663"
+            ],
+            "units": [],
+            "keywords": [
+              "절감량에",
+              "4663",
+              "사용량에",
+              "계수",
+              "값으로"
+            ]
+          }
+        },
+        "domain_specific": {
+          "total_score": 0.4,
+          "numeric_score": 0.0,
+          "unit_score": 0.0,
+          "keyword_score": 1.0,
+          "details": {
+            "gold_nums": [
+              "0.4663"
+            ],
+            "gold_units": [],
+            "gold_keywords": [
+              "절감량에",
+              "4663",
+              "사용량에",
+              "계수",
+              "값으로"
+            ],
+            "pred_nums": [
+              "2",
+              "20"
+            ],
+            "pred_units": []
+          }
+        },
+        "rag_metrics": {
+          "faithfulness": {
+            "score": 0.5,
+            "supported_claims": 1,
+            "total_claims": 2,
+            "support_ratio": 0.5
+          },
+          "answer_correctness": {
+            "score": 0.57,
+            "semantic_similarity": 0.75,
+            "factual_correctness": 0.45,
+            "details": {
+              "num_match_ratio": 0.0,
+              "unit_match_ratio": 1.0,
+              "truth_nums": [
+                "0.4663"
+              ],
+              "answer_nums": [
+                "2",
+                "20"
+              ]
+            }
+          },
+          "context_precision": {
+            "score": 0.0,
+            "relevant_contexts": 0,
+            "total_contexts": 3,
+            "precision": 0.0
+          },
+          "overall_score": 0.428
+        },
+        "academic_metrics": {
+          "exact_match": 0.0,
+          "token_f1": {
+            "precision": 0.6667,
+            "recall": 0.56,
+            "f1": 0.6087
+          },
+          "rouge_l": {
+            "precision": 0.6667,
+            "recall": 0.56,
+            "f1": 0.6087
+          },
+          "bleu_1": 0.6667,
+          "bleu_2": 0.5
+        },
+        "summary": {
+          "basic_v5_score": 0.4,
+          "domain_total_score": 0.4,
+          "numeric_accuracy": 0.0,
+          "unit_accuracy": 0.0,
+          "keyword_accuracy": 1.0,
+          "token_f1": 0.6087,
+          "rouge_l": 0.6087,
+          "bleu_2": 0.5,
+          "exact_match": 0.0,
+          "faithfulness": 0.5,
+          "answer_correctness": 0.57,
+          "context_precision": 0.0,
+          "rag_overall": 0.428
+        }
+      },
+      "pipeline_metrics": {
+        "vector_time_ms": 52,
+        "bm25_time_ms": 133,
+        "vector_results": 50,
+        "bm25_results": 50,
+        "merged_results": 81,
+        "pre_filter_in": 81,
+        "pre_filter_out": 71,
+        "filter_in": 10,
+        "filter_out": 0,
+        "filter_pass_rate": 1.0,
+        "hard_blocked": 0,
+        "overlap_ratio": 0.3412698412698413,
+        "key_token_coverage": 0.5,
+        "generation_time_ms": 3961,
+        "rerank_time_ms": 0,
+        "total_time_ms": 5089,
+        "num_contexts_used": 3,
+        "question_type": "procedural",
+        "config_hash": "f49a272e8520"
+      }
+    },
+    {
+      "id": 30,
+      "question": "AI 플랫폼 화면에 'Nan'이 표시되는 증상의 원인과 해결 방법은 무엇인가요?",
+      "gold_answer": "'Nan' 표시는 SCADA에서 데이터를 읽어오지 못하거나 디스크 용량이 초과한 경우 발생합니다. 해결을 위해 SCADA 서버(SCADA, iRDC, Kafka)의 정상 동작을 점검하고, 정상이라면 AI 플랫폼 서버의 관련 서비스(SCADA, iRDC, Kafka)를 점검 및 조치해야 합니다.",
+      "prediction": "AI 플랫폼 화면에 Nan이 표시되는 증상의 원인과 해결 방법은 다음과 같습니다 증상 - 대시보드 또는 공정 운영 화면에 내용이 표출되지 않고 Nan만 표시되고 있습니다. 원인 1. SCADA에서 데이터를 읽어오지 못하고 있습니다. 2. 디스크 용량이 초과되어 데이터 수집이 제한됩니다. 해결 방법 1. 서버가 정상 동작하고 있는지 점검합니다 (SCADA, iRDC, Kafka). 2. 점검 대상 SCADA, iRDC, Kafka. 3. 점검 대상이 모두 정상이라면, SCADA, iRDC, Kafka를 재시작해야 합니다. 해결이 되지 않은 경우 - 용역사에 연락하여 점검 및 조치가 필요합니다.",
+      "keywords": [
+        "SCADA 데이터 읽어오지 못함",
+        "디스크 용량 초과",
+        "SCADA 서버 점검",
+        "AI 플랫폼 서버 점검"
+      ],
+      "confidence": 0.6998027476305085,
+      "num_sources": 3,
+      "time_ms": 7106,
+      "evaluation": {
+        "basic_score": {
+          "score": 1.0,
+          "type": "weighted",
+          "numeric_hit": 0.0,
+          "unit_hit": 1.0,
+          "keyword_hit": 1.0,
+          "details": {
+            "nums": [],
+            "units": [
+              "irdc",
+              "nan",
+              "ai",
+              "kafka",
+              "scada"
+            ],
+            "keywords": [
+              "용량이",
+              "조치해야",
+              "해결을",
+              "점검하고",
+              "못하거나"
+            ]
+          }
+        },
+        "domain_specific": {
+          "total_score": 1.0,
+          "numeric_score": 0.0,
+          "unit_score": 0.0,
+          "keyword_score": 1.0,
+          "details": {
+            "gold_nums": [],
+            "gold_units": [],
+            "gold_keywords": [
+              "ai",
+              "kafka",
+              "용량이",
+              "조치해야",
+              "해결을"
+            ],
+            "pred_nums": [
+              "2",
+              "3",
+              "1"
+            ],
+            "pred_units": []
+          }
+        },
+        "rag_metrics": {
+          "faithfulness": {
+            "score": 0.5714,
+            "supported_claims": 4,
+            "total_claims": 7,
+            "support_ratio": 0.5714
+          },
+          "answer_correctness": {
+            "score": 0.749,
+            "semantic_similarity": 0.5172,
+            "factual_correctness": 0.9034,
+            "details": {
+              "num_match_ratio": 1.0,
+              "unit_match_ratio": 1.0,
+              "truth_nums": [],
+              "answer_nums": [
+                "2",
+                "3",
+                "1"
+              ]
+            }
+          },
+          "context_precision": {
+            "score": 0.6667,
+            "relevant_contexts": 2,
+            "total_contexts": 3,
+            "precision": 0.6667
+          },
+          "overall_score": 0.6615
+        },
+        "academic_metrics": {
+          "exact_match": 0.0,
+          "token_f1": {
+            "precision": 0.2703,
+            "recall": 0.5556,
+            "f1": 0.3636
+          },
+          "rouge_l": {
+            "precision": 0.1892,
+            "recall": 0.3889,
+            "f1": 0.2545
+          },
+          "bleu_1": 0.2703,
+          "bleu_2": 0.1233
+        },
+        "summary": {
+          "basic_v5_score": 1.0,
+          "domain_total_score": 1.0,
+          "numeric_accuracy": 0.0,
+          "unit_accuracy": 0.0,
+          "keyword_accuracy": 1.0,
+          "token_f1": 0.3636,
+          "rouge_l": 0.2545,
+          "bleu_2": 0.1233,
+          "exact_match": 0.0,
+          "faithfulness": 0.5714,
+          "answer_correctness": 0.749,
+          "context_precision": 0.6667,
+          "rag_overall": 0.6615
+        }
+      },
+      "pipeline_metrics": {
+        "vector_time_ms": 45,
+        "bm25_time_ms": 135,
+        "vector_results": 50,
+        "bm25_results": 50,
+        "merged_results": 70,
+        "pre_filter_in": 70,
+        "pre_filter_out": 50,
+        "filter_in": 20,
+        "filter_out": 0,
+        "filter_pass_rate": 1.0,
+        "hard_blocked": 0,
+        "overlap_ratio": 0.3902439024390244,
+        "key_token_coverage": 0.6,
+        "generation_time_ms": 6379,
+        "rerank_time_ms": 0,
+        "total_time_ms": 7106,
+        "num_contexts_used": 3,
+        "question_type": "numeric",
+        "config_hash": "f49a272e8520"
+      }
+    }
+  ]
+}

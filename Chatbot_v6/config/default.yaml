@@ -42,7 +42,7 @@ domain:
   domain_dict_path: "data/domain_dictionary.json"
 
 # Model settings
-model_name: "llama3.1:8b-instruct-q4_K_M"
+model_name: "qwen2.5:3b-instruct-q4_K_M"
 embedding_model: "jhgan/ko-sroberta-multitask"
 vector_store_dir: "vector_store"
 

@@ -88,6 +88,11 @@ DEFAULT_CHUNK_OVERLAP: Final[int] = 200
 DEFAULT_WASTEWATER_CHUNK_SIZE: Final[int] = 900
 DEFAULT_WASTEWATER_OVERLAP_RATIO: Final[float] = 0.25
 DEFAULT_NUMERIC_CONTEXT_WINDOW: Final[int] = 3
+DEFAULT_ENABLE_NUMERIC_CHUNKING: Final[bool] = True
+DEFAULT_PRESERVE_TABLE_CONTEXT: Final[bool] = True
+DEFAULT_USE_PAGE_BASED_CHUNKING: Final[bool] = True
+DEFAULT_ENABLE_BOUNDARY_SNAP: Final[bool] = True
+DEFAULT_BOUNDARY_SNAP_MARGIN_RATIO: Final[float] = 0.10
 
 # Embedding
 DEFAULT_EMBEDDING_MODEL: Final[str] = "jhgan/ko-sroberta-multitask"
@@ -95,7 +100,7 @@ DEFAULT_EMBEDDING_BATCH_SIZE: Final[int] = 64  # 🚀 최적화 5: 배치 크기
 DEFAULT_EMBEDDING_DEVICE: Final[str] = "cuda"  # or "cpu"
 
 # LLM
-DEFAULT_LLM_MODEL: Final[str] = "llama3.1:8b-instruct-q4_K_M"
+DEFAULT_LLM_MODEL: Final[str] = "qwen2.5:3b-instruct-q4_K_M"
 DEFAULT_LLM_TEMPERATURE: Final[float] = 0.0
 DEFAULT_LLM_TOP_P: Final[float] = 0.9
 DEFAULT_LLM_TOP_K: Final[int] = 40

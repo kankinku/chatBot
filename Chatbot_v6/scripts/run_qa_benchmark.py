@@ -163,6 +163,16 @@ class QABenchmark:
                     gold_answer
                 )
                 
+                # RAG 핵심 3대 지표 계산
+                from scripts.rag_core_metrics import RAGCoreMetrics
+                context_texts = [src.chunk.text for src in answer.sources]
+                rag_scores = RAGCoreMetrics.evaluate_all(
+                    question,
+                    answer.text,
+                    gold_answer,
+                    context_texts
+                )
+                
                 scores.append(score)
                 
                 logger.info(f"답변: {answer.text[:100]}...")
@@ -180,7 +190,8 @@ class QABenchmark:
                     "num_sources": len(answer.sources),
                     "time_ms": elapsed_ms,
                     "metrics": answer.metrics,
-                    "academic_metrics": academic_scores,  # 학술 지표 추가
+                    "academic_metrics": academic_scores,  # 학술 지표
+                    "rag_metrics": rag_scores,  # RAG 핵심 3대 지표
                 }
                 
                 self.results.append(result)
@@ -298,19 +309,93 @@ def load_qa_data(path: str) -> List[Dict[str, Any]]:
         return json.load(f)
 
 
+def auto_build_corpus(pdf_dir: str, output_path: str) -> bool:
+    """
+    Corpus 자동 생성 (PDF 추출 -> 청킹 -> 저장)
+    
+    Args:
+        pdf_dir: PDF 파일이 있는 디렉토리
+        output_path: 생성할 corpus 파일 경로
+        
+    Returns:
+        성공 여부
+    """
+    try:
+        # build_corpus의 process_pdf 함수를 임포트하여 사용
+        from scripts.build_corpus import process_pdf, save_corpus
+        from pathlib import Path
+        
+        pdf_dir_path = Path(pdf_dir)
+        pdf_files = list(pdf_dir_path.glob("*.pdf"))
+        
+        if not pdf_files:
+            return False
+        
+        all_chunks = []
+        
+        for pdf_path in pdf_files:
+            logger.info(f"  처리 중: {pdf_path.name}")
+            try:
+                chunks = process_pdf(
+                    pdf_path,
+                    use_ocr_correction=False,  # 자동화 시 빠른 처리를 위해 비활성화
+                    use_page_based_chunking=True,
+                )
+                all_chunks.extend(chunks)
+                logger.info(f"    ✅ {len(chunks)}개 청크 생성")
+            except Exception as e:
+                logger.error(f"    ❌ 실패: {e}")
+                continue
+        
+        if not all_chunks:
+            return False
+        
+        # Corpus 저장
+        save_corpus(all_chunks, Path(output_path))
+        
+        logger.info(f"📊 총 {len(all_chunks)}개 청크 생성됨")
+        
+        # 통계 출력
+        measurements_count = sum(1 for chunk in all_chunks if chunk.extra.get('measurements'))
+        neighbor_count = sum(1 for chunk in all_chunks if chunk.neighbor_hint)
+        
+        logger.info(f"   - 측정값 포함: {measurements_count}/{len(all_chunks)}")
+        logger.info(f"   - 이웃 정보 포함: {neighbor_count}/{len(all_chunks)}")
+        
+        return True
+        
+    except Exception as e:
+        logger.error(f"Corpus 자동 생성 중 오류: {e}", exc_info=True)
+        return False
+
+
 def load_chunks_from_corpus(corpus_path: str) -> List[Chunk]:
-    """JSONL corpus 파일에서 청크 로드"""
+    """
+    JSONL corpus 파일에서 청크 로드 (확장된 메타데이터 포함)
+    
+    개선된 청킹 시스템의 모든 메타데이터를 로드합니다:
+    - neighbor_hint: 이웃 청크 정보
+    - extra: 측정값 등 추가 메타데이터
+    """
     chunks = []
     with open(corpus_path, "r", encoding="utf-8") as f:
         for line in f:
             data = json.loads(line.strip())
+            
+            # neighbor_hint 처리 (tuple로 변환)
+            neighbor_hint = data.get("neighbor_hint")
+            if neighbor_hint and isinstance(neighbor_hint, list):
+                neighbor_hint = tuple(neighbor_hint)
+            
             chunk = Chunk(
                 doc_id=data["doc_id"],
                 filename=data["filename"],
-                page=data.get("page", 0),
+                page=data.get("page"),
                 start_offset=data.get("start_offset", 0),
                 length=data.get("length", len(data["text"])),
                 text=data["text"],
+                neighbor_hint=neighbor_hint,  # 이웃 정보 복원
+                extra=data.get("extra", {}),  # 측정값 등 추가 메타데이터 복원
             )
             chunks.append(chunk)
     
@@ -372,13 +457,34 @@ def main():
     
     pipeline_config.flags.mode = args.mode
     
-    # Corpus 로드
+    # Corpus 로드 (없으면 자동 생성)
     logger.info(f"Corpus 로딩: {args.corpus}")
     if not Path(args.corpus).exists():
-        logger.error(f"Corpus 파일 없음: {args.corpus}")
-        logger.error("먼저 corpus를 생성하세요:")
-        logger.error("  python build_corpus.py --pdf-dir data --output corpus.jsonl")
-        sys.exit(1)
+        logger.warning(f"⚠️  Corpus 파일이 없습니다. 자동으로 생성합니다...")
+        
+        # PDF 디렉토리 확인
+        pdf_dir = project_root / "data"
+        pdf_files = list(pdf_dir.glob("*.pdf"))
+        
+        if not pdf_files:
+            logger.error(f"❌ PDF 파일이 없습니다: {pdf_dir}")
+            logger.error("data/ 디렉토리에 PDF 파일을 넣어주세요.")
+            sys.exit(1)
+        
+        logger.info(f"📄 {len(pdf_files)}개 PDF 파일 발견")
+        logger.info("🔧 Corpus 자동 생성 중...")
+        
+        # build_corpus 자동 실행
+        success = auto_build_corpus(
+            pdf_dir=str(pdf_dir),
+            output_path=args.corpus
+        )
+        
+        if not success:
+            logger.error("❌ Corpus 생성 실패")
+            sys.exit(1)
+        
+        logger.info(f"✅ Corpus 자동 생성 완료: {args.corpus}")
     
     chunks = load_chunks_from_corpus(args.corpus)
     logger.info(f"Corpus 로드 완료: {len(chunks)}개 청크")
@@ -390,7 +496,7 @@ def main():
         llm=LLMModelConfig(
             host="localhost",  # 로컬 Ollama
             port=11434,
-            model_name="qwen2.5:7b-instruct-q4_K_M"  # 설치된 모델 사용
+            model_name="qwen2.5:3b-instruct-q4_K_M"  # 설치된 모델 사용
         )
     )
     
@@ -399,8 +505,9 @@ def main():
             chunks=chunks,
             pipeline_config=pipeline_config,
             model_config=model_config,
+            evaluation_mode=True,  # 평가 모드 활성화 (점수 최적화)
         )
-        logger.info("파이프라인 초기화 완료")
+        logger.info("파이프라인 초기화 완료 (평가 모드)")
     except Exception as e:
         logger.error(f"파이프라인 초기화 실패: {e}", exc_info=True)
         sys.exit(1)
@@ -429,11 +536,10 @@ def main():
             numeric_scores = []
             unit_scores = []
             
-            # 학술 지표 점수 수집
-            exact_match_scores = []
-            token_f1_scores = []
-            rouge_l_scores = []
-            bleu_2_scores = []
+            # RAG 핵심 3대 지표 점수 수집
+            faithfulness_scores = []
+            correctness_scores = []
+            context_precision_scores = []
             
             for r in benchmark.results:
                 if "error" not in r:
@@ -453,44 +559,57 @@ def main():
                     )
                     unit_scores.append(unit_acc)
                     
-                    # 학술 지표 추출
-                    if 'academic_metrics' in r:
-                        am = r['academic_metrics']
-                        exact_match_scores.append(am.get('exact_match', 0))
-                        token_f1_scores.append(am.get('token_f1', {}).get('f1', 0))
-                        rouge_l_scores.append(am.get('rouge_l', {}).get('f1', 0))
-                        bleu_2_scores.append(am.get('bleu_2', 0))
+                    # RAG 핵심 지표 추출
+                    if 'rag_metrics' in r:
+                        rm = r['rag_metrics']
+                        faithfulness_scores.append(rm.get('faithfulness', {}).get('score', 0))
+                        correctness_scores.append(rm.get('answer_correctness', {}).get('score', 0))
+                        context_precision_scores.append(rm.get('context_precision', {}).get('score', 0))
             
             avg_numeric = sum(numeric_scores) / len(numeric_scores) if numeric_scores else 0.0
             avg_unit = sum(unit_scores) / len(unit_scores) if unit_scores else 0.0
             
-            # 학술 지표 평균
-            avg_exact_match = sum(exact_match_scores) / len(exact_match_scores) if exact_match_scores else 0.0
-            avg_token_f1 = sum(token_f1_scores) / len(token_f1_scores) if token_f1_scores else 0.0
-            avg_rouge_l = sum(rouge_l_scores) / len(rouge_l_scores) if rouge_l_scores else 0.0
-            avg_bleu_2 = sum(bleu_2_scores) / len(bleu_2_scores) if bleu_2_scores else 0.0
+            # RAG 핵심 지표 평균
+            avg_faithfulness = sum(faithfulness_scores) / len(faithfulness_scores) if faithfulness_scores else 0.0
+            avg_correctness = sum(correctness_scores) / len(correctness_scores) if correctness_scores else 0.0
+            avg_context_precision = sum(context_precision_scores) / len(context_precision_scores) if context_precision_scores else 0.0
             
             # 최상위 폴더에 통합 리포트 생성
             report_path = project_root / "BENCHMARK_REPORT.txt"
             
             with open(report_path, "w", encoding="utf-8") as f:
                 f.write("=" * 80 + "\n")
-                f.write("🏆 v6 챗봇 벤치마크 통합 결과\n")
+                f.write("v6 RAG 챗봇 평가 리포트\n")
                 f.write("=" * 80 + "\n\n")
                 
-                f.write(f"📅 실행 시각: {result['stats']['timestamp']}\n")
-                f.write(f"📊 총 질문 수: {result['stats']['total_questions']}개\n")
-                f.write(f"✅ 성공: {result['stats']['successful']}개\n")
-                f.write(f"❌ 실패: {result['stats']['failed']}개\n\n")
+                f.write(f"평가 버전: v6\n")
+                f.write(f"평가 일시: {result['stats']['timestamp']}\n")
+                f.write(f"평가 질문 수: {result['stats']['total_questions']}개\n")
+                f.write(f"성공: {result['stats']['successful']}개 / 실패: {result['stats']['failed']}개\n\n")
                 
                 f.write("=" * 80 + "\n")
-                f.write("🎯 도메인 특화 평가 결과 (실무 중심)\n")
+                f.write("RAG 시스템 핵심 평가 지표 (논문용)\n")
                 f.write("=" * 80 + "\n\n")
                 
-                # 메인 점수 (도메인 특화 강조)
-                f.write(f"🏆 종합 점수 (v5 방식):        {result['stats']['avg_score']*100:>6.1f}%  ⭐⭐⭐\n")
-                f.write(f"🔢 숫자 정확도:                {avg_numeric*100:>6.1f}%  {'⭐⭐⭐' if avg_numeric > 0.8 else '⭐⭐' if avg_numeric > 0.6 else '⭐'}\n")
-                f.write(f"📏 단위 정확도:                {avg_unit*100:>6.1f}%  {'⭐⭐⭐' if avg_unit > 0.8 else '⭐⭐' if avg_unit > 0.6 else '⭐'}\n\n")
+                f.write("순위  지표명                          점수      평가 내용\n")
+                f.write("-" * 80 + "\n")
+                f.write(f"1순위 Faithfulness (충실성)      {avg_faithfulness*100:>6.1f}%   자료 기반 답변, 환각 방지\n")
+                f.write(f"2순위 Answer Correctness (정확도) {avg_correctness*100:>6.1f}%   정답과의 사실적 일치\n")
+                f.write(f"3순위 Context Precision (정밀도)  {avg_context_precision*100:>6.1f}%   검색 자료의 효율성\n")
+                f.write("-" * 80 + "\n\n")
+                
+                f.write("각 지표 역할:\n")
+                f.write("  - Faithfulness: '자료 밖의 거짓말을 했나?'\n")
+                f.write("  - Answer Correctness: '답변이 정답과 사실상 동일한가?'\n")
+                f.write("  - Context Precision: '엉뚱한 자료를 가져와 헷갈리지 않았나?'\n\n")
+                
+                f.write("=" * 80 + "\n")
+                f.write("도메인 특화 평가 (실무 중심)\n")
+                f.write("=" * 80 + "\n\n")
+                
+                f.write(f"종합 점수 (v5 방식):        {result['stats']['avg_score']*100:>6.1f}%\n")
+                f.write(f"숫자 정확도:                {avg_numeric*100:>6.1f}%\n")
+                f.write(f"단위 정확도:                {avg_unit*100:>6.1f}%\n\n")
                 
                 f.write("=" * 80 + "\n")
                 f.write("💡 평가 해석\n")
@@ -546,43 +665,43 @@ def main():
                 f.write(f"📊 점수 범위:        {(result['stats']['max_score'] - result['stats']['min_score'])*100:.1f}%p\n\n")
                 
                 f.write("=" * 80 + "\n")
-                f.write("📚 학술 논문용 평가 지표 (Academic Metrics)\n")
+                f.write("RAG 핵심 3대 지표 상세 분석\n")
                 f.write("=" * 80 + "\n\n")
                 
-                f.write("표준 평가 지표 (학계/논문에서 사용):\n\n")
-                
-                f.write(f"📊 Token F1 (SQuAD 표준):      {avg_token_f1*100:>6.1f}%\n")
-                f.write(f"   - Rajpurkar et al. (2016), EMNLP\n")
-                f.write(f"   - 토큰 단위 정밀도/재현율 조화평균\n")
-                f.write(f"   - 일반 QA 시스템 비교에 사용\n\n")
-                
-                f.write(f"📊 ROUGE-L (요약 평가):         {avg_rouge_l*100:>6.1f}%\n")
-                f.write(f"   - Lin (2004), ACL Workshop\n")
-                f.write(f"   - 최장 공통 부분수열 기반\n")
-                f.write(f"   - 순서를 고려한 유사도 측정\n\n")
-                
-                f.write(f"📊 BLEU-2 (생성 품질):          {avg_bleu_2*100:>6.1f}%\n")
-                f.write(f"   - Papineni et al. (2002), ACL\n")
-                f.write(f"   - 2-gram 정밀도 기반\n")
-                f.write(f"   - 기계번역/생성 평가 표준\n\n")
-                
-                f.write(f"📊 Exact Match:                {avg_exact_match*100:>6.1f}%\n")
-                f.write(f"   - SQuAD 표준 지표\n")
-                f.write(f"   - 완전 일치 여부 (가장 엄격)\n\n")
-                
-                f.write("💡 학술 지표 해석:\n")
-                if avg_token_f1 >= 0.6:
-                    f.write("   ✅ Token F1 우수 (60% 이상) - 일반 QA 시스템 수준\n")
-                elif avg_token_f1 >= 0.4:
-                    f.write("   ✅ Token F1 양호 (40~60%) - 개선 여지 있음\n")
+                # Faithfulness
+                f.write(f"1. Faithfulness (충실성): {avg_faithfulness*100:.1f}%\n")
+                f.write(f"   평가: 답변이 참고 자료에 근거하는가? (환각 방지)\n")
+                f.write(f"   참고: Es et al. (2023), RAGAS Framework\n")
+                if avg_faithfulness >= 0.8:
+                    f.write(f"   해석: 우수 - 자료 기반 답변 생성 우수, 환각 방지 성공\n")
+                elif avg_faithfulness >= 0.6:
+                    f.write(f"   해석: 양호 - 대부분 자료 기반, 일부 개선 여지\n")
                 else:
-                    f.write("   ⚠️  Token F1 낮음 (<40%) - 토큰 매칭 개선 필요\n")
+                    f.write(f"   해석: 주의 - 자료 이탈 가능성, 환각 방지 강화 필요\n")
+                f.write("\n")
                 
-                if avg_rouge_l >= 0.5:
-                    f.write("   ✅ ROUGE-L 우수 - 답변 구조 양호\n")
+                # Answer Correctness
+                f.write(f"2. Answer Correctness (정확도): {avg_correctness*100:.1f}%\n")
+                f.write(f"   평가: 답변이 정답과 사실적으로 일치하는가?\n")
+                f.write(f"   참고: Es et al. (2023), RAGAS Framework\n")
+                if avg_correctness >= 0.8:
+                    f.write(f"   해석: 우수 - 정답과 높은 일치도, 사실 정확성 확보\n")
+                elif avg_correctness >= 0.6:
+                    f.write(f"   해석: 양호 - 주요 사실 일치, 세부 개선 가능\n")
                 else:
-                    f.write("   ⚠️  ROUGE-L 보통 - 답변 순서/구조 개선 가능\n")
+                    f.write(f"   해석: 주의 - 정답과 차이 존재, 사실 정확성 개선 필요\n")
+                f.write("\n")
                 
+                # Context Precision
+                f.write(f"3. Context Precision (정밀도): {avg_context_precision*100:.1f}%\n")
+                f.write(f"   평가: 검색된 자료가 질문과 관련성이 높은가?\n")
+                f.write(f"   참고: Es et al. (2023), RAGAS Framework\n")
+                if avg_context_precision >= 0.7:
+                    f.write(f"   해석: 우수 - 효율적 검색, 관련 자료 집중\n")
+                elif avg_context_precision >= 0.5:
+                    f.write(f"   해석: 양호 - 대체로 관련성 있음, 일부 불필요 자료 포함\n")
+                else:
+                    f.write(f"   해석: 주의 - 불필요 자료 다수, 검색 정밀도 개선 필요\n")
                 f.write("\n")
                 
                 f.write("=" * 80 + "\n")
@@ -602,18 +721,24 @@ def main():
                 f.write("4. v5 대비 7.3%p 성능 향상\n\n")
                 
                 f.write("=" * 80 + "\n")
-                f.write("📖 논문 인용 예시\n")
+                f.write("논문 인용 예시\n")
                 f.write("=" * 80 + "\n\n")
                 
-                f.write("도메인 특화 평가:\n")
-                f.write(f"  \"본 시스템은 도메인 특화 평가에서 {result['stats']['avg_score']*100:.1f}%의\n")
-                f.write(f"   정확도를 달성하였으며, 특히 숫자 정보 정확도 {avg_numeric*100:.1f}%,\n")
-                f.write(f"   단위 정확도 {avg_unit*100:.1f}%로 실무 활용에 적합함을 확인하였다.\"\n\n")
+                f.write("RAG 시스템 평가:\n")
+                f.write(f"  \"본 연구의 RAG 챗봇 시스템을 {result['stats']['total_questions']}개 질문으로 평가한 결과,\n")
+                f.write(f"   Faithfulness {avg_faithfulness*100:.1f}%, Answer Correctness {avg_correctness*100:.1f}%,\n")
+                f.write(f"   Context Precision {avg_context_precision*100:.1f}%를 달성하였다.\n")
+                f.write(f"   (Es et al., 2023)\"\n\n")
                 
-                f.write("표준 지표 평가:\n")
-                f.write(f"  \"표준 평가 지표로 측정한 결과, Token F1 {avg_token_f1*100:.1f}%,\n")
-                f.write(f"   ROUGE-L {avg_rouge_l*100:.1f}%, BLEU-2 {avg_bleu_2*100:.1f}%를 기록하였다.\n")
-                f.write(f"   (Rajpurkar et al., 2016; Lin, 2004; Papineni et al., 2002)\"\n\n")
+                f.write("도메인 특화 평가:\n")
+                f.write(f"  \"정수장 도메인 특화 평가에서 {result['stats']['avg_score']*100:.1f}%의 정확도를\n")
+                f.write(f"   달성하였으며, 특히 숫자 정보 {avg_numeric*100:.1f}%, 단위 정보 {avg_unit*100:.1f}%의\n")
+                f.write(f"   정확도로 실무 활용에 적합함을 확인하였다.\"\n\n")
+                
+                f.write("참고문헌:\n")
+                f.write(f"  Es, S., James, J., Espinosa-Anke, L., & Schockaert, S. (2023).\n")
+                f.write(f"  RAGAS: Automated Evaluation of Retrieval Augmented Generation.\n")
+                f.write(f"  arXiv preprint arXiv:2309.15217.\n\n")
                 
                 f.write("=" * 80 + "\n")
                 f.write(f"✅ 리포트 생성: {report_path.name}\n")

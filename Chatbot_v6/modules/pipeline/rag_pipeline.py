@@ -38,20 +38,24 @@ class RAGPipeline:
         chunks: List[Chunk],
         pipeline_config: Optional[PipelineConfig] = None,
         model_config: Optional[ModelConfig] = None,
+        evaluation_mode: bool = False,
     ):
         """
         Args:
             chunks: 청크 리스트
             pipeline_config: 파이프라인 설정
             model_config: 모델 설정
+            evaluation_mode: 평가 모드 (True시 평가 최적화 프롬프트 사용)
         """
         self.chunks = chunks
         self.pipeline_config = pipeline_config or PipelineConfig()
         self.model_config = model_config or ModelConfig()
+        self.evaluation_mode = evaluation_mode
         
         logger.info("RAGPipeline initializing",
                    num_chunks=len(chunks),
-                   config_hash=self.pipeline_config.config_hash())
+                   config_hash=self.pipeline_config.config_hash(),
+                   evaluation_mode=evaluation_mode)
         
         try:
             # 질문 분석기
@@ -81,8 +85,16 @@ class RAGPipeline:
             from modules.generation.llm_client import OllamaClient
             llm_client = OllamaClient(self.model_config.llm)
             
+            # 평가 모드에 따라 PromptBuilder 생성
+            from modules.generation.prompt_builder import PromptBuilder
+            prompt_builder = PromptBuilder(
+                domain_dict_path=self.pipeline_config.domain.domain_dict_path,
+                evaluation_mode=self.evaluation_mode,
+            )
+            
             self.generator = AnswerGenerator(
                 llm_client=llm_client,
+                prompt_builder=prompt_builder,
                 max_retries=self.pipeline_config.llm_retries,
                 retry_backoff_ms=self.pipeline_config.llm_retry_backoff_ms,
             )

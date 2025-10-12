@@ -11,7 +11,6 @@ from typing import List
 from .base_chunker import BaseChunker, ChunkingConfig
 from .sliding_window_chunker import SlidingWindowChunker
 from modules.core.types import Chunk
-from modules.preprocessing.normalizer import MeasurementNormalizer
 from modules.core.logger import get_logger
 
 logger = get_logger(__name__)
@@ -27,7 +26,7 @@ class NumericChunker(BaseChunker):
     def __init__(self, config: ChunkingConfig):
         super().__init__(config)
         self.base_chunker = SlidingWindowChunker(config)
-        self.measurement_normalizer = MeasurementNormalizer()
+        # measurement_normalizer는 BaseChunker에서 이미 생성됨
     
     def chunk_text(
         self,
@@ -140,7 +139,53 @@ class NumericChunker(BaseChunker):
         all_chunks: List[Chunk],
     ) -> List[Chunk]:
         """
-        대상 청크 주변의 이웃 청크 찾기
+        대상 청크 주변의 이웃 청크 찾기 (chunk_id 기반)
+        
+        실제 순차적 이웃을 정확히 찾아서 문맥 확장에 활용합니다.
+        
+        Args:
+            target: 대상 청크
+            all_chunks: 전체 청크 리스트
+            
+        Returns:
+            이웃 청크 리스트 (앞쪽 + 뒤쪽)
+        """
+        target_id = target.extra.get('chunk_id', -1)
+        
+        # chunk_id가 없으면 오프셋 기반으로 폴백
+        if target_id < 0:
+            return self._find_neighbor_chunks_by_offset(target, all_chunks)
+        
+        neighbors = []
+        window = self.config.numeric_context_window
+        half_window = window // 2
+        
+        # chunk_id로 인덱싱 (O(1) 조회)
+        chunk_by_id = {}
+        for chunk in all_chunks:
+            cid = chunk.extra.get('chunk_id', -1)
+            if cid >= 0:
+                chunk_by_id[cid] = chunk
+        
+        # 앞쪽 이웃 (1~2개)
+        for i in range(max(0, target_id - half_window), target_id):
+            if i in chunk_by_id:
+                neighbors.append(chunk_by_id[i])
+        
+        # 뒤쪽 이웃 (1~2개)
+        for i in range(target_id + 1, target_id + half_window + 1):
+            if i in chunk_by_id:
+                neighbors.append(chunk_by_id[i])
+        
+        return neighbors
+    
+    def _find_neighbor_chunks_by_offset(
+        self,
+        target: Chunk,
+        all_chunks: List[Chunk],
+    ) -> List[Chunk]:
+        """
+        오프셋 기반 이웃 찾기 (폴백 방법)
         
         Args:
             target: 대상 청크
@@ -158,7 +203,7 @@ class NumericChunker(BaseChunker):
             if chunk.start_offset == target_start:
                 continue  # 자기 자신 제외
             
-            # 거리 계산 (대략적)
+            # 거리 계산
             distance = abs(chunk.start_offset - target_start)
             
             # 윈도우 범위 내에 있으면 추가

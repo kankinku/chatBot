@@ -16,17 +16,21 @@ from typing import List
 from tqdm import tqdm
 
 # 프로젝트 루트 추가
-project_root = Path(__file__).parent
+project_root = Path(__file__).parent.parent  # scripts의 부모 디렉토리
 sys.path.insert(0, str(project_root))
 
 from modules.preprocessing.pdf_extractor import PDFExtractor
 from modules.preprocessing.text_cleaner import TextCleaner
-from modules.preprocessing.normalizer import Normalizer
 from modules.preprocessing.ocr_corrector import OCRCorrector
 from modules.chunking.sliding_window_chunker import SlidingWindowChunker
 from modules.chunking.numeric_chunker import NumericChunker
 from modules.core.types import Chunk
 from modules.core.logger import setup_logging, get_logger
+from config.constants import (
+    DEFAULT_CHUNK_SIZE,
+    DEFAULT_CHUNK_OVERLAP,
+    DEFAULT_USE_PAGE_BASED_CHUNKING,
+)
 
 setup_logging(log_dir="logs", log_level="INFO", log_format="json")
 logger = get_logger(__name__)
@@ -34,18 +38,20 @@ logger = get_logger(__name__)
 
 def process_pdf(
     pdf_path: Path,
-    use_ocr_correction: bool = True,
-    chunk_size: int = 800,
-    chunk_overlap: int = 200,
+    use_ocr_correction: bool = False,  # 기본값 False (속도 우선)
+    chunk_size: int = DEFAULT_CHUNK_SIZE,
+    chunk_overlap: int = DEFAULT_CHUNK_OVERLAP,
+    use_page_based_chunking: bool = DEFAULT_USE_PAGE_BASED_CHUNKING,
 ) -> List[Chunk]:
     """
-    단일 PDF 파일 처리
+    단일 PDF 파일 처리 (페이지별 청킹 지원)
     
     Args:
         pdf_path: PDF 파일 경로
         use_ocr_correction: OCR 오류 수정 여부
         chunk_size: 청크 크기
         chunk_overlap: 청크 오버랩
+        use_page_based_chunking: 페이지별 청킹 사용 여부
         
     Returns:
         생성된 청크 리스트
@@ -54,67 +60,144 @@ def process_pdf(
     
     # 1. PDF 텍스트 추출
     extractor = PDFExtractor()
+    
     try:
-        text = extractor.extract_text_from_file(str(pdf_path))
-        logger.info(f"Extracted text length: {len(text)} chars")
+        if use_page_based_chunking:
+            # 페이지별 추출
+            pages = extractor.extract_pages_from_file(str(pdf_path))
+            logger.info(f"Extracted {len(pages)} pages")
+        else:
+            # 전체 텍스트 추출
+            text = extractor.extract_text_from_file(str(pdf_path))
+            pages = [(None, text)]
+            logger.info(f"Extracted text length: {len(text)} chars")
     except Exception as e:
         logger.error(f"Failed to extract PDF: {e}", exc_info=True)
         return []
     
-    if not text or len(text) < 50:
+    if not pages or (len(pages) == 1 and len(pages[0][1]) < 50):
         logger.warning(f"No meaningful text extracted from {pdf_path.name}")
         return []
     
-    # 2. OCR 오류 수정 (선택적)
-    if use_ocr_correction:
-        corrector = OCRCorrector()
-        text = corrector.correct(text)
-        logger.info(f"OCR correction completed")
+    # 청킹 설정
+    from modules.chunking.base_chunker import ChunkingConfig
     
-    # 3. 텍스트 정제
-    cleaner = TextCleaner()
-    text = cleaner.clean(text)
-    logger.info(f"Text cleaning completed")
-    
-    # 4. 정규화
-    normalizer = Normalizer()
-    text = normalizer.normalize(text)
-    logger.info(f"Text normalization completed")
-    
-    # 5. 슬라이딩 윈도우 청킹
-    sliding_chunker = SlidingWindowChunker(
+    chunking_config = ChunkingConfig(
         chunk_size=chunk_size,
-        overlap_size=chunk_overlap,
+        chunk_overlap=chunk_overlap,
+        enable_numeric_chunking=True,
+        numeric_context_window=3,
+        preserve_table_context=True,
     )
     
-    base_chunks = sliding_chunker.chunk(
-        text=text,
-        doc_id=pdf_path.stem,
-        filename=pdf_path.name,
-    )
+    sliding_chunker = SlidingWindowChunker(config=chunking_config)
+    numeric_chunker = NumericChunker(config=chunking_config)
     
-    logger.info(f"Sliding window chunking: {len(base_chunks)} chunks")
+    all_base_chunks = []
+    all_numeric_chunks = []
     
-    # 6. 숫자 특화 청크 추가
-    numeric_chunker = NumericChunker()
-    numeric_chunks = numeric_chunker.chunk(
-        text=text,
-        doc_id=pdf_path.stem,
-        filename=pdf_path.name,
-    )
+    # 페이지별 처리
+    for page_num, page_text in pages:
+        if not page_text or len(page_text) < 10:
+            continue
+        
+        # 2. OCR 오류 수정 (선택적)
+        if use_ocr_correction:
+            corrector = OCRCorrector()
+            page_text = corrector.correct_single(page_text)
+        
+        # 3. 텍스트 정제
+        cleaner = TextCleaner()
+        page_text = cleaner.clean(page_text)
+        
+        # 4. 슬라이딩 윈도우 청킹
+        base_chunks = sliding_chunker.chunk_text(
+            text=page_text,
+            doc_id=pdf_path.stem,
+            filename=pdf_path.name,
+            page=page_num,
+        )
+        
+        all_base_chunks.extend(base_chunks)
+        
+        # 5. 숫자 특화 청크 추가
+        numeric_chunks = numeric_chunker._create_numeric_expanded_chunks(
+            doc_id=pdf_path.stem,
+            filename=pdf_path.name,
+            full_text=page_text,
+            base_chunks=base_chunks,
+            page=page_num,
+        )
+        
+        all_numeric_chunks.extend(numeric_chunks)
     
-    logger.info(f"Numeric chunking: {len(numeric_chunks)} numeric chunks")
+    logger.info(f"Base chunks: {len(all_base_chunks)}, Numeric chunks: {len(all_numeric_chunks)}")
     
-    # 7. 청크 병합
-    all_chunks = base_chunks + numeric_chunks
-    logger.info(f"Total chunks: {len(all_chunks)}")
+    # 6. 청크 병합
+    all_chunks = all_base_chunks + all_numeric_chunks
+    
+    # 7. 중복 제거
+    all_chunks = deduplicate_chunks(all_chunks)
+    
+    logger.info(f"Total chunks after deduplication: {len(all_chunks)}")
     
     return all_chunks
 
 
+def deduplicate_chunks(chunks: List[Chunk]) -> List[Chunk]:
+    """
+    corpus 생성 시 중복 청크 제거
+    
+    Args:
+        chunks: 청크 리스트
+        
+    Returns:
+        중복이 제거된 청크 리스트
+    """
+    from modules.filtering.deduplicator import Deduplicator
+    from config.pipeline_config import DeduplicationConfig
+    from modules.core.types import RetrievedSpan
+    
+    if not chunks:
+        return chunks
+    
+    logger.info(f"Deduplicating {len(chunks)} chunks")
+    
+    # 중복 제거 설정
+    dedup_config = DeduplicationConfig(
+        jaccard_threshold=0.9,
+        semantic_threshold=0.0,
+        enable_semantic_dedup=False,
+        min_chunk_length=50,
+    )
+    
+    deduplicator = Deduplicator(dedup_config)
+    
+    # RetrievedSpan으로 변환
+    spans = [
+        RetrievedSpan(
+            chunk=chunk,
+            source="chunking",
+            score=1.0,
+            rank=i + 1,
+        )
+        for i, chunk in enumerate(chunks)
+    ]
+    
+    # 중복 제거
+    deduplicated_spans = deduplicator.deduplicate(spans)
+    
+    # 다시 Chunk로 변환
+    deduplicated_chunks = [span.chunk for span in deduplicated_spans]
+    
+    logger.info(f"Removed {len(chunks) - len(deduplicated_chunks)} duplicate chunks")
+    
+    return deduplicated_chunks
+
+
 def save_corpus(chunks: List[Chunk], output_path: Path):
     """
-    청크를 JSONL 형식으로 저장
+    청크를 JSONL 형식으로 저장 (확장된 메타데이터 포함)
     
     Args:
         chunks: 청크 리스트
@@ -124,7 +207,7 @@ def save_corpus(chunks: List[Chunk], output_path: Path):
     
     with open(output_path, "w", encoding="utf-8") as f:
         for chunk in chunks:
-            # Chunk를 dict로 변환
+            # Chunk를 dict로 변환 (모든 메타데이터 포함)
             chunk_dict = {
                 "doc_id": chunk.doc_id,
                 "filename": chunk.filename,
@@ -132,6 +215,8 @@ def save_corpus(chunks: List[Chunk], output_path: Path):
                 "start_offset": chunk.start_offset,
                 "length": chunk.length,
                 "text": chunk.text,
+                "neighbor_hint": chunk.neighbor_hint,  # 이웃 정보
+                "extra": chunk.extra,  # 측정값 등 추가 메타데이터
             }
             
             f.write(json.dumps(chunk_dict, ensure_ascii=False) + "\n")
@@ -141,7 +226,7 @@ def save_corpus(chunks: List[Chunk], output_path: Path):
 
 def load_corpus(corpus_path: Path) -> List[Chunk]:
     """
-    JSONL 형식의 corpus 파일을 로드
+    JSONL 형식의 corpus 파일을 로드 (확장된 메타데이터 포함)
     
     Args:
         corpus_path: corpus 파일 경로
@@ -153,13 +238,21 @@ def load_corpus(corpus_path: Path) -> List[Chunk]:
     with open(corpus_path, "r", encoding="utf-8") as f:
         for line in f:
             data = json.loads(line)
+            
+            # neighbor_hint 처리 (tuple로 변환)
+            neighbor_hint = data.get("neighbor_hint")
+            if neighbor_hint and isinstance(neighbor_hint, list):
+                neighbor_hint = tuple(neighbor_hint)
+            
             chunk = Chunk(
                 doc_id=data["doc_id"],
                 filename=data["filename"],
-                page=data.get("page", 0),
+                page=data.get("page"),
                 start_offset=data.get("start_offset", 0),
                 length=data.get("length", len(data["text"])),
                 text=data["text"],
+                neighbor_hint=neighbor_hint,  # 이웃 정보 복원
+                extra=data.get("extra", {}),  # 추가 메타데이터 복원
             )
             chunks.append(chunk)
     
@@ -167,12 +260,13 @@ def load_corpus(corpus_path: Path) -> List[Chunk]:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="PDF로부터 Corpus 생성")
+    parser = argparse.ArgumentParser(description="PDF로부터 Corpus 생성 (개선된 청킹)")
     parser.add_argument("--pdf-dir", default="../data", help="PDF 디렉토리")
     parser.add_argument("--output", default="../data/corpus.jsonl", help="출력 파일명")
-    parser.add_argument("--chunk-size", type=int, default=800, help="청크 크기")
-    parser.add_argument("--chunk-overlap", type=int, default=200, help="청크 오버랩")
-    parser.add_argument("--no-ocr-correction", action="store_true", help="OCR 수정 비활성화")
+    parser.add_argument("--chunk-size", type=int, default=DEFAULT_CHUNK_SIZE, help=f"청크 크기 (디폴트: {DEFAULT_CHUNK_SIZE})")
+    parser.add_argument("--chunk-overlap", type=int, default=DEFAULT_CHUNK_OVERLAP, help=f"청크 오버랩 (디폴트: {DEFAULT_CHUNK_OVERLAP})")
+    parser.add_argument("--use-ocr-correction", action="store_true", help="OCR 수정 활성화 (느림, LLM 필요)")
+    parser.add_argument("--no-page-based", action="store_true", help=f"페이지별 청킹 비활성화 (디폴트: {'활성화' if DEFAULT_USE_PAGE_BASED_CHUNKING else '비활성화'})")
     parser.add_argument("--pattern", default="*.pdf", help="PDF 파일 패턴")
     args = parser.parse_args()
     
@@ -183,7 +277,8 @@ def main():
     logger.info(f"출력 파일: {args.output}")
     logger.info(f"청크 크기: {args.chunk_size}")
     logger.info(f"청크 오버랩: {args.chunk_overlap}")
-    logger.info(f"OCR 수정: {'비활성화' if args.no_ocr_correction else '활성화'}")
+    logger.info(f"OCR 수정: {'활성화' if args.use_ocr_correction else '비활성화 (속도 우선)'}")
+    logger.info(f"페이지별 청킹: {'비활성화' if args.no_page_based else '활성화'}")
     
     # PDF 파일 찾기
     pdf_dir = Path(args.pdf_dir)
@@ -203,9 +298,10 @@ def main():
         try:
             chunks = process_pdf(
                 pdf_path,
-                use_ocr_correction=not args.no_ocr_correction,
+                use_ocr_correction=args.use_ocr_correction,
                 chunk_size=args.chunk_size,
                 chunk_overlap=args.chunk_overlap,
+                use_page_based_chunking=not args.no_page_based,
             )
             all_chunks.extend(chunks)
         except Exception as e:
@@ -231,6 +327,14 @@ def main():
     logger.info("\n문서별 청크 수:")
     for doc_id, count in doc_counter.most_common():
         logger.info(f"  {doc_id}: {count}")
+    
+    # 측정값 통계
+    measurements_count = sum(1 for chunk in all_chunks if chunk.extra.get('measurements'))
+    logger.info(f"\n측정값 포함 청크: {measurements_count}/{len(all_chunks)}")
+    
+    # 이웃 정보 통계
+    neighbor_count = sum(1 for chunk in all_chunks if chunk.neighbor_hint)
+    logger.info(f"이웃 정보 포함 청크: {neighbor_count}/{len(all_chunks)}")
 
 
 if __name__ == "__main__":
