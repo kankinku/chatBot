@@ -1,0 +1,55 @@
+# Default Pipeline Configuration
+# 기본 파이프라인 설정
+
+thresholds:
+  confidence_threshold: 0.20
+  confidence_threshold_numeric: 0.12
+  confidence_threshold_long: 0.13
+  guard_overlap_threshold: 0.10
+  rerank_threshold: 0.41
+  context_min_overlap: 0.07
+  keyword_filter_min: 1
+
+rrf:
+  vector_weight: 0.2   # v5 최적화: BM25 우선
+  bm25_weight: 0.8     # v5 최적화: 키워드 검색 집중
+  base_rrf_k: 60
+
+context:
+  k_default: 6
+  k_numeric: 8
+  k_min: 4
+  k_max: 10
+  allow_neighbor_from_adjacent_page: true
+
+flags:
+  mode: "accuracy"  # "accuracy" or "speed"
+  use_cross_reranker: false
+  use_gpu: false
+  store_backend: "auto"  # "faiss", "hnsw", or "auto"
+  rerank_top_n: 50
+  enable_parallel_search: true
+  enable_retrieval_cache: true
+  retrieval_cache_size: 256
+
+deduplication:
+  jaccard_threshold: 0.9
+  semantic_threshold: 0.0
+  enable_semantic_dedup: false
+  min_chunk_length: 50
+
+domain:
+  domain_dict_path: "data/domain_dictionary.json"
+
+# Model settings
+model_name: "llama3.1:8b-instruct-q4_K_M"
+embedding_model: "jhgan/ko-sroberta-multitask"
+vector_store_dir: "vector_store"
+
+# Retry settings
+llm_retries: 3
+llm_retry_backoff_ms: 800
+
+# Random seed
+seed: 42
+

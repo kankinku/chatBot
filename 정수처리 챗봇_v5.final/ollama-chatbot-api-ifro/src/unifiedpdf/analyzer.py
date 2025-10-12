@@ -21,48 +21,135 @@ class Analysis:
 
 
 
+# 도메인 사전 캐시 (메모리 누수 방지)
+_domain_cache = {}
+_cache_lock = None
+
 def _load_domain(cfg: PipelineConfig) -> Dict[str, List[str]]:
+    global _cache_lock
+    if _cache_lock is None:
+        import threading
+        _cache_lock = threading.Lock()
+    
     path = getattr(getattr(cfg, "domain", object()), "domain_dict_path", None)
     if not path:
         return {"units": [], "keywords": [], "procedural": [], "comparative": [], "definition": [], "problem": []}
+    
+    # 캐시에서 확인
+    with _cache_lock:
+        if path in _domain_cache:
+            return _domain_cache[path]
+    
     try:
-        data = json.loads(Path(path).read_text(encoding="utf-8"))
-        norm = {k: [str(x).lower() for x in data.get(k, [])] for k in [
-            "units", "keywords", "procedural", "comparative", "definition", "problem"
-        ]}
-        return norm
+        # 파일 수정 시간 확인
+        path_obj = Path(path)
+        if not path_obj.exists():
+            return {"units": [], "keywords": [], "procedural": [], "comparative": [], "definition": [], "problem": []}
+        
+        mtime = path_obj.stat().st_mtime
+        cache_key = f"{path}_{mtime}"
+        
+        with _cache_lock:
+            if cache_key in _domain_cache:
+                return _domain_cache[cache_key]
+            
+            data = json.loads(path_obj.read_text(encoding="utf-8"))
+            norm = {k: [str(x).lower() for x in data.get(k, [])] for k in [
+                "units", "keywords", "procedural", "comparative", "definition", "problem"
+            ]}
+            _domain_cache[cache_key] = norm
+            
+            # 캐시 크기 제한 (최대 10개)
+            if len(_domain_cache) > 10:
+                oldest_key = next(iter(_domain_cache))
+                del _domain_cache[oldest_key]
+            
+            return norm
     except Exception:
         return {"units": [], "keywords": [], "procedural": [], "comparative": [], "definition": [], "problem": []}
 
+def clear_domain_cache():
+    """도메인 사전 캐시 정리"""
+    global _domain_cache, _cache_lock
+    if _cache_lock is None:
+        import threading
+        _cache_lock = threading.Lock()
+    
+    with _cache_lock:
+        _domain_cache.clear()
+
+def clear_regex_cache():
+    """정규식 캐시 정리"""
+    global _regex_cache, _regex_cache_lock
+    if _regex_cache_lock is None:
+        import threading
+        _regex_cache_lock = threading.Lock()
+    
+    with _regex_cache_lock:
+        _regex_cache.clear()
+
+
+# 정규식 패턴 캐시 (메모리 누수 방지)
+_regex_cache = {}
+_regex_cache_lock = None
+
+def _get_compiled_regex(pattern: str):
+    global _regex_cache_lock
+    if _regex_cache_lock is None:
+        import threading
+        _regex_cache_lock = threading.Lock()
+    
+    with _regex_cache_lock:
+        if pattern not in _regex_cache:
+            _regex_cache[pattern] = re.compile(pattern)
+        return _regex_cache[pattern]
+
+def _re_or(base: str, extras: List[str]) -> str:
+    if not extras:
+        return base
+    return base[:-1] + "|" + "|".join(map(re.escape, extras)) + ")"
 
 def analyze_question(q: str, cfg: PipelineConfig) -> Analysis:
     ql = q.lower().strip()
-    tokens = re.findall(r"[\w\-/\.%°℃]+", ql)
+    
+    # 컴파일된 정규식 사용
+    token_pattern = _get_compiled_regex(r"[\w\-/\.%°℃]+")
+    tokens = token_pattern.findall(ql)
     length = len(tokens)
 
     dom = _load_domain(cfg)
     units = set(dom.get("units", []))
     domain_kw = dom.get("keywords", [])
 
-    has_number = bool(re.search(r"\d", ql))
+    # 숫자 검사용 정규식
+    number_pattern = _get_compiled_regex(r"\d")
+    has_number = bool(number_pattern.search(ql))
     has_unit = any(u in ql for u in units)
     has_domain_kw = any(kw in ql for kw in domain_kw if kw)
 
     numeric_like = has_number or has_unit or has_domain_kw
 
-    def _re_or(base: str, extras: List[str]) -> str:
-        return base if not extras else base[:-1] + "|" + "|".join(map(re.escape, extras)) + ")"
-
-    # 정수장 도메인 특화 질문 유형 분류
-    is_definition = bool(re.search(_re_or(r"(정의|무엇|란|의미|개념|설명|목적|기능|특징)", dom.get("definition", [])), q))
-    is_procedural = bool(re.search(_re_or(r"(방법|절차|순서|어떻게|운영|조치|설정|접속|로그인)", dom.get("procedural", [])), q))
-    is_comparative = bool(re.search(_re_or(r"(비교|vs|더|높|낮|차이|장점|단점|차이점)", dom.get("comparative", [])), ql))
-    is_problem = bool(re.search(_re_or(r"(문제|오류|이상|고장|원인|대응|대책|해결|증상)", dom.get("problem", [])), q))
+    # 질문 유형별 정규식 패턴 생성 및 컴파일
+    definition_pattern = _get_compiled_regex(_re_or(r"(정의|무엇|란|의미|개념|설명|목적|기능|특징)", dom.get("definition", [])))
+    procedural_pattern = _get_compiled_regex(_re_or(r"(방법|절차|순서|어떻게|운영|조치|설정|접속|로그인)", dom.get("procedural", [])))
+    comparative_pattern = _get_compiled_regex(_re_or(r"(비교|vs|더|높|낮|차이|장점|단점|차이점)", dom.get("comparative", [])))
+    problem_pattern = _get_compiled_regex(_re_or(r"(문제|오류|이상|고장|원인|대응|대책|해결|증상)", dom.get("problem", [])))
     
     # 정수장 특화 질문 유형 추가
-    is_system_info = bool(re.search(r"(시스템|플랫폼|대시보드|로그인|계정|비밀번호|주소|url)", ql))
-    is_technical_spec = bool(re.search(r"(모델|알고리즘|성능|지표|입력변수|설정값|고려사항)", ql))
-    is_operational = bool(re.search(r"(운영|모드|제어|알람|진단|결함|정보|현황)", ql))
+    system_info_pattern = _get_compiled_regex(r"(시스템|플랫폼|대시보드|로그인|계정|비밀번호|주소|url)")
+    technical_spec_pattern = _get_compiled_regex(r"(모델|알고리즘|성능|지표|입력변수|설정값|고려사항)")
+    operational_pattern = _get_compiled_regex(r"(운영|모드|제어|알람|진단|결함|정보|현황)")
+
+    # 정수장 도메인 특화 질문 유형 분류
+    is_definition = bool(definition_pattern.search(q))
+    is_procedural = bool(procedural_pattern.search(q))
+    is_comparative = bool(comparative_pattern.search(ql))
+    is_problem = bool(problem_pattern.search(q))
+    
+    # 정수장 특화 질문 유형 추가
+    is_system_info = bool(system_info_pattern.search(ql))
+    is_technical_spec = bool(technical_spec_pattern.search(ql))
+    is_operational = bool(operational_pattern.search(ql))
 
     if numeric_like:
         qtype = "numeric"

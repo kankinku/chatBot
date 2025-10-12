@@ -10,11 +10,16 @@ import urllib.request
 
 def _ollama_generate(prompt: str, model_name: str, timeout: int = 20) -> str:
     url = "http://127.0.0.1:11434/api/generate"
+    
+    # keep_alive 시간을 환경변수로 제어 (기본값: 2분)
+    keep_alive_minutes = int(os.getenv('OLLAMA_KEEP_ALIVE_MINUTES', '2'))
+    keep_alive = f"{keep_alive_minutes}m" if keep_alive_minutes > 0 else "0"
+    
     data = {
         "model": model_name, 
         "prompt": prompt, 
         "stream": False,
-        "keep_alive": "24h"  # 모델을 메모리에 유지
+        "keep_alive": keep_alive  # 메모리 누수 방지를 위해 짧은 시간으로 설정
     }
     req = urllib.request.Request(
         url, data=json.dumps(data).encode("utf-8"), headers={"Content-Type": "application/json"}

@@ -14,14 +14,39 @@ from .timeouts import LLM_TIMEOUT_S, run_with_timeout
 import re
 
 
-_LOG_PATH = os.path.join("logs", "llm_errors.log")
-os.makedirs(os.path.dirname(_LOG_PATH), exist_ok=True)
-logging.basicConfig(level=logging.ERROR)
-_logger = logging.getLogger("unifiedpdf.llm")
-if not _logger.handlers:
-    _fh = logging.FileHandler(_LOG_PATH, encoding="utf-8")
-    _fh.setLevel(logging.ERROR)
-    _logger.addHandler(_fh)
+# 로깅 시스템 초기화 (메모리 누수 방지)
+_logger = None
+_log_handler = None
+
+def _get_logger():
+    global _logger, _log_handler
+    if _logger is None:
+        _LOG_PATH = os.path.join("logs", "llm_errors.log")
+        os.makedirs(os.path.dirname(_LOG_PATH), exist_ok=True)
+        
+        _logger = logging.getLogger("unifiedpdf.llm")
+        _logger.setLevel(logging.ERROR)
+        
+        # 기존 핸들러 제거
+        for handler in _logger.handlers[:]:
+            _logger.removeHandler(handler)
+        
+        # 새 핸들러 추가
+        _log_handler = logging.FileHandler(_LOG_PATH, encoding="utf-8")
+        _log_handler.setLevel(logging.ERROR)
+        _log_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+        _logger.addHandler(_log_handler)
+    
+    return _logger
+
+def _cleanup_logger():
+    """로거 정리"""
+    global _logger, _log_handler
+    if _logger and _log_handler:
+        _logger.removeHandler(_log_handler)
+        _log_handler.close()
+        _log_handler = None
+        _logger = None
 
 
 def _extract_keywords_from_question(question: str, domain_dict: dict = None, qtype: str = "general") -> List[str]:
@@ -285,11 +310,16 @@ def ollama_generate(prompt: str, model_name: str, timeout_s: Optional[int] = Non
     # Docker 환경에서는 ollama 서비스명 사용, 로컬에서는 localhost 사용
     ollama_host = os.getenv('OLLAMA_HOST', 'ollama')
     url = f"http://{ollama_host}:11434/api/generate"
+    
+    # keep_alive 시간을 환경변수로 제어 (기본값: 5분)
+    keep_alive_minutes = int(os.getenv('OLLAMA_KEEP_ALIVE_MINUTES', '5'))
+    keep_alive = f"{keep_alive_minutes}m" if keep_alive_minutes > 0 else "0"
+    
     data = {
         "model": model_name, 
         "prompt": prompt, 
         "stream": False,
-        "keep_alive": "24h",  # 모델을 메모리에 유지하여 응답 속도 향상
+        "keep_alive": keep_alive,  # 메모리 누수 방지를 위해 짧은 시간으로 설정
         "options": {
             "temperature": 0.0,  # llama3.1 모델에 적합한 매우 낮은 온도
             "top_p": 0.9,        # 높은 집중도
@@ -305,7 +335,7 @@ def ollama_generate(prompt: str, model_name: str, timeout_s: Optional[int] = Non
             body = json.loads(resp.read().decode("utf-8", errors="ignore"))
             return body.get("response", "")
     except Exception as e:
-        _logger.error("Ollama request failed: %s", e)
+        _get_logger().error("Ollama request failed: %s", e)
         return ""
 
 
@@ -356,17 +386,56 @@ def _post_process_answer(text: str) -> str:
     return text.strip()
 
 
-def generate_answer(question: str, contexts: List[RetrievedSpan], cfg: PipelineConfig, qtype: str = "general", recovery: bool = False) -> str:
-    # Domain Dictionary 로드
-    domain_dict = None
+# 도메인 사전 캐시 (llm.py용)
+_domain_dict_cache = {}
+_domain_cache_lock = None
+
+def _load_domain_dict(cfg: PipelineConfig) -> dict:
+    global _domain_cache_lock
+    if _domain_cache_lock is None:
+        import threading
+        _domain_cache_lock = threading.Lock()
+    
+    domain_dict_path = cfg.domain.domain_dict_path
+    if not domain_dict_path:
+        return None
+    
+    # 캐시에서 확인
+    with _domain_cache_lock:
+        if domain_dict_path in _domain_dict_cache:
+            return _domain_dict_cache[domain_dict_path]
+    
     try:
-        import json
-        domain_dict_path = cfg.domain.domain_dict_path
-        if domain_dict_path and Path(domain_dict_path).exists():
+        path_obj = Path(domain_dict_path)
+        if not path_obj.exists():
+            return None
+        
+        # 파일 수정 시간 확인
+        mtime = path_obj.stat().st_mtime
+        cache_key = f"{domain_dict_path}_{mtime}"
+        
+        with _domain_cache_lock:
+            if cache_key in _domain_dict_cache:
+                return _domain_dict_cache[cache_key]
+            
             with open(domain_dict_path, 'r', encoding='utf-8') as f:
                 domain_dict = json.load(f)
+            
+            _domain_dict_cache[cache_key] = domain_dict
+            
+            # 캐시 크기 제한 (최대 5개)
+            if len(_domain_dict_cache) > 5:
+                oldest_key = next(iter(_domain_dict_cache))
+                del _domain_dict_cache[oldest_key]
+            
+            return domain_dict
     except Exception as e:
-        _logger.warning(f"Domain dictionary 로드 실패: {e}")
+        _get_logger().warning(f"Domain dictionary 로드 실패: {e}")
+        return None
+
+def generate_answer(question: str, contexts: List[RetrievedSpan], cfg: PipelineConfig, qtype: str = "general", recovery: bool = False) -> str:
+    # Domain Dictionary 로드 (캐시 사용)
+    domain_dict = _load_domain_dict(cfg)
     
     # Use improved prompt format (and stricter recovery prompt if requested)
     if recovery:
@@ -565,4 +634,4 @@ def _log_failed_answer(question: str, contexts: List[RetrievedSpan], answer: str
         with open(log_file, 'a', encoding='utf-8') as f:
             f.write(json.dumps(log_entry, ensure_ascii=False) + '\n')
     except Exception as e:
-        _logger.warning(f"답변 실패 로깅 실패: {e}")
+        _get_logger().warning(f"답변 실패 로깅 실패: {e}")

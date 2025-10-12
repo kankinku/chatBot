@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  # Ollama 서버
+  ollama:
+    image: ollama/ollama:latest
+    container_name: chatbot_v6_ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    environment:
+      - OLLAMA_KEEP_ALIVE=5m
+    volumes:
+      - ollama_data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "ps"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 8G
+
+  # 챗봇 API 서버
+  chatbot:
+    build: .
+    container_name: chatbot_v6_api
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONUTF8=1
+      - LOG_LEVEL=INFO
+      - LOG_FORMAT=json
+      - OLLAMA_HOST=ollama
+      - OLLAMA_PORT=11434
+      - ENABLE_GPU=false
+    volumes:
+      - ./data:/app/data
+      - ./vector_store:/app/vector_store
+      - ./logs:/app/logs
+    depends_on:
+      ollama:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  ollama_data:
+
+networks:
+  default:
+    driver: bridge
+

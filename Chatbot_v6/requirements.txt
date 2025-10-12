@@ -1,0 +1,40 @@
+# Core dependencies
+python>=3.10
+
+# PDF processing
+pymupdf>=1.23.0  # PDF text extraction
+
+# Embedding & ML
+sentence-transformers>=2.2.0  # SBERT embeddings
+torch>=2.0.0  # PyTorch
+transformers>=4.30.0  # Transformers
+numpy>=1.24.0  # Numerical operations
+
+# Vector stores
+faiss-cpu>=1.7.4  # FAISS vector search (CPU version)
+# faiss-gpu>=1.7.4  # FAISS vector search (GPU version) - uncomment if GPU available
+hnswlib>=0.7.0  # HNSW vector search
+
+# Web framework
+fastapi>=0.100.0  # API framework
+uvicorn>=0.23.0  # ASGI server
+pydantic>=2.0.0  # Data validation
+
+# HTTP requests
+urllib3>=2.0.0  # HTTP client (for Ollama)
+
+# Data processing
+pyyaml>=6.0  # YAML config files
+
+# Logging
+python-json-logger>=2.0.0  # JSON logging
+
+# Development
+pytest>=7.4.0  # Testing
+black>=23.0.0  # Code formatting
+ruff>=0.0.280  # Linting
+mypy>=1.4.0  # Type checking
+
+# Optional: Progress bars
+tqdm>=4.65.0  # Progress bars
+
