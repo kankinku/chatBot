@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import re
 from datetime import datetime
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Dict, Any
 
 from config.constants import UNIT_SYNONYMS, UNIT_CONVERSIONS
 from modules.core.logger import get_logger
@@ -24,8 +24,215 @@ class Normalizer:
     """
     
     def normalize_number(self, text: str) -> str:
-        """숫자에서 쉼표 제거"""
-        return text.replace(",", "")
+        """숫자 정규화 강화 - 숫자 정확도 개선"""
+        # 쉼표 제거
+        text = text.replace(",", "")
+        
+        # 소수점 정규화 (점과 쉼표 혼용)
+        text = re.sub(r'(\d+)[,.](\d+)', r'\1.\2', text)
+        
+        # 공백 제거 (숫자와 단위 사이)
+        text = re.sub(r'(\d+)\s+([a-zA-Z%°℃]+)', r'\1\2', text)
+        
+        # 특수 문자 정규화
+        text = text.replace('°', '도').replace('℃', '도')
+        
+        return text
+
+
+class NumericExtractor:
+    """
+    숫자 추출기 - 숫자 정확도 개선
+    
+    단일 책임: 텍스트에서 숫자와 단위를 정확히 추출하고 검증
+    """
+    
+    def __init__(self):
+        """숫자 추출기 초기화"""
+        # 숫자 패턴 (정수, 소수, 과학적 표기법)
+        self.number_patterns = [
+            r'\d+\.\d+',           # 소수
+            r'\d+',                # 정수
+            r'\d+\.\d+e[+-]?\d+',  # 과학적 표기법
+        ]
+        
+        # 단위 패턴
+        self.unit_patterns = [
+            r'%', r'℃', r'°C', r'도', r'°',
+            r'mg/L', r'ppm', r'ppb', r'μS/cm',
+            r'm³/day', r'm³/h', r'L/min', r'L/s',
+            r'bar', r'kPa', r'Pa', r'atm',
+            r'kWh', r'MW', r'kW', r'W',
+            r'kgCO2e', r'CO2', r'탄소',
+            r'pH', r'NTU', r'TU', r'SS',
+        ]
+        
+        logger.debug("NumericExtractor initialized")
+    
+    def extract_numbers_with_units(self, text: str) -> List[Dict[str, Any]]:
+        """
+        텍스트에서 숫자와 단위를 추출
+        
+        Args:
+            text: 분석할 텍스트
+            
+        Returns:
+            추출된 숫자-단위 쌍 리스트
+        """
+        results = []
+        
+        # 숫자-단위 패턴 매칭
+        pattern = r'(\d+(?:\.\d+)?(?:e[+-]?\d+)?)\s*([a-zA-Z%°℃μ]+(?:\/[a-zA-Z]+)?)'
+        matches = re.findall(pattern, text)
+        
+        for number_str, unit in matches:
+            try:
+                number = float(number_str)
+                normalized_unit = self._normalize_unit(unit)
+                
+                results.append({
+                    'number': number,
+                    'unit': normalized_unit,
+                    'original': f"{number_str} {unit}",
+                    'confidence': self._calculate_confidence(number, normalized_unit)
+                })
+            except ValueError:
+                continue
+        
+        # 단위 없는 숫자도 추출
+        standalone_numbers = re.findall(r'\b(\d+(?:\.\d+)?)\b', text)
+        for num_str in standalone_numbers:
+            try:
+                number = float(num_str)
+                results.append({
+                    'number': number,
+                    'unit': '',
+                    'original': num_str,
+                    'confidence': 0.5  # 단위가 없으면 낮은 신뢰도
+                })
+            except ValueError:
+                continue
+        
+        logger.debug(f"Extracted {len(results)} numbers from text")
+        return results
+    
+    def _normalize_unit(self, unit: str) -> str:
+        """정수장 특화 단위 정규화"""
+        unit = unit.strip().lower()
+        
+        # 정수장 도메인 특화 단위 매핑
+        unit_mapping = {
+            # 온도
+            '도': '℃', 'c': '℃', 'celcius': '℃', '섭씨': '℃',
+            
+            # 농도
+            '퍼센트': '%', 'percent': '%', 'pct': '%',
+            '밀리그램': 'mg/L', 'mg': 'mg/L', 'mg/l': 'mg/L',
+            'ppm': 'ppm', 'ppb': 'ppb',
+            
+            # 부피/유량
+            '리터': 'L', 'liter': 'L', 'l': 'L',
+            '미터': 'm', 'meter': 'm',
+            'm³': 'm³', 'm3': 'm³', 'cubic': 'm³',
+            'm³/day': 'm³/day', 'm³/h': 'm³/h', 'm³/d': 'm³/day',
+            'L/min': 'L/min', 'L/s': 'L/s',
+            
+            # 압력
+            '바': 'bar', 'bar': 'bar',
+            '파스칼': 'Pa', 'pa': 'Pa', 'kpa': 'kPa',
+            '기압': 'atm', 'atm': 'atm',
+            
+            # 전력
+            '킬로와트': 'kW', 'kw': 'kW', 'kwatt': 'kW',
+            '와트': 'W', 'watt': 'W', 'w': 'W',
+            '메가와트': 'MW', 'mw': 'MW',
+            
+            # 탄소
+            'kgco2e': 'kgCO2e', 'kgco2': 'kgCO2e',
+            'co2': 'CO2', '탄소': 'CO2',
+            
+            # 수질
+            'ntu': 'NTU', 'tu': 'TU', 'ss': 'SS',
+            'ph': 'pH', '산성도': 'pH',
+            'μs/cm': 'μS/cm', 'us/cm': 'μS/cm',
+            
+            # 시간
+            '시간': 'h', 'hour': 'h', 'hr': 'h',
+            '분': 'min', 'minute': 'min',
+            '초': 's', 'second': 's', 'sec': 's',
+            
+            # 기타
+            'rpm': 'rpm', '회전': 'rpm',
+            'm/s': 'm/s', '속도': 'm/s',
+        }
+        
+        return unit_mapping.get(unit, unit)
+    
+    def _calculate_confidence(self, number: float, unit: str) -> float:
+        """숫자-단위 쌍의 신뢰도 계산"""
+        confidence = 0.8  # 기본 신뢰도
+        
+        # 단위가 있으면 신뢰도 증가
+        if unit:
+            confidence += 0.2
+        
+        # 정수장 도메인에 적합한 범위인지 확인
+        if self._is_domain_appropriate(number, unit):
+            confidence += 0.1
+        
+        return min(confidence, 1.0)
+    
+    def _is_domain_appropriate(self, number: float, unit: str) -> bool:
+        """정수장 도메인에 적합한 수치인지 확인"""
+        # 온도 범위 (0-50℃)
+        if unit in ['℃', '도'] and 0 <= number <= 50:
+            return True
+        
+        # pH 범위 (6-9)
+        if unit == 'pH' and 6 <= number <= 9:
+            return True
+        
+        # 탁도 범위 (0-100 NTU)
+        if unit in ['NTU', 'TU'] and 0 <= number <= 100:
+            return True
+        
+        # 전력 범위 (0-1000 kW)
+        if unit in ['kW', 'W'] and 0 <= number <= 1000:
+            return True
+        
+        return False
+    
+    def validate_numeric_answer(self, answer: str, expected_numbers: List[float]) -> Dict[str, Any]:
+        """
+        답변의 숫자 정확도 검증
+        
+        Args:
+            answer: 생성된 답변
+            expected_numbers: 예상 숫자 리스트
+            
+        Returns:
+            검증 결과
+        """
+        extracted = self.extract_numbers_with_units(answer)
+        answer_numbers = [item['number'] for item in extracted]
+        
+        # 숫자 매칭 계산
+        matched_count = 0
+        for expected in expected_numbers:
+            for answer_num in answer_numbers:
+                if abs(expected - answer_num) < 0.01:  # 0.01 오차 허용
+                    matched_count += 1
+                    break
+        
+        accuracy = matched_count / len(expected_numbers) if expected_numbers else 0
+        
+        return {
+            'accuracy': accuracy,
+            'matched_count': matched_count,
+            'total_expected': len(expected_numbers),
+            'extracted_numbers': answer_numbers,
+            'confidence': sum(item['confidence'] for item in extracted) / len(extracted) if extracted else 0
+        }
     
     def normalize_unit(self, unit: str) -> str:
         """단위 정규화"""

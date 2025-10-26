@@ -11,8 +11,8 @@ thresholds:
   keyword_filter_min: 1
 
 rrf:
-  vector_weight: 0.2   # v5 최적화: BM25 우선
-  bm25_weight: 0.8     # v5 최적화: 키워드 검색 집중
+  vector_weight: 0.5   # 균형 잡힌 검색: 의미 + 키워드
+  bm25_weight: 0.5     # 균형 잡힌 검색: 키워드 + 의미
   base_rrf_k: 60
 
 context:
@@ -25,8 +25,8 @@ context:
 flags:
   mode: "accuracy"  # "accuracy" or "speed"
   use_cross_reranker: false
-  use_gpu: false
-  store_backend: "auto"  # "faiss", "hnsw", or "auto"
+  use_gpu: true     # GPU 가속 활성화
+  store_backend: "faiss"  # FAISS GPU 인덱스 사용
   rerank_top_n: 50
   enable_parallel_search: true
   enable_retrieval_cache: true

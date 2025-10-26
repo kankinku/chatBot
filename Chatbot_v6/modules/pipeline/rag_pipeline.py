@@ -131,10 +131,20 @@ class RAGPipeline:
             logger.debug("Step 1: Question Analysis")
             analysis = self.question_analyzer.analyze(question)
             
-            # 2. 검색 (분석 결과 반영)
+            # 2. 검색 (분석 결과 반영 + 조건부 쿼리 확장)
             logger.debug("Step 2: Retrieval")
+            # 조건부 쿼리 확장 (성능 최적화)
+            if analysis.expanded_query and analysis.expanded_query != question:
+                # 확장된 쿼리가 원본과 다를 때만 사용
+                search_query = analysis.expanded_query
+                logger.debug(f"Using expanded query: {search_query}")
+            else:
+                # 원본 쿼리 사용 (성능 우선)
+                search_query = question
+                logger.debug(f"Using original query: {search_query}")
+            
             spans, retrieval_metrics = self.retriever.search(
-                query=question,
+                query=search_query,
                 top_k=top_k,
                 vector_weight=analysis.rrf_vector_weight,
                 bm25_weight=analysis.rrf_bm25_weight,

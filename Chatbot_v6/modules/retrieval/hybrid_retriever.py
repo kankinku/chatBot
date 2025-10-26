@@ -6,6 +6,8 @@ BM25와 Vector 검색을 결합한 하이브리드 검색 (단일 책임).
 
 from __future__ import annotations
 
+import asyncio
+import concurrent.futures
 from collections import defaultdict
 from typing import List, Tuple, Dict
 
@@ -66,7 +68,7 @@ class HybridRetriever:
         bm25_weight: float | None = None,
     ) -> Tuple[List[RetrievedSpan], Dict[str, int]]:
         """
-        하이브리드 검색
+        하이브리드 검색 (진짜 병렬 처리)
         
         Args:
             query: 검색 쿼리
@@ -83,15 +85,22 @@ class HybridRetriever:
         v_w = vector_weight if vector_weight is not None else self.vector_weight
         b_w = bm25_weight if bm25_weight is not None else self.bm25_weight
         
-        # Vector 검색 (가장 느린 작업)
+        # 🚀 진짜 병렬 처리: ThreadPoolExecutor + I/O 바운드 작업 최적화
         t0 = time.time()
-        vector_results = self.vector.search(query, top_k)
-        vector_time_ms = int((time.time() - t0) * 1000)
         
-        # BM25 검색 (매우 빠름)
-        t1 = time.time()
-        bm25_results = self.bm25.search(query, top_k)
-        bm25_time_ms = int((time.time() - t1) * 1000)
+        # Vector 검색은 CPU 집약적이므로 별도 스레드에서 실행
+        # BM25 검색은 매우 빠르므로 메인 스레드에서 실행
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+            # Vector 검색만 별도 스레드에서 실행
+            vector_future = executor.submit(self.vector.search, query, top_k)
+            
+            # BM25 검색은 메인 스레드에서 즉시 실행
+            bm25_results = self.bm25.search(query, top_k)
+            
+            # Vector 검색 결과 대기
+            vector_results = vector_future.result()
+        
+        total_time_ms = int((time.time() - t0) * 1000)
         
         # 결과 병합
         merged_scores = self._merge_results(
@@ -106,16 +115,19 @@ class HybridRetriever:
         
         # 메트릭
         metrics = {
-            "vector_time_ms": vector_time_ms,
-            "bm25_time_ms": bm25_time_ms,
+            "total_time_ms": total_time_ms,
             "vector_results": len(vector_results),
             "bm25_results": len(bm25_results),
             "merged_results": len(spans),
+            "parallel_execution": True,
         }
         
-        # logger.debug(f"Hybrid search completed", results=len(spans))
+        logger.debug(f"Parallel hybrid search completed", 
+                    results=len(spans), 
+                    total_time_ms=total_time_ms)
         
         return spans, metrics
+    
     
     def _merge_results(
         self,

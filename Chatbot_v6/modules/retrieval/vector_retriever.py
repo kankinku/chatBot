@@ -32,6 +32,7 @@ class VectorRetriever:
         embedder: BaseEmbedder,
         index_dir: Optional[str] = None,
         backend: str = "faiss",  # "faiss" or "simple"
+        use_gpu: bool = False,  # GPU 가속
     ):
         """
         Args:
@@ -39,11 +40,13 @@ class VectorRetriever:
             embedder: 임베더
             index_dir: 인덱스 디렉토리 (FAISS 사용 시)
             backend: 백엔드 ("faiss" or "simple")
+            use_gpu: GPU 가속 사용 여부
         """
         self.chunks = chunks
         self.embedder = embedder
         self.index_dir = index_dir
         self.backend = backend
+        self.use_gpu = use_gpu
         
         logger.info("VectorRetriever initializing",
                    num_chunks=len(chunks),
@@ -86,7 +89,7 @@ class VectorRetriever:
             ) from e
     
     def _build_faiss_index(self) -> None:
-        """FAISS 인덱스 구축/로드"""
+        """FAISS 인덱스 구축/로드 (GPU 가속 지원)"""
         if not self.index_dir:
             # FAISS 없으면 simple로 fallback
             logger.warning("No index_dir provided, falling back to simple index")
@@ -104,6 +107,15 @@ class VectorRetriever:
         
         try:
             import faiss
+            
+            # GPU 가속 확인
+            if self.use_gpu and faiss.get_num_gpus() > 0:
+                logger.info("Using FAISS GPU acceleration")
+                self._build_gpu_faiss_index()
+            else:
+                logger.info("Using FAISS CPU index")
+                self._build_cpu_faiss_index()
+            
             import json
             
             # FAISS 인덱스 로드
@@ -124,6 +136,39 @@ class VectorRetriever:
         except Exception as e:
             logger.error(f"Failed to load FAISS index: {e}", exc_info=True)
             self._build_simple_index()
+    
+    def _build_gpu_faiss_index(self) -> None:
+        """GPU 가속 FAISS 인덱스 구축"""
+        try:
+            import faiss
+            
+            # GPU 리소스 생성
+            self.gpu_res = faiss.StandardGpuResources()
+            
+            # CPU 인덱스를 GPU로 전환
+            cpu_index = faiss.read_index(str(Path(self.index_dir) / "index.faiss"))
+            self.index = faiss.index_cpu_to_gpu(self.gpu_res, 0, cpu_index)
+            
+            logger.info("FAISS GPU index created successfully")
+            
+        except Exception as e:
+            logger.warning(f"GPU FAISS failed, falling back to CPU: {e}")
+            self._build_cpu_faiss_index()
+    
+    def _build_cpu_faiss_index(self) -> None:
+        """CPU FAISS 인덱스 구축"""
+        try:
+            import faiss
+            
+            # CPU 인덱스 로드
+            index_path = Path(self.index_dir) / "index.faiss"
+            self.index = faiss.read_index(str(index_path))
+            
+            logger.info("FAISS CPU index loaded successfully")
+            
+        except Exception as e:
+            logger.error(f"CPU FAISS failed: {e}")
+            raise
     
     def search(
         self,

@@ -1,0 +1,228 @@
+# ============================================================================
+# 대용량 데이터 파일 (GitHub 업로드 방지)
+# ============================================================================
+
+# PDF 문서
+*.pdf
+*.PDF
+
+# Corpus 파일
+*.jsonl
+corpus.json
+**/corpus.jsonl
+**/corpus.json
+
+# 벡터 DB / 인덱스 파일
+*.faiss
+*.index
+*.hnsw
+*.bin
+*.npy
+*.npz
+*.sqlite3
+chroma.sqlite3
+vectordb/
+vector_store/
+**/vectordb/
+**/vector_store/
+
+# 데이터 디렉토리
+data/pdfs/
+**/data/*.pdf
+**/data/*.PDF
+**/data/pdfs/
+
+# ============================================================================
+# Python
+# ============================================================================
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv/
+env.bak/
+venv.bak/
+
+# ============================================================================
+# 로그 및 출력 파일
+# ============================================================================
+
+# 로그
+logs/
+*.log
+*.log.*
+**/logs/
+chatbot.log
+error.log
+
+# 벤치마크 결과
+benchmark_results.json
+**/benchmark_results.json
+out/
+**/out/
+
+# ============================================================================
+# IDE 및 에디터
+# ============================================================================
+
+# VSCode
+.vscode/
+*.code-workspace
+
+# PyCharm
+.idea/
+*.iml
+
+# Vim
+*.swp
+*.swo
+*~
+.*.swp
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# ============================================================================
+# OS 관련
+# ============================================================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+
+# Linux
+*~
+
+# ============================================================================
+# 설정 파일 (민감 정보)
+# ============================================================================
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+*.local.yaml
+*.local.json
+
+# ============================================================================
+# Docker
+# ============================================================================
+
+# Docker volumes
+docker-compose.override.yml
+
+# ============================================================================
+# Node.js (프론트엔드)
+# ============================================================================
+
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ============================================================================
+# 임시 파일
+# ============================================================================
+
+# 임시 디렉토리
+temp/
+tmp/
+*.tmp
+*.temp
+temp_block.txt
+
+# Backup files
+*.bak
+*.backup
+
+# ============================================================================
+# 특정 프로젝트 제외
+# ============================================================================
+
+# test_chatbot의 vectordb (대용량)
+test_chatbot/vectordb/
+
+# 각 버전별 vector_store
+정수처리\ 챗봇_v2/vector_store/
+정수처리\ 챗봇_v3/vector_store/
+정수처리\ 챗봇_v4/vector_store/
+정수처리\ 챗봇_v5.final/vector_store/
+
+# ============================================================================
+# 유지할 파일 (예외)
+# ============================================================================
+
+# 작은 샘플/예시 파일은 유지 (필요시 아래에 추가)
+# !example.pdf
+# !sample_corpus.jsonl
+
+# domain_dictionary.json은 유지 (작은 설정 파일)
+!**/domain_dictionary.json
+!domain_dictionary.json
+
+# qa 테스트 파일은 유지 (작은 파일)
+!**/qa.json
+!**/qa_test*.json
+!qa.json
+

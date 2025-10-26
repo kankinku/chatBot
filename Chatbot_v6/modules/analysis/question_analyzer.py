@@ -31,6 +31,7 @@ class QuestionAnalysis:
     has_number: bool = False
     has_unit: bool = False
     has_domain_keyword: bool = False
+    expanded_query: str = ""  # 쿼리 확장 결과
 
 
 class QuestionAnalyzer:
@@ -118,6 +119,9 @@ class QuestionAnalyzer:
         if qtype in ["system_info", "technical_spec"]:
             threshold_adj -= 0.1
         
+        # 쿼리 확장
+        expanded_query = self._expand_query(question)
+        
         return QuestionAnalysis(
             qtype=qtype,
             length=length,
@@ -128,6 +132,7 @@ class QuestionAnalyzer:
             has_number=has_number,
             has_unit=has_unit,
             has_domain_keyword=has_domain_kw,
+            expanded_query=expanded_query,
         )
     
     def _classify_question_type(self, question: str, q_lower: str) -> str:
@@ -183,4 +188,63 @@ class QuestionAnalyzer:
         }
         
         return weights.get(qtype, (0.58, 0.42))
+    
+    def _expand_query(self, question: str) -> str:
+        """
+        쿼리 확장 최적화 - 정밀한 키워드 매핑
+        
+        질문 유형별로 선택적 쿼리 확장을 적용하여 노이즈 최소화
+        """
+        # 질문 유형 분석
+        q_lower = question.lower()
+        
+        # 확장이 필요한 경우만 적용
+        should_expand = any(keyword in q_lower for keyword in [
+            "AI", "플랫폼", "공정", "수질", "탁도", "pH", "온도", "유량", "압력", "전력", "탄소"
+        ])
+        
+        if not should_expand:
+            return question
+        
+        # 정밀한 도메인 키워드 매핑 (정수장 특화)
+        precise_expansions = {
+            "AI": ["AI", "인공지능", "모델", "알고리즘"],
+            "플랫폼": ["플랫폼", "대시보드"],
+            "공정": ["공정", "처리"],
+            "수질": ["수질", "탁도", "SS"],
+            "pH": ["pH", "산성도"],
+            "온도": ["온도", "수온"],
+            "유량": ["유량", "유입량"],
+            "압력": ["압력", "수압"],
+            "전력": ["전력", "kWh"],
+            "탄소": ["탄소", "CO2"]
+        }
+        
+        expanded_terms = []
+        original_terms = question.split()
+        
+        # 원본 단어 유지
+        expanded_terms.extend(original_terms)
+        
+        # 선택적 확장 (최대 2개 키워드만)
+        expansion_count = 0
+        for term in original_terms:
+            if expansion_count >= 2:  # 확장 제한
+                break
+                
+            for key, synonyms in precise_expansions.items():
+                if key.lower() in term.lower():
+                    # 가장 관련성 높은 1개 키워드만 추가
+                    best_synonym = synonyms[1] if len(synonyms) > 1 else synonyms[0]
+                    if best_synonym not in expanded_terms:
+                        expanded_terms.append(best_synonym)
+                        expansion_count += 1
+                    break
+        
+        # 중복 제거 및 정리
+        unique_terms = list(dict.fromkeys(expanded_terms))
+        expanded_query = " ".join(unique_terms)
+        
+        logger.debug(f"Optimized query expansion: '{question}' -> '{expanded_query}'")
+        return expanded_query
 

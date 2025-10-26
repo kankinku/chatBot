@@ -1,60 +1,83 @@
 version: '3.8'
 
 services:
-  # Ollama 서버
-  ollama:
-    image: ollama/ollama:latest
-    container_name: chatbot_v6_ollama
-    restart: unless-stopped
-    ports:
-      - "11434:11434"
-    environment:
-      - OLLAMA_KEEP_ALIVE=5m
-    volumes:
-      - ollama_data:/root/.ollama
-    healthcheck:
-      test: ["CMD", "ollama", "ps"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    deploy:
-      resources:
-        limits:
-          memory: 8G
-
-  # 챗봇 API 서버
+  # 메인 챗봇 애플리케이션
   chatbot:
     build: .
-    container_name: chatbot_v6_api
-    restart: always
+    container_name: chatbot-v6
     ports:
       - "8000:8000"
-    environment:
-      - PYTHONUNBUFFERED=1
-      - PYTHONUTF8=1
-      - LOG_LEVEL=INFO
-      - LOG_FORMAT=json
-      - OLLAMA_HOST=ollama
-      - OLLAMA_PORT=11434
-      - ENABLE_GPU=false
     volumes:
       - ./data:/app/data
-      - ./vector_store:/app/vector_store
+      - ./out:/app/out
       - ./logs:/app/logs
+      - ./vector_store:/app/vector_store
+    environment:
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+      - OLLAMA_HOST=ollama:11434
     depends_on:
-      ollama:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+      - ollama
+    restart: unless-stopped
+    networks:
+      - chatbot-network
+
+  # Ollama LLM 서버
+  ollama:
+    image: ollama/ollama:latest
+    container_name: chatbot-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    restart: unless-stopped
+    networks:
+      - chatbot-network
+    # GPU 지원 (선택사항)
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+  # Redis 캐시 (선택사항)
+  redis:
+    image: redis:7-alpine
+    container_name: chatbot-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    networks:
+      - chatbot-network
+
+  # Elasticsearch (선택사항)
+  elasticsearch:
+    image: elasticsearch:8.11.0
+    container_name: chatbot-elasticsearch
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    restart: unless-stopped
+    networks:
+      - chatbot-network
 
 volumes:
   ollama_data:
+  redis_data:
+  elasticsearch_data:
 
 networks:
-  default:
+  chatbot-network:
     driver: bridge
-

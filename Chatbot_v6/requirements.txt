@@ -1,19 +1,28 @@
+# Chatbot v6 - 정수처리 RAG 챗봇 시스템
+# Python 3.10+ required
+
 # Core dependencies
 python>=3.10
 
 # PDF processing
 pymupdf>=1.23.0  # PDF text extraction
+pdfplumber>=0.9.0  # Alternative PDF processing
 
 # Embedding & ML
 sentence-transformers>=2.2.0  # SBERT embeddings
 torch>=2.0.0  # PyTorch
 transformers>=4.30.0  # Transformers
 numpy>=1.24.0  # Numerical operations
+scikit-learn>=1.3.0  # ML utilities
 
 # Vector stores
 faiss-cpu>=1.7.4  # FAISS vector search (CPU version)
 # faiss-gpu>=1.7.4  # FAISS vector search (GPU version) - uncomment if GPU available
 hnswlib>=0.7.0  # HNSW vector search
+
+# Search & Retrieval
+rank-bm25>=0.2.2  # BM25 search
+elasticsearch>=8.0.0  # Elasticsearch (optional)
 
 # Web framework
 fastapi>=0.100.0  # API framework
@@ -21,20 +30,32 @@ uvicorn>=0.23.0  # ASGI server
 pydantic>=2.0.0  # Data validation
 
 # HTTP requests
+requests>=2.31.0  # HTTP client
 urllib3>=2.0.0  # HTTP client (for Ollama)
 
 # Data processing
 pyyaml>=6.0  # YAML config files
+pandas>=2.0.0  # Data manipulation
+jsonlines>=3.1.0  # JSONL processing
 
 # Logging
 python-json-logger>=2.0.0  # JSON logging
 
-# Development
+# Evaluation metrics
+rouge-score>=0.1.2  # ROUGE evaluation
+nltk>=3.8.1  # Natural language processing
+spacy>=3.6.0  # Advanced NLP
+
+# Development & Testing
 pytest>=7.4.0  # Testing
+pytest-cov>=4.1.0  # Coverage
 black>=23.0.0  # Code formatting
 ruff>=0.0.280  # Linting
 mypy>=1.4.0  # Type checking
 
-# Optional: Progress bars
+# Progress bars
 tqdm>=4.65.0  # Progress bars
 
+# Optional: GPU acceleration
+# torch-audio>=2.0.0  # Audio processing (if needed)
+# torch-vision>=0.15.0  # Vision processing (if needed)
