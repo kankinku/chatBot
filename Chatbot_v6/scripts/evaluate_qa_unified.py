@@ -17,6 +17,14 @@ from pathlib import Path
 from typing import List, Dict, Any
 from datetime import datetime
 
+# GPU 모니터링을 위한 추가 임포트
+try:
+    import torch
+    import psutil
+    GPU_MONITORING_AVAILABLE = True
+except ImportError:
+    GPU_MONITORING_AVAILABLE = False
+
 # 프로젝트 루트 추가
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
@@ -30,6 +38,41 @@ from scripts.unified_evaluation import UnifiedEvaluator
 
 setup_logging(log_dir="logs", log_level="INFO", log_format="json")
 logger = get_logger(__name__)
+
+
+def get_gpu_usage() -> Dict[str, Any]:
+    """GPU 사용량 정보 반환"""
+    if not GPU_MONITORING_AVAILABLE:
+        return {"error": "GPU monitoring not available"}
+    
+    try:
+        if torch.cuda.is_available():
+            # GPU 메모리 사용량
+            allocated = torch.cuda.memory_allocated(0) / 1024**3  # GB
+            reserved = torch.cuda.memory_reserved(0) / 1024**3   # GB
+            total = torch.cuda.get_device_properties(0).total_memory / 1024**3  # GB
+            
+            return {
+                "gpu_available": True,
+                "gpu_name": torch.cuda.get_device_name(0),
+                "memory_allocated_gb": round(allocated, 2),
+                "memory_reserved_gb": round(reserved, 2),
+                "memory_total_gb": round(total, 2),
+                "memory_usage_percent": round((allocated / total) * 100, 1)
+            }
+        else:
+            return {"gpu_available": False}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+def log_gpu_status(context: str = ""):
+    """GPU 상태 로깅"""
+    gpu_info = get_gpu_usage()
+    if "error" not in gpu_info:
+        logger.info(f"GPU Status {context}", **gpu_info)
+    else:
+        logger.warning(f"GPU monitoring failed {context}: {gpu_info['error']}")
 
 
 class UnifiedQABenchmark:
@@ -50,6 +93,9 @@ class UnifiedQABenchmark:
         logger.info(f"=== 통합 평가 벤치마크 시작 ===")
         logger.info(f"총 질문 수: {len(self.qa_data)}")
         
+        # 초기 GPU 상태 로깅
+        log_gpu_status("(시작 전)")
+        
         start_time = time.time()
         qa_pairs = []
         
@@ -61,6 +107,10 @@ class UnifiedQABenchmark:
             
             logger.info(f"\n[{i}/{len(self.qa_data)}] 질문 처리 중...")
             logger.info(f"질문: {question}")
+            
+            # GPU 상태 로깅 (5개마다)
+            if i % 5 == 1:
+                log_gpu_status(f"(질문 {i} 처리 중)")
             
             try:
                 # 답변 생성
@@ -141,6 +191,9 @@ class UnifiedQABenchmark:
         
         # 통계 계산
         stats = self._calculate_stats(total_time)
+        
+        # 최종 GPU 상태 로깅
+        log_gpu_status("(완료 후)")
         
         logger.info("\n=== 벤치마크 완료 ===")
         logger.info(f"총 질문: {stats['total_questions']}")
@@ -349,7 +402,7 @@ def auto_build_corpus(pdf_dir: str, output_path: str) -> bool:
         all_chunks = []
         
         for pdf_path in pdf_files:
-            logger.info(f"  처리 중: {pdf_path.name}")
+            logger.info(f"PDF 처리: {pdf_path.name}")
             try:
                 chunks = process_pdf(
                     pdf_path,
@@ -357,30 +410,30 @@ def auto_build_corpus(pdf_dir: str, output_path: str) -> bool:
                     use_page_based_chunking=True,
                 )
                 all_chunks.extend(chunks)
-                logger.info(f"    ✅ {len(chunks)}개 청크 생성")
+                logger.info(f"완료: {len(chunks)}개 청크", count=len(chunks))
             except Exception as e:
-                logger.error(f"    ❌ 실패: {e}")
+                logger.error(f"처리 실패: {pdf_path.name}", error_code="E402")
                 continue
         
         if not all_chunks:
+            logger.error("Corpus 생성 실패: 처리된 청크가 없음", error_code="E403")
             return False
         
         # Corpus 저장
         save_corpus(all_chunks, Path(output_path))
         
-        logger.info(f"📊 총 {len(all_chunks)}개 청크 생성됨")
+        logger.info(f"Corpus 생성 완료: {len(all_chunks)}개 청크", count=len(all_chunks))
         
-        # 통계 출력
+        # 통계 출력 (간소화)
         measurements_count = sum(1 for chunk in all_chunks if chunk.extra.get('measurements'))
         neighbor_count = sum(1 for chunk in all_chunks if chunk.neighbor_hint)
         
-        logger.info(f"   - 측정값 포함: {measurements_count}/{len(all_chunks)}")
-        logger.info(f"   - 이웃 정보 포함: {neighbor_count}/{len(all_chunks)}")
+        logger.info(f"통계 - 측정값: {measurements_count}, 이웃정보: {neighbor_count}")
         
         return True
         
     except Exception as e:
-        logger.error(f"Corpus 자동 생성 중 오류: {e}", exc_info=True)
+        logger.error(f"Corpus 자동 생성 실패", error_code="E403", exc_info=True)
         return False
 
 
@@ -466,25 +519,26 @@ def main():
     # 작업 디렉토리를 프로젝트 루트로 변경
     os.chdir(project_root)
     
-    logger.info("=" * 80)
+    logger.info("=" * 60)
     logger.info("통합 평가 시스템 - QA 벤치마크")
-    logger.info("=" * 80)
+    logger.info("=" * 60)
     logger.info(f"프로젝트 루트: {project_root}")
     
     # QA 데이터 로드
-    logger.info(f"\n📖 QA 데이터 로딩: {args.qa}")
+    logger.info(f"QA 데이터 로딩: {args.qa}")
     if not Path(args.qa).exists():
-        logger.error(f"QA 파일이 없습니다: {args.qa}")
+        logger.error(f"QA 파일이 없습니다: {args.qa}", error_code="E401")
         sys.exit(1)
     
     qa_data = load_qa_data(args.qa)
-    logger.info(f"✅ QA 데이터 로드 완료: {len(qa_data)}개 질문")
+    logger.info(f"QA 데이터 로드 완료: {len(qa_data)}개 질문", count=len(qa_data))
     
     # 설정 로드
-    logger.info(f"\n⚙️  파이프라인 설정 로딩: {args.config}")
+    logger.info(f"파이프라인 설정 로딩: {args.config}")
     config_path = Path(args.config)
     if config_path.exists():
         pipeline_config = PipelineConfig.from_file(config_path)
+        logger.info("설정 로드 완료")
     else:
         logger.warning(f"설정 파일 없음, 기본 설정 사용")
         pipeline_config = PipelineConfig()
@@ -492,21 +546,21 @@ def main():
     pipeline_config.flags.mode = args.mode
     
     # Corpus 로드 (없으면 자동 생성)
-    logger.info(f"\n📚 Corpus 로딩: {args.corpus}")
+    logger.info(f"Corpus 로딩: {args.corpus}")
     if not Path(args.corpus).exists():
-        logger.warning(f"⚠️  Corpus 파일이 없습니다. 자동으로 생성합니다...")
+        logger.warning("Corpus 파일이 없습니다. 자동 생성합니다...")
         
         # PDF 디렉토리 확인
         pdf_dir = project_root / "data"
         pdf_files = list(pdf_dir.glob("*.pdf"))
         
         if not pdf_files:
-            logger.error(f"❌ PDF 파일이 없습니다: {pdf_dir}")
+            logger.error(f"PDF 파일이 없습니다: {pdf_dir}", error_code="E404")
             logger.error("data/ 디렉토리에 PDF 파일을 넣어주세요.")
             sys.exit(1)
         
-        logger.info(f"📄 {len(pdf_files)}개 PDF 파일 발견")
-        logger.info("🔧 Corpus 자동 생성 중...")
+        logger.info(f"PDF 파일 발견: {len(pdf_files)}개", count=len(pdf_files))
+        logger.info("Corpus 자동 생성 시작...")
         
         # build_corpus 자동 실행
         success = auto_build_corpus(
@@ -515,18 +569,30 @@ def main():
         )
         
         if not success:
-            logger.error("❌ Corpus 생성 실패")
+            logger.error("Corpus 생성 실패", error_code="E403")
             sys.exit(1)
         
-        logger.info(f"✅ Corpus 자동 생성 완료: {args.corpus}")
+        logger.info(f"Corpus 자동 생성 완료: {args.corpus}")
     
     chunks = load_chunks_from_corpus(args.corpus)
-    logger.info(f"✅ Corpus 로드 완료: {len(chunks)}개 청크")
+    logger.info(f"Corpus 로드 완료: {len(chunks)}개 청크", count=len(chunks))
+    
+    # LLM 모델 확인 및 자동 설치
+    logger.info(f"LLM 모델 확인: {args.model}")
+    try:
+        from modules.generation.ollama_manager import ollama_manager
+        if not ollama_manager.ensure_model_available(args.model):
+            logger.error(f"LLM 모델을 사용할 수 없습니다: {args.model}")
+            logger.info("수동 설치: ollama pull " + args.model)
+            sys.exit(1)
+    except Exception as e:
+        logger.warning(f"모델 자동 설치 실패: {e}")
+        logger.info("수동으로 모델을 설치해주세요: ollama pull " + args.model)
     
     # 파이프라인 초기화
-    logger.info("\n🚀 RAG 파이프라인 초기화 중...")
+    logger.info("RAG 파이프라인 초기화 중...")
     model_config = ModelConfig(
-        embedding=EmbeddingModelConfig(device="cpu"),
+        embedding=EmbeddingModelConfig(device="cuda"),  # GPU 강제 사용
         llm=LLMModelConfig(
             host="localhost",
             port=11434,
@@ -541,15 +607,19 @@ def main():
             model_config=model_config,
             evaluation_mode=True,  # 평가 모드 활성화
         )
-        logger.info("✅ 파이프라인 초기화 완료 (평가 모드)")
+        logger.info("파이프라인 초기화 완료 (평가 모드)")
+        
+        # 파이프라인 초기화 후 GPU 상태 로깅
+        log_gpu_status("(파이프라인 초기화 후)")
+        
     except Exception as e:
-        logger.error(f"❌ 파이프라인 초기화 실패: {e}", exc_info=True)
+        logger.error(f"파이프라인 초기화 실패: {e}", error_code="E500", exc_info=True)
         sys.exit(1)
     
     # 벤치마크 실행
-    logger.info("\n" + "=" * 80)
-    logger.info("📊 벤치마크 실행 시작")
-    logger.info("=" * 80)
+    logger.info("=" * 60)
+    logger.info("벤치마크 실행 시작")
+    logger.info("=" * 60)
     
     benchmark = UnifiedQABenchmark(pipeline, qa_data)
     

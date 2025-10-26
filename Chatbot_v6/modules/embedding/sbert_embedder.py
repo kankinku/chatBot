@@ -1,7 +1,8 @@
 """
-SBERT Embedder - Sentence-BERT 임베더
+SBERT Embedder
 
-Sentence-BERT를 사용한 임베딩을 수행합니다 (단일 책임).
+Sentence-BERT 모델 기반 텍스트 임베딩.
+배치 처리, 정규화, LRU 캐싱 지원 (쿼리 1024개).
 """
 
 from __future__ import annotations
@@ -20,11 +21,7 @@ logger = get_logger(__name__)
 
 
 class SBERTEmbedder(BaseEmbedder):
-    """
-    Sentence-BERT 임베더
-    
-    단일 책임: Sentence-BERT 모델을 사용한 임베딩만 수행
-    """
+    """Sentence-BERT 기반 텍스트 임베딩"""
     
     def __init__(self, config: Optional[EmbeddingModelConfig] = None):
         """
@@ -48,8 +45,8 @@ class SBERTEmbedder(BaseEmbedder):
             from sentence_transformers import SentenceTransformer
             import torch
             
-            # Device 결정
-            if self.config.device == "auto":
+            # Device 결정 (GPU 강제 사용)
+            if self.config.device == "auto" or self.config.device == "cpu":
                 device = "cuda" if torch.cuda.is_available() else "cpu"
             else:
                 device = self.config.device
@@ -181,14 +178,16 @@ class SBERTEmbedder(BaseEmbedder):
                     import torch
                     if torch.cuda.is_available():
                         torch.cuda.empty_cache()
-                except Exception:
-                    pass
+                except Exception as e:
+                    # GPU 정리 실패는 치명적이지 않음
+                    logger.debug("GPU cache cleanup failed (non-critical)", error=str(e))
                 
                 # 모델 참조 해제
                 del self._model
                 self._model = None
                 
                 logger.debug("SBERT model cleaned up")
-        except Exception:
-            pass  # 정리 실패 시 무시
+        except Exception as e:
+            # 모델 정리 실패는 심각한 문제가 아니므로 debug 레벨로 로깅
+            logger.debug("Model cleanup failed (non-critical)", error=str(e), error_type=type(e).__name__)
 

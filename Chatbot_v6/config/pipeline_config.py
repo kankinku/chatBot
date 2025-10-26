@@ -149,6 +149,10 @@ class ModeConfig:
     enable_retrieval_cache: bool = DEFAULT_CACHE_ENABLED
     retrieval_cache_size: int = DEFAULT_CACHE_SIZE
     
+    # GPU 강제 사용 플래그
+    force_gpu_embedding: bool = False  # 임베딩 GPU 강제 사용
+    force_gpu_faiss: bool = False      # FAISS GPU 강제 사용
+    
     def validate(self) -> None:
         """설정 값 검증"""
         valid_modes = {"accuracy", "speed", "balanced"}

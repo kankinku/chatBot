@@ -1,31 +1,10 @@
 version: '3.8'
 
 services:
-  # 메인 챗봇 애플리케이션
-  chatbot:
-    build: .
-    container_name: chatbot-v6
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./data:/app/data
-      - ./out:/app/out
-      - ./logs:/app/logs
-      - ./vector_store:/app/vector_store
-    environment:
-      - PYTHONPATH=/app
-      - PYTHONUNBUFFERED=1
-      - OLLAMA_HOST=ollama:11434
-    depends_on:
-      - ollama
-    restart: unless-stopped
-    networks:
-      - chatbot-network
-
-  # Ollama LLM 서버
+  # Ollama 서비스
   ollama:
     image: ollama/ollama:latest
-    container_name: chatbot-ollama
+    container_name: chatbot-v6-ollama
     ports:
       - "11434:11434"
     volumes:
@@ -33,51 +12,51 @@ services:
     environment:
       - OLLAMA_HOST=0.0.0.0
     restart: unless-stopped
-    networks:
-      - chatbot-network
-    # GPU 지원 (선택사항)
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: 1
-    #           capabilities: [gpu]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
 
-  # Redis 캐시 (선택사항)
-  redis:
-    image: redis:7-alpine
-    container_name: chatbot-redis
+  # FastAPI 백엔드 (RAG 시스템)
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: chatbot-v6-backend
     ports:
-      - "6379:6379"
+      - "8000:8000"
     volumes:
-      - redis_data:/data
-    restart: unless-stopped
-    networks:
-      - chatbot-network
-
-  # Elasticsearch (선택사항)
-  elasticsearch:
-    image: elasticsearch:8.11.0
-    container_name: chatbot-elasticsearch
-    ports:
-      - "9200:9200"
-      - "9300:9300"
+      - ./config:/app/config
+      - ./data:/app/data
+      - ./modules:/app/modules
+      - ./api:/app/api
+      - ./logs:/app/logs
     environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-    volumes:
-      - elasticsearch_data:/usr/share/elasticsearch/data
+      - OLLAMA_HOST=ollama
+      - OLLAMA_PORT=11434
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      - ollama
     restart: unless-stopped
-    networks:
-      - chatbot-network
+    command: uvicorn api.app:app --host 0.0.0.0 --port 8000 --reload
+
+  # React 프론트엔드
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        REACT_APP_API_URL: http://localhost:8000
+    container_name: chatbot-v6-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
 
 volumes:
   ollama_data:
-  redis_data:
-  elasticsearch_data:
-
-networks:
-  chatbot-network:
-    driver: bridge
+    driver: local

@@ -1,7 +1,10 @@
 """
-Reranker - 리랭커
+Reranker
 
-검색 결과를 재순위화합니다 (단일 책임).
+휴리스틱 기반 검색 결과 재순위화.
+정확한 매칭, 키워드 매칭, 오버랩 점수 종합.
+
+Note: Cross-encoder는 무거우므로 간단한 휴리스틱 사용
 """
 
 from __future__ import annotations
@@ -18,13 +21,7 @@ logger = get_logger(__name__)
 
 
 class Reranker:
-    """
-    리랭커
-    
-    단일 책임: 검색 결과 재순위화만 수행
-    
-    Note: Cross-encoder는 무거우므로 간단한 휴리스틱 기반 리랭킹 사용
-    """
+    """휴리스틱 기반 검색 결과 재순위화"""
     
     def __init__(self, config: PipelineConfig):
         """

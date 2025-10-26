@@ -1,7 +1,8 @@
 """
-Context Filter - 컨텍스트 필터
+Context Filter
 
-컨텍스트 품질을 검증하고 필터링합니다 (단일 책임).
+검색된 컨텍스트의 품질을 검증하고 점수를 캘리브레이션.
+오버랩, 키워드 매칭, 다양성 기준으로 필터링.
 """
 
 from __future__ import annotations
@@ -18,11 +19,7 @@ logger = get_logger(__name__)
 
 
 class ContextFilter:
-    """
-    컨텍스트 필터
-    
-    단일 책임: 컨텍스트 품질 검증 및 필터링만 수행
-    """
+    """컨텍스트 품질 검증 및 점수 캘리브레이션"""
     
     def __init__(self, config: PipelineConfig):
         """

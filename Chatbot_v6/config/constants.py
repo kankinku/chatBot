@@ -1,8 +1,8 @@
 """
-Constants - One Source of Truth
+Constants
 
-모든 상수를 단일 소스에서 관리합니다.
-선택값을 설정으로 분리하여 유연성을 확보합니다.
+시스템 전역 상수 정의 (OSOT 원칙).
+상태 코드, 에러 코드, 기본값, 단위 변환 등.
 """
 
 from enum import IntEnum, Enum
@@ -96,16 +96,16 @@ DEFAULT_BOUNDARY_SNAP_MARGIN_RATIO: Final[float] = 0.10
 
 # Embedding
 DEFAULT_EMBEDDING_MODEL: Final[str] = "jhgan/ko-sroberta-multitask"
-DEFAULT_EMBEDDING_BATCH_SIZE: Final[int] = 64  # 🚀 최적화 5: 배치 크기 증가 (32→64)
-DEFAULT_EMBEDDING_DEVICE: Final[str] = "cuda"  # or "cpu"
+DEFAULT_EMBEDDING_BATCH_SIZE: Final[int] = 512  # 🚀 GPU 최적화: 배치 크기 대폭 증가 (256→512)
+DEFAULT_EMBEDDING_DEVICE: Final[str] = "cuda"  # GPU 강제 사용
 
 # LLM
 DEFAULT_LLM_MODEL: Final[str] = "qwen2.5:3b-instruct-q4_K_M"
 DEFAULT_LLM_TEMPERATURE: Final[float] = 0.0
 DEFAULT_LLM_TOP_P: Final[float] = 0.9
 DEFAULT_LLM_TOP_K: Final[int] = 40
-DEFAULT_LLM_NUM_CTX: Final[int] = 8192
-DEFAULT_LLM_NUM_PREDICT: Final[int] = 512
+DEFAULT_LLM_NUM_CTX: Final[int] = 4096
+DEFAULT_LLM_NUM_PREDICT: Final[int] = 128  # 챗봇용 짧은 답변 (2문장 이내)
 DEFAULT_LLM_KEEP_ALIVE_MINUTES: Final[int] = 5
 
 # Retrieval
@@ -161,8 +161,19 @@ DEFAULT_VECTOR_STORE_DIR: Final[str] = "vector_store"
 DEFAULT_DOMAIN_DICT_PATH: Final[str] = "data/domain_dictionary.json"
 
 # Ollama
-DEFAULT_OLLAMA_HOST: Final[str] = "ollama"  # Docker service name
+DEFAULT_OLLAMA_HOST: Final[str] = "localhost"  # localhost for local, "ollama" for Docker
 DEFAULT_OLLAMA_PORT: Final[int] = 11434
+
+# Prompt Building
+DEFAULT_CONTEXT_TEXT_LENGTH: Final[int] = 800
+DEFAULT_CONTEXT_TEXT_LENGTH_SHORT: Final[int] = 600
+DEFAULT_CONTEXT_TEXT_LENGTH_LONG: Final[int] = 800
+DEFAULT_CONTEXT_TRUNCATE_RATIO: Final[float] = 0.8
+
+# Answer Generation
+DEFAULT_MAX_ANSWER_LENGTH: Final[int] = 200  # 챗봇용 짧은 답변 길이 제한
+DEFAULT_MIN_ANSWER_LENGTH: Final[int] = 10
+DEFAULT_EXTRACTIVE_FALLBACK_LENGTH: Final[int] = 200
 
 
 # ============================================================================

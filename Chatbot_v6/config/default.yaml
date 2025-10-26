@@ -25,12 +25,14 @@ context:
 flags:
   mode: "accuracy"  # "accuracy" or "speed"
   use_cross_reranker: false
-  use_gpu: true     # GPU 가속 활성화
-  store_backend: "faiss"  # FAISS GPU 인덱스 사용
-  rerank_top_n: 50
+  use_gpu: true     # GPU 강제 사용
+  store_backend: "hnsw"  # HNSW 인덱스 사용 (FAISS보다 빠름)
+  rerank_top_n: 20
   enable_parallel_search: true
   enable_retrieval_cache: true
   retrieval_cache_size: 256
+  force_gpu_embedding: true  # 임베딩 GPU 강제 사용
+  force_gpu_faiss: true      # FAISS GPU 강제 사용
 
 deduplication:
   jaccard_threshold: 0.9

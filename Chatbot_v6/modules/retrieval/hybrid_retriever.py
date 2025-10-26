@@ -1,7 +1,8 @@
 """
-Hybrid Retriever - 하이브리드 검색기
+Hybrid Retriever
 
-BM25와 Vector 검색을 결합한 하이브리드 검색 (단일 책임).
+BM25 키워드 검색과 Vector 의미 검색을 가중치 합산으로 결합.
+병렬 처리로 성능 최적화.
 """
 
 from __future__ import annotations
@@ -21,11 +22,7 @@ logger = get_logger(__name__)
 
 
 class HybridRetriever:
-    """
-    하이브리드 검색기
-    
-    단일 책임: BM25와 Vector 검색 결과를 가중치 합산으로 결합
-    """
+    """BM25와 Vector 검색을 가중치 합산으로 결합"""
     
     def __init__(
         self,
@@ -55,8 +52,8 @@ class HybridRetriever:
         # BM25 검색기
         self.bm25 = BM25Retriever(chunks)
         
-        # Vector 검색기
-        self.vector = VectorRetriever(chunks, embedder, index_dir)
+        # Vector 검색기 (GPU 강제 사용)
+        self.vector = VectorRetriever(chunks, embedder, index_dir, use_gpu=True)
         
         logger.info("HybridRetriever initialized")
     

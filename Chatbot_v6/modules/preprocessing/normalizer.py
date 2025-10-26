@@ -38,6 +38,58 @@ class Normalizer:
         text = text.replace('°', '도').replace('℃', '도')
         
         return text
+    
+    def normalize_unit(self, unit: str) -> str:
+        """단위 정규화"""
+        unit = unit.strip().lower()
+        
+        # 기본 단위 매핑
+        unit_mapping = {
+            # 온도
+            '도': '℃', 'c': '℃', 'celcius': '℃', '섭씨': '℃',
+            
+            # 농도
+            '퍼센트': '%', 'percent': '%', 'pct': '%',
+            '밀리그램': 'mg/L', 'mg': 'mg/L', 'mg/l': 'mg/L',
+            'ppm': 'ppm', 'ppb': 'ppb',
+            
+            # 부피/유량
+            '리터': 'L', 'liter': 'L', 'l': 'L',
+            '미터': 'm', 'meter': 'm',
+            'm³': 'm³', 'm3': 'm³', 'cubic': 'm³',
+            'm³/day': 'm³/day', 'm³/h': 'm³/h', 'm³/d': 'm³/day',
+            'L/min': 'L/min', 'L/s': 'L/s',
+            
+            # 압력
+            '바': 'bar', 'bar': 'bar',
+            '파스칼': 'Pa', 'pa': 'Pa', 'kpa': 'kPa',
+            '기압': 'atm', 'atm': 'atm',
+            
+            # 전력
+            '킬로와트': 'kW', 'kw': 'kW', 'kwatt': 'kW',
+            '와트': 'W', 'watt': 'W', 'w': 'W',
+            '메가와트': 'MW', 'mw': 'MW',
+            
+            # 탄소
+            'kgco2e': 'kgCO2e', 'kgco2': 'kgCO2e',
+            'co2': 'CO2', '탄소': 'CO2',
+            
+            # 수질
+            'ntu': 'NTU', 'tu': 'TU', 'ss': 'SS',
+            'ph': 'pH', '산성도': 'pH',
+            'μs/cm': 'μS/cm', 'us/cm': 'μS/cm',
+            
+            # 시간
+            '시간': 'h', 'hour': 'h', 'hr': 'h',
+            '분': 'min', 'minute': 'min',
+            '초': 's', 'second': 's', 'sec': 's',
+            
+            # 기타
+            'rpm': 'rpm', '회전': 'rpm',
+            'm/s': 'm/s', '속도': 'm/s',
+        }
+        
+        return unit_mapping.get(unit, unit)
 
 
 class NumericExtractor:

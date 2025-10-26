@@ -110,7 +110,7 @@ class PDFExtractor:
         try:
             import pymupdf
             
-            logger.info(f"Extracting pages from PDF: {path}")
+            logger.info(f"PDF 처리 시작: {path.name}")
             
             doc = pymupdf.open(str(path))
             
@@ -120,22 +120,22 @@ class PDFExtractor:
                 page = doc[page_num]
                 text = page.get_text()
                 pages.append((page_num + 1, text))
-                logger.debug(f"Extracted page {page_num + 1}/{len(doc)}", 
-                            chars=len(text))
             
             doc.close()
             
-            logger.info(f"PDF page extraction complete", pages=len(pages))
+            logger.info(f"PDF 처리 완료: {len(pages)}페이지", count=len(pages))
             
             return pages
         
         except ImportError as e:
+            logger.error(f"필수 라이브러리 누락: pymupdf", error_code="E402")
             raise TextExtractionError(
                 str(path),
                 cause=ImportError("pymupdf not installed. Run: pip install pymupdf")
             ) from e
         
         except Exception as e:
+            logger.error(f"PDF 처리 실패: {path.name}", error_code="E402", exc_info=True)
             raise TextExtractionError(
                 str(path),
                 cause=e,

@@ -1,7 +1,8 @@
 """
-Guardrail Checker - 가드레일 체커
+Guardrail Checker
 
-질문-컨텍스트 정합성을 검증합니다 (단일 책임).
+질문과 컨텍스트 간의 정합성을 검증.
+오버랩 비율과 키워드 커버리지 기반 품질 체크.
 """
 
 from __future__ import annotations
@@ -17,11 +18,7 @@ logger = get_logger(__name__)
 
 
 class GuardrailChecker:
-    """
-    가드레일 체커
-    
-    단일 책임: 질문-컨텍스트 정합성 검증만 수행
-    """
+    """질문-컨텍스트 정합성 검증"""
     
     def __init__(self, config: PipelineConfig):
         """

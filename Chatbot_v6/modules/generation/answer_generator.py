@@ -1,7 +1,8 @@
 """
-Answer Generator - 답변 생성기
+Answer Generator
 
-LLM을 사용하여 최종 답변을 생성합니다 (단일 책임).
+LLM 기반 답변 생성 및 후처리.
+재시도 로직, Recovery 모드, 추출적 폴백 지원.
 """
 
 from __future__ import annotations
@@ -12,6 +13,11 @@ from typing import List, Optional
 
 from modules.core.types import RetrievedSpan
 from modules.core.logger import get_logger
+from config.constants import (
+    DEFAULT_MAX_ANSWER_LENGTH,
+    DEFAULT_MIN_ANSWER_LENGTH,
+    DEFAULT_EXTRACTIVE_FALLBACK_LENGTH,
+)
 from .llm_client import OllamaClient
 from .prompt_builder import PromptBuilder
 
@@ -19,11 +25,7 @@ logger = get_logger(__name__)
 
 
 class AnswerGenerator:
-    """
-    답변 생성기
-    
-    단일 책임: LLM을 사용한 답변 생성 및 후처리
-    """
+    """LLM 기반 답변 생성 및 품질 검증"""
     
     def __init__(
         self,
@@ -149,12 +151,12 @@ class AnswerGenerator:
         if text.startswith("[답변]"):
             text = text[4:].strip()
         
-        # 길이 제한 (최대 500자)
-        if len(text) > 500:
+        # 길이 제한
+        if len(text) > DEFAULT_MAX_ANSWER_LENGTH:
             sentences = text.split('.')
             truncated = ""
             for sentence in sentences:
-                if len(truncated + sentence + '.') <= 500:
+                if len(truncated + sentence + '.') <= DEFAULT_MAX_ANSWER_LENGTH:
                     truncated += sentence + '.'
                 else:
                     break
@@ -196,7 +198,7 @@ class AnswerGenerator:
         answer = answer.strip()
         
         # 너무 짧음
-        if len(answer) < 10:
+        if len(answer) < DEFAULT_MIN_ANSWER_LENGTH:
             return True
         
         # "확인할 수 없습니다" 류의 답변
@@ -251,10 +253,10 @@ class AnswerGenerator:
             if meaningful_sentences:
                 # 첫 2-3 문장 사용
                 result = '. '.join(meaningful_sentences[:3])
-                if len(result) > 300:
-                    result = result[:300] + "..."
+                if len(result) > DEFAULT_EXTRACTIVE_FALLBACK_LENGTH + 100:
+                    result = result[:DEFAULT_EXTRACTIVE_FALLBACK_LENGTH + 100] + "..."
                 return result + ("." if not result.endswith('.') else "")
         
-        # 폴백: 첫 200자
-        return best_text[:200] + "..."
+        # 폴백: 첫 N자
+        return best_text[:DEFAULT_EXTRACTIVE_FALLBACK_LENGTH] + "..."
 

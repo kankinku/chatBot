@@ -1,7 +1,8 @@
 """
-RAG Pipeline - RAG 파이프라인
+RAG Pipeline
 
-모든 모듈을 통합한 완전한 RAG 파이프라인 (단일 책임: 조율).
+end-to-end RAG 파이프라인.
+분석 → 검색 → 필터링 → 리랭킹 → 생성의 전체 흐름 조율.
 """
 
 from __future__ import annotations
@@ -27,11 +28,7 @@ logger = get_logger(__name__)
 
 
 class RAGPipeline:
-    """
-    RAG 파이프라인
-    
-    단일 책임: 모든 모듈을 조율하여 end-to-end RAG 수행
-    """
+    """모든 RAG 모듈을 조율하는 통합 파이프라인"""
     
     def __init__(
         self,

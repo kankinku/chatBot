@@ -1,7 +1,8 @@
 """
-Ollama Client - Ollama LLM 클라이언트
+Ollama Client
 
-Ollama API와 통신하는 클라이언트 (단일 책임).
+Ollama API 통신 클라이언트.
+텍스트 생성 및 연결 상태 확인.
 """
 
 from __future__ import annotations
@@ -13,16 +14,13 @@ from typing import Optional, Dict, Any
 from config.model_config import LLMModelConfig
 from modules.core.exceptions import LLMConnectionError, LLMTimeoutError, LLMResponseEmptyError
 from modules.core.logger import get_logger
+from .ollama_manager import ollama_manager
 
 logger = get_logger(__name__)
 
 
 class OllamaClient:
-    """
-    Ollama LLM 클라이언트
-    
-    단일 책임: Ollama API 통신만 수행
-    """
+    """Ollama API 통신 클라이언트"""
     
     def __init__(self, config: Optional[LLMModelConfig] = None):
         """
@@ -35,6 +33,9 @@ class OllamaClient:
         logger.info("OllamaClient initialized",
                    base_url=self.base_url,
                    model=self.config.model_name)
+        
+        # 모델 자동 설치 확인
+        self._ensure_model_available()
     
     def generate(
         self,
@@ -135,4 +136,15 @@ class OllamaClient:
         
         except Exception:
             return False
+    
+    def _ensure_model_available(self) -> None:
+        """모델이 사용 가능한지 확인하고 필요시 자동 설치"""
+        try:
+            # OllamaManager를 사용하여 모델 확인 및 자동 설치
+            if not ollama_manager.ensure_model_available(self.config.model_name):
+                logger.warning(f"Model {self.config.model_name} is not available")
+                logger.info("You may need to install it manually: ollama pull " + self.config.model_name)
+        except Exception as e:
+            logger.error(f"Failed to ensure model availability: {e}")
+            logger.info("Continuing without automatic model installation...")
 

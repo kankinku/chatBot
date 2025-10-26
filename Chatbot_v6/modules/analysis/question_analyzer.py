@@ -1,7 +1,8 @@
 """
-Question Analyzer - 질문 분석기
+Question Analyzer
 
-질문 유형, 키워드, 가중치를 분석합니다 (단일 책임).
+질문 유형 분류, 검색 가중치 결정, 쿼리 확장.
+LRU 캐싱으로 성능 최적화 (256개).
 """
 
 from __future__ import annotations
@@ -35,11 +36,7 @@ class QuestionAnalysis:
 
 
 class QuestionAnalyzer:
-    """
-    질문 분석기
-    
-    단일 책임: 질문 분석만 수행
-    """
+    """질문 유형 분류 및 검색 파라미터 결정"""
     
     def __init__(self, domain_dict_path: Optional[str] = None):
         """

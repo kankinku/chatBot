@@ -1,7 +1,8 @@
 """
-Prompt Builder - 프롬프트 생성기
+Prompt Builder
 
-도메인 특화 프롬프트를 생성합니다 (단일 책임).
+질문 유형별 최적화된 프롬프트 생성.
+표준/Recovery/평가 모드 지원, 도메인 사전 기반 컨텍스트 선택.
 """
 
 from __future__ import annotations
@@ -12,16 +13,18 @@ from typing import List, Optional, Dict, Set
 
 from modules.core.types import RetrievedSpan
 from modules.core.logger import get_logger
+from config.constants import (
+    DEFAULT_CONTEXT_TEXT_LENGTH,
+    DEFAULT_CONTEXT_TEXT_LENGTH_SHORT,
+    DEFAULT_CONTEXT_TEXT_LENGTH_LONG,
+    DEFAULT_CONTEXT_TRUNCATE_RATIO,
+)
 
 logger = get_logger(__name__)
 
 
 class PromptBuilder:
-    """
-    프롬프트 생성기
-    
-    단일 책임: 프롬프트 생성만 수행
-    """
+    """질문 유형별 최적화 프롬프트 생성"""
     
     def __init__(self, domain_dict_path: Optional[str] = None, evaluation_mode: bool = False):
         """
@@ -155,15 +158,15 @@ class PromptBuilder:
         # 질문 유형별 맞춤 설정
         if question_type in ["technical_spec", "definition"]:
             max_contexts = 6
-            text_length = 800
+            text_length = DEFAULT_CONTEXT_TEXT_LENGTH_LONG
             instruction = "기술적 세부사항과 정확한 용어를 포함하여"
         elif question_type in ["system_info", "numeric"]:
             max_contexts = 5
-            text_length = 600
+            text_length = DEFAULT_CONTEXT_TEXT_LENGTH_SHORT
             instruction = "정확한 수치, URL, 계정 정보를 그대로"
         else:
             max_contexts = 4
-            text_length = 500
+            text_length = DEFAULT_CONTEXT_TEXT_LENGTH_SHORT
             instruction = "문서 내용을 바탕으로"
         
         parts = [
@@ -184,7 +187,7 @@ class PromptBuilder:
                 last_newline = truncated.rfind('\n')
                 last_break = max(last_period, last_newline)
                 
-                if last_break > text_length * 0.8:
+                if last_break > text_length * DEFAULT_CONTEXT_TRUNCATE_RATIO:
                     text = truncated[:last_break + 1]
                 else:
                     text = truncated + "..."
@@ -203,7 +206,7 @@ class PromptBuilder:
             "- 답변은 한국어를 사용해주세요(url이나 전문 용어는 예외)",
             "- 관련 키워드나 용어가 문서에 있다면 반드시 포함하세요",
             "- 문서 내용을 바탕으로 직접적인 답변을 제공하세요. 추론이나 해석은 피하세요",
-            "- 답변은 간결하고 명확하게 작성하세요 (최대 3-4문장)",
+            "- 답변은 간결하고 명확하게 작성하세요 (최대 2문장 이내)",
             "- 문서 내용을 그대로 복사하지 말고 요약하여 자연스럽게 답변하세요",
             "- 핵심 정보만 포함하고 불필요한 세부사항은 생략하세요",
             "- 출처 표시나 문서 번호는 포함하지 마세요",
@@ -229,7 +232,7 @@ class PromptBuilder:
     ) -> str:
         """복구 모드 프롬프트 (더 엄격)"""
         max_contexts = 5
-        text_length = 600
+        text_length = DEFAULT_CONTEXT_TEXT_LENGTH_SHORT
         
         parts = [
             "고산 정수장 시스템 사용자 설명서 전문 챗봇입니다.",
@@ -257,7 +260,7 @@ class PromptBuilder:
             "- 일반적인 추측이나 외부 지식은 사용하지 마세요",
             "- 관련 키워드나 전문 용어가 문서에 있다면 반드시 포함하세요",
             "- 여러 문서에서 관련 정보를 종합하여 답변하세요",
-            "- 답변은 간결하고 명확하게 작성하세요 (최대 3-4문장)",
+            "- 답변은 간결하고 명확하게 작성하세요 (최대 2문장 이내)",
             "- 문서 내용을 그대로 복사하지 말고 요약하여 자연스럽게 답변하세요",
             "- 핵심 정보만 포함하고 불필요한 세부사항은 생략하세요",
             "- 출처 표시나 문서 번호는 포함하지 마세요",
@@ -291,7 +294,7 @@ class PromptBuilder:
         - 자연스러움보다 정확성 우선
         """
         max_contexts = 6
-        text_length = 800
+        text_length = DEFAULT_CONTEXT_TEXT_LENGTH_LONG
         
         parts = [
             "당신은 고산 정수장 시스템 사용자 설명서 전문 챗봇입니다.",
@@ -310,7 +313,7 @@ class PromptBuilder:
                 last_newline = truncated.rfind('\n')
                 last_break = max(last_period, last_newline)
                 
-                if last_break > text_length * 0.8:
+                if last_break > text_length * DEFAULT_CONTEXT_TRUNCATE_RATIO:
                     text = truncated[:last_break + 1]
                 else:
                     text = truncated + "..."
@@ -331,7 +334,7 @@ class PromptBuilder:
             "- 정답에 포함될 키워드를 최대한 많이 포함하세요",
             "- 문서에 없는 정보는 '문서에서 확인할 수 없습니다'라고만 답변하세요",
             "- 추측이나 일반적인 정보는 절대 사용하지 마세요",
-            "- 답변은 명확하고 구체적으로 작성하세요",
+            "- 답변은 명확하고 구체적으로 작성하세요 (최대 2문장 이내)",
             "- 출처나 문서 번호는 포함하지 마세요",
             "- 이모지는 사용하지 마세요",
             "",

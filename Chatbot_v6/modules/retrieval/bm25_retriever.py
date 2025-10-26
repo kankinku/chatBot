@@ -1,7 +1,8 @@
 """
-BM25 Retriever - BM25 검색기
+BM25 Retriever
 
-BM25 알고리즘을 사용한 키워드 기반 검색 (단일 책임).
+Okapi BM25 알고리즘을 사용한 키워드 기반 검색.
+한글 특성 반영을 위해 char n-gram (3-5) 사용.
 """
 
 from __future__ import annotations
@@ -18,11 +19,7 @@ logger = get_logger(__name__)
 
 
 class BM25Retriever:
-    """
-    BM25 검색기
-    
-    단일 책임: BM25 알고리즘을 사용한 키워드 검색만 수행
-    """
+    """BM25 알고리즘 기반 키워드 검색"""
     
     def __init__(
         self,

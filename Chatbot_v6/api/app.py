@@ -13,10 +13,14 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
+import uuid
+import time
 
 from config.pipeline_config import PipelineConfig
 from config.environment import get_env_config
@@ -137,8 +141,33 @@ async def health_check():
     }
 
 
+@app.get("/status")
+async def get_status():
+    """AI 서비스 상태 확인"""
+    if not pipeline:
+        return {
+            "status": "initializing",
+            "ai_available": False,
+            "model_loaded": False,
+            "total_pdfs": 0,
+            "total_chunks": 0,
+        }
+    
+    # 문서 통계
+    total_chunks = len(pipeline.chunks) if hasattr(pipeline, 'chunks') else 0
+    unique_files = len(set(c.filename for c in pipeline.chunks)) if hasattr(pipeline, 'chunks') else 0
+    
+    return {
+        "status": "ok",
+        "ai_available": True,
+        "model_loaded": True,
+        "total_pdfs": unique_files,
+        "total_chunks": total_chunks,
+    }
+
+
 @app.post("/ask", response_model=AnswerResponse)
-async def ask_question(request: QuestionRequest):
+async def ask_question(req: Request, request: QuestionRequest):
     """
     질문에 대한 답변
     
@@ -151,14 +180,21 @@ async def ask_question(request: QuestionRequest):
     if not pipeline:
         raise HTTPException(status_code=503, detail="Pipeline not initialized")
     
+    start_time = time.time()
+    session_id = req.headers.get('X-Session-ID', str(uuid.uuid4()))
+    
     try:
-        logger.info(f"Received question", question=request.question)
+        logger.info(f"Received question", 
+                   question=request.question,
+                   session_id=session_id)
         
         # 파이프라인 실행
         answer = pipeline.ask(
             question=request.question,
             top_k=request.top_k,
         )
+        
+        processing_time = time.time() - start_time
         
         # 응답 변환
         sources = [
@@ -176,11 +212,17 @@ async def ask_question(request: QuestionRequest):
             answer=answer.text,
             confidence=answer.confidence,
             sources=sources,
-            metrics=answer.metrics,
+            metrics={
+                **answer.metrics,
+                "processing_time": processing_time,
+                "session_id": session_id,
+            },
         )
         
         logger.info("Question answered successfully",
-                   confidence=answer.confidence)
+                   confidence=answer.confidence,
+                   processing_time=processing_time,
+                   session_id=session_id)
         
         return response
     
