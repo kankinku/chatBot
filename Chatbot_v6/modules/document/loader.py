@@ -120,7 +120,10 @@ class DocumentLoader:
             
             # PDF 텍스트 추출
             extractor = PDFExtractor()
-            pages_text, page_count = extractor.extract(str(pdf_path))
+            pages = extractor.extract_pages_from_file(str(pdf_path))
+            # pages는 [(page_num, text), ...] 형태의 튜플 리스트
+            pages_text = [text for _, text in pages]
+            page_count = len(pages)
             
             # 메타데이터 생성
             doc_id = pdf_path.stem  # 파일명 (확장자 제외)
@@ -135,13 +138,31 @@ class DocumentLoader:
             )
             self.metadata.append(metadata)
             
-            # 청킹
-            chunker = SlidingWindowChunker()
-            chunks = chunker.chunk_pages(
-                pages_text=pages_text,
-                doc_id=doc_id,
-                filename=pdf_path.name,
+            # 청킹 설정 및 실행
+            from modules.chunking.base_chunker import ChunkingConfig
+            
+            chunking_config = ChunkingConfig(
+                chunk_size=802,
+                chunk_overlap=200,
+                enable_numeric_chunking=True,
+                numeric_context_window=3,
+                preserve_table_context=True,
+                enable_boundary_snap=True,
             )
+            
+            chunker = SlidingWindowChunker(config=chunking_config)
+            
+            # 페이지별로 텍스트를 청킹
+            chunks = []
+            for page_num, page_text in pages:  # pages는 이미 (page_num, text) 튜플 리스트
+                if page_text.strip():  # 빈 페이지 제외
+                    page_chunks = chunker.chunk_text(
+                        doc_id=doc_id,
+                        filename=pdf_path.name,
+                        text=page_text,
+                        page=page_num,
+                    )
+                    chunks.extend(page_chunks)
             
             return chunks
         

@@ -2,13 +2,12 @@
 Hybrid Retriever
 
 BM25 키워드 검색과 Vector 의미 검색을 가중치 합산으로 결합.
-병렬 처리로 성능 최적화.
+
+단순하고 직관적인 순차 처리.
 """
 
 from __future__ import annotations
 
-import asyncio
-import concurrent.futures
 from collections import defaultdict
 from typing import List, Tuple, Dict
 
@@ -52,8 +51,8 @@ class HybridRetriever:
         # BM25 검색기
         self.bm25 = BM25Retriever(chunks)
         
-        # Vector 검색기 (GPU 강제 사용)
-        self.vector = VectorRetriever(chunks, embedder, index_dir, use_gpu=True)
+        # Vector 검색기 (Chroma DB 사용)
+        self.vector = VectorRetriever(chunks, embedder, index_dir)
         
         logger.info("HybridRetriever initialized")
     
@@ -65,7 +64,7 @@ class HybridRetriever:
         bm25_weight: float | None = None,
     ) -> Tuple[List[RetrievedSpan], Dict[str, int]]:
         """
-        하이브리드 검색 (진짜 병렬 처리)
+        하이브리드 검색 (순차 처리)
         
         Args:
             query: 검색 쿼리
@@ -82,20 +81,14 @@ class HybridRetriever:
         v_w = vector_weight if vector_weight is not None else self.vector_weight
         b_w = bm25_weight if bm25_weight is not None else self.bm25_weight
         
-        # 🚀 진짜 병렬 처리: ThreadPoolExecutor + I/O 바운드 작업 최적화
+        # 순차 처리: BM25 먼저, 그 다음 Vector
         t0 = time.time()
         
-        # Vector 검색은 CPU 집약적이므로 별도 스레드에서 실행
-        # BM25 검색은 매우 빠르므로 메인 스레드에서 실행
-        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-            # Vector 검색만 별도 스레드에서 실행
-            vector_future = executor.submit(self.vector.search, query, top_k)
-            
-            # BM25 검색은 메인 스레드에서 즉시 실행
-            bm25_results = self.bm25.search(query, top_k)
-            
-            # Vector 검색 결과 대기
-            vector_results = vector_future.result()
+        # BM25 검색 (매우 빠름)
+        bm25_results = self.bm25.search(query, top_k)
+        
+        # Vector 검색 (Chroma DB)
+        vector_results = self.vector.search(query, top_k)
         
         total_time_ms = int((time.time() - t0) * 1000)
         
@@ -116,15 +109,14 @@ class HybridRetriever:
             "vector_results": len(vector_results),
             "bm25_results": len(bm25_results),
             "merged_results": len(spans),
-            "parallel_execution": True,
+            "sequential_execution": True,
         }
         
-        logger.debug(f"Parallel hybrid search completed", 
+        logger.debug(f"Sequential hybrid search completed", 
                     results=len(spans), 
                     total_time_ms=total_time_ms)
         
         return spans, metrics
-    
     
     def _merge_results(
         self,
@@ -145,7 +137,6 @@ class HybridRetriever:
         Returns:
             {청크 인덱스: 병합 점수}
         """
-        # 🚀 최적화 3: 간단하고 빠른 정규화 (작은 데이터셋에 최적)
         merged: Dict[int, float] = defaultdict(float)
         
         # Vector 결과 정규화
@@ -201,4 +192,3 @@ class HybridRetriever:
             spans.append(span)
         
         return spans
-

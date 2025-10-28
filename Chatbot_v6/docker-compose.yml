@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Ollama 서비스
   ollama:
@@ -20,8 +18,8 @@ services:
               count: all
               capabilities: [gpu]
 
-  # FastAPI 백엔드 (RAG 시스템)
-  backend:
+  # FastAPI 백엔드 (챗봇 서버 - RAG 시스템)
+  chatbot-backend:
     build:
       context: .
       dockerfile: Dockerfile
@@ -34,29 +32,100 @@ services:
       - ./modules:/app/modules
       - ./api:/app/api
       - ./logs:/app/logs
+      - ./vector_store:/app/vector_store
     environment:
       - OLLAMA_HOST=ollama
       - OLLAMA_PORT=11434
       - PYTHONUNBUFFERED=1
     depends_on:
-      - ollama
+      ollama:
+        condition: service_started
     restart: unless-stopped
-    command: uvicorn api.app:app --host 0.0.0.0 --port 8000 --reload
+    command: >
+      sh -c "
+        echo 'Waiting for Ollama to be ready...' &&
+        sleep 10 &&
+        uvicorn api.app:app --host 0.0.0.0 --port 8000 --no-reload
+      "
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+
+  # MySQL 데이터베이스 (프록시 서버용)
+  mysql:
+    image: mysql:8.0
+    container_name: chatbot-v6-mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=1234
+      - MYSQL_DATABASE=chatbot_db
+      - MYSQL_USER=chatbot_user
+      - MYSQL_PASSWORD=1234
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    restart: unless-stopped
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+
+  # Django 프록시 서버
+  backend-proxy:
+    build:
+      context: ./Server/backend
+      dockerfile: Dockerfile
+    container_name: chatbot-v6-proxy
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./Server/backend:/app
+      - ./logs:/app/logs
+    environment:
+      - CHATBOT_URL=http://chatbot-backend:8000
+      - MYSQL_HOST=mysql
+      - MYSQL_PORT=3306
+      - MYSQL_DATABASE=chatbot_db
+      - MYSQL_USER=chatbot_user
+      - MYSQL_PASSWORD=1234
+      - SECRET_KEY=chatbot-secret-key-change-in-production
+      - DEBUG=True
+    depends_on:
+      - chatbot-backend
+      - mysql
+    restart: unless-stopped
+    command: >
+      sh -c "
+        echo 'Waiting for MySQL to be ready...' &&
+        sleep 10 &&
+        python manage.py migrate &&
+        python manage.py runserver 0.0.0.0:8000
+      "
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/chatbot/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   # React 프론트엔드
   frontend:
     build:
-      context: ./frontend
+      context: ./Server/frontend
       dockerfile: Dockerfile
       args:
-        REACT_APP_API_URL: http://localhost:8000
+        REACT_APP_API_URL: http://localhost:8001
     container_name: chatbot-v6-frontend
     ports:
       - "3000:80"
     depends_on:
-      - backend
+      - backend-proxy
     restart: unless-stopped
+    networks:
+      - default
 
 volumes:
   ollama_data:
+    driver: local
+  mysql_data:
     driver: local

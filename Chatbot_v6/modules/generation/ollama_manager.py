@@ -121,16 +121,26 @@ class OllamaManager:
                 headers={"Content-Type": "application/json"}
             )
             
-            with urllib.request.urlopen(req, timeout=timeout) as response:
-                result = json.loads(response.read().decode())
+            # 모델 다운로드는 시간이 오래 걸릴 수 있음 (비동기 처리)
+            # POST 요청은 즉시 성공하고 백그라운드에서 다운로드 진행
+            with urllib.request.urlopen(req, timeout=30) as response:
+                # 응답이 오면 다운로드 시작된 것
+                logger.info(f"Model download started: {model_name}")
                 
-                if result.get("status") == "success":
-                    logger.info(f"Model installed successfully: {model_name}")
-                    self._available_models = None  # 캐시 무효화
-                    return True
-                else:
-                    logger.error(f"Model installation failed: {result}")
-                    return False
+                # 다운로드 완료까지 대기 (최대 timeout 초)
+                for i in range(timeout // 5):
+                    time.sleep(5)
+                    if self.is_model_installed(model_name):
+                        logger.info(f"Model installed successfully: {model_name}")
+                        self._available_models = None  # 캐시 무효화
+                        return True
+                    
+                    if (i + 1) % 6 == 0:  # 30초마다 로그
+                        logger.info(f"Still downloading {model_name}... ({((i+1)*5)}/{timeout}s)")
+                
+                # 타임아웃 전에 완료되지 않았지만, 설치 시도는 했음
+                logger.warning(f"Model download timeout, but installation may continue in background: {model_name}")
+                return True  # 백그라운드에서 계속 진행되므로 True 반환
         
         except Exception as e:
             logger.error(f"Failed to install model {model_name}: {e}", exc_info=True)
@@ -218,4 +228,5 @@ class OllamaManager:
 
 # 전역 인스턴스
 ollama_manager = OllamaManager()
+
 

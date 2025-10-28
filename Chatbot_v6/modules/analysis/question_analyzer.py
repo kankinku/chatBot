@@ -132,8 +132,39 @@ class QuestionAnalyzer:
             expanded_query=expanded_query,
         )
     
+    def is_greeting(self, question: str) -> bool:
+        """인사말인지 확인"""
+        q_lower = question.lower().strip()
+        
+        # 인사말 패턴
+        greeting_patterns = [
+            '안녕', '반갑', '하이', 'hi', 'hello', '안녕하세요', 
+            '안녕하십니까', '반갑습니다', '만나서 반가워', 
+            '만나서 반가워요', '반가워', '반가워요',
+            '좋은 아침', '좋은 오후', '좋은 저녁', '좋은 밤',
+            '환영', '환영합니다', '오신 것을 환영'
+        ]
+        
+        # 간단한 인사말만 체크 (너무 짧거나 패턴이 정확히 일치하는 경우)
+        words = re.findall(r'\w+', q_lower)
+        
+        # 1-3단어로 구성되고 인사 패턴이 포함된 경우
+        if len(words) <= 3:
+            for pattern in greeting_patterns:
+                if pattern in q_lower:
+                    # 특수 케이스 제외 (예: "안녕하세요 처리 방법" 같은 질문)
+                    if any(keyword in q_lower for keyword in ['방법', '처리', '설정', '문제', '오류']):
+                        return False
+                    return True
+        
+        return False
+    
     def _classify_question_type(self, question: str, q_lower: str) -> str:
         """질문 유형 분류"""
+        # 인사말 체크
+        if self.is_greeting(question):
+            return "greeting"
+        
         # 패턴 매칭
         patterns = {
             "definition": r"(정의|무엇|란|의미|개념|설명|목적|기능|특징)",

@@ -93,3 +93,5 @@ Thumbs.db
 # Temporary
 temp/
 tmp/
+
+data/

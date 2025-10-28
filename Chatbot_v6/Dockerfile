@@ -30,7 +30,7 @@ ENV PYTHONUNBUFFERED=1
 
 # 헬스체크
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
+    CMD curl -f http://localhost:8000/healthz || exit 1
 
 # 기본 실행 명령
 CMD ["python", "api/app.py"]

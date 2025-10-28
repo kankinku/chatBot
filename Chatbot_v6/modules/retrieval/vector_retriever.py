@@ -1,16 +1,15 @@
 """
-Vector Retriever
+Vector Retriever - Chroma DB 기반
 
-임베딩 벡터 기반 의미적 유사도 검색.
-FAISS 또는 NumPy 백엔드 지원.
+Chroma DB를 사용한 단순하고 효율적인 벡터 검색.
+NumPy 의존성 제거, 복잡한 인덱스 관리 불필요.
 """
 
 from __future__ import annotations
 
 from pathlib import Path
 from typing import List, Tuple, Optional
-
-import numpy as np
+import uuid
 
 from modules.core.types import Chunk
 from modules.core.logger import get_logger
@@ -21,272 +20,252 @@ logger = get_logger(__name__)
 
 
 class VectorRetriever:
-    """벡터 유사도 기반 의미 검색"""
+    """Chroma DB 기반 벡터 검색"""
     
     def __init__(
         self,
         chunks: List[Chunk],
         embedder: BaseEmbedder,
         index_dir: Optional[str] = None,
-        backend: str = "hnsw",  # "faiss", "hnsw", or "simple"
-        use_gpu: bool = True,  # GPU 가속 강제 활성화
+        collection_name: str = "chatbot_chunks",
     ):
         """
         Args:
             chunks: 청크 리스트
             embedder: 임베더
-            index_dir: 인덱스 디렉토리 (FAISS 사용 시)
-            backend: 백엔드 ("faiss" or "simple")
-            use_gpu: GPU 가속 사용 여부
+            index_dir: Chroma DB 저장 디렉토리
+            collection_name: Chroma 컬렉션 이름
         """
         self.chunks = chunks
         self.embedder = embedder
-        self.index_dir = index_dir
-        self.backend = backend
-        self.use_gpu = use_gpu
+        self.index_dir = index_dir or "vector_store"
+        self.collection_name = collection_name
+        # 청크 인덱스를 Chroma ID에 매핑 (청크 인덱스 -> Chroma ID)
+        self.chunk_index_to_id: List[str] = []
         
         logger.info("VectorRetriever initializing",
                    num_chunks=len(chunks),
-                   backend=backend,
+                   collection_name=collection_name,
                    embedding_dim=embedder.dim)
         
-        # 인덱스 구축
-        self._build_index()
+        # Chroma DB 초기화
+        self._init_chroma()
         
         logger.info("VectorRetriever initialized")
     
-    def _build_index(self) -> None:
-        """벡터 인덱스 구축"""
-        if self.backend == "faiss":
-            self._build_faiss_index()
-        elif self.backend == "hnsw":
-            self._build_hnsw_index()
-        else:
-            self._build_simple_index()
-    
-    def _build_simple_index(self) -> None:
-        """간단한 numpy 기반 인덱스"""
-        logger.info("Building simple numpy index")
-        
-        # 모든 청크 임베딩
-        texts = [chunk.text for chunk in self.chunks]
-        
+    def _init_chroma(self) -> None:
+        """Chroma DB 초기화 및 인덱스 구축"""
         try:
-            self.vectors = self.embedder.embed_texts(texts)
+            import chromadb
+            from chromadb.config import Settings
             
-            # 🚀 최적화 1A: 벡터를 정규화하여 저장 (norm 계산 불필요!)
-            norms = np.linalg.norm(self.vectors, axis=1, keepdims=True)
-            self.vectors = self.vectors / (norms + 1e-9)
-            # 이제 self.vectors는 이미 정규화되어 있음 (norm = 1)
+            # Chroma 클라이언트 초기화
+            self.client = chromadb.PersistentClient(
+                path=self.index_dir,
+                settings=Settings(
+                    anonymized_telemetry=False,
+                    allow_reset=True
+                )
+            )
             
-            logger.info(f"Simple index built (normalized vectors)", shape=self.vectors.shape)
+            # 컬렉션 가져오기 또는 생성
+            try:
+                self.collection = self.client.get_collection(
+                    name=self.collection_name,
+                    embedding_function=self._get_embedding_function()
+                )
+                logger.info(f"Loaded existing collection: {self.collection_name}")
+                
+                # 컬렉션 크기 확인
+                count = self.collection.count()
+                if count != len(self.chunks):
+                    logger.warning(f"Collection size mismatch: {count} vs {len(self.chunks)}")
+                    logger.info("Rebuilding collection...")
+                    self._build_collection()
+                else:
+                    logger.info(f"Collection ready with {count} documents")
+                    # 기존 컬렉션에서 ID 매핑 재구성
+                    self._rebuild_id_mapping()
+                    
+            except Exception as e:
+                # 컬렉션이 없거나 다른 문제 발생
+                logger.info(f"Creating new collection: {self.collection_name}", error=str(e))
+                self._build_collection()
+                
+        except ImportError as e:
+            raise EmbeddingError(
+                "Chroma DB not available. Please install: pip install chromadb",
+                cause=e
+            ) from e
         
         except Exception as e:
             raise EmbeddingError(
-                "Failed to build simple vector index",
+                "Failed to initialize Chroma DB",
                 cause=e
             ) from e
     
-    def _build_hnsw_index(self) -> None:
-        """HNSW 인덱스 구축 (FAISS보다 빠름)"""
+    def _get_embedding_function(self):
+        """Chroma용 임베딩 함수 생성 (Chroma 0.4.16+ 호환)"""
         try:
-            import hnswlib
+            from chromadb import EmbeddingFunction
             
-            logger.info("Building HNSW index")
+            class CustomEmbeddingFunction(EmbeddingFunction):
+                def __init__(self, embedder):
+                    super().__init__()
+                    self.embedder = embedder
+                
+                def __call__(self, input):
+                    """Chroma 0.4.16+는 'input' 파라미터 사용"""
+                    if not input:
+                        return []
+                    
+                    # 단일 문자열인 경우 리스트로 변환
+                    if isinstance(input, str):
+                        input = [input]
+                    
+                    # 임베딩 생성
+                    try:
+                        embeddings = self.embedder.embed_texts(input)
+                        
+                        # NumPy 배열을 리스트로 변환
+                        import numpy as np
+                        if isinstance(embeddings, np.ndarray):
+                            return [emb.tolist() for emb in embeddings]
+                        else:
+                            return [[float(x) for x in emb] for emb in embeddings]
+                    except Exception as e:
+                        logger.error(f"Embedding generation failed: {e}", exc_info=True)
+                        return []
             
-            # 모든 청크 임베딩
-            texts = [chunk.text for chunk in self.chunks]
-            embeddings = self.embedder.embed_texts(texts)
+            return CustomEmbeddingFunction(self.embedder)
             
-            # HNSW 인덱스 생성
-            dim = embeddings.shape[1]
-            self.index = hnswlib.Index(space='cosine', dim=dim)
+        except ImportError:
+            # EmbeddingFunction 클래스가 없으면 간단한 함수로 대체
+            def embedding_function(input):
+                if not input:
+                    return []
+                if isinstance(input, str):
+                    input = [input]
+                
+                embeddings = self.embedder.embed_texts(input)
+                import numpy as np
+                if isinstance(embeddings, np.ndarray):
+                    return [emb.tolist() for emb in embeddings]
+                else:
+                    return [[float(x) for x in emb] for emb in embeddings]
             
-            # 인덱스 초기화
-            self.index.init_index(
-                max_elements=len(embeddings),
-                ef_construction=200,  # 구축 시 정확도
-                M=16  # 연결 수
+            return embedding_function
+    
+    def _build_collection(self) -> None:
+        """컬렉션 구축"""
+        try:
+            # 기존 컬렉션 삭제 (있다면)
+            try:
+                self.client.delete_collection(self.collection_name)
+                logger.info(f"Deleted existing collection: {self.collection_name}")
+            except Exception:
+                pass  # 컬렉션이 없으면 무시
+            
+            # 새 컬렉션 생성
+            embedding_func = self._get_embedding_function()
+            self.collection = self.client.create_collection(
+                name=self.collection_name,
+                embedding_function=embedding_func,
+                metadata={"description": "Chatbot chunks collection"}
             )
             
-            # 벡터 추가
-            self.index.add_items(embeddings)
+            # 청크 ID 매핑 초기화
+            self.chunk_index_to_id = []
             
-            # 검색 시 정확도 설정
-            self.index.set_ef(50)  # 검색 시 정확도
+            # 청크들을 Chroma에 추가
+            texts = []
+            metadatas = []
+            ids = []
             
-            self.dim = dim
-            self.backend = "hnsw"
+            for idx, chunk in enumerate(self.chunks):
+                # 고유 ID 생성 (인덱스 기반)
+                chunk_id = f"chunk_{idx}_{uuid.uuid4().hex[:8]}"
+                self.chunk_index_to_id.append(chunk_id)
+                
+                # 텍스트 추가
+                texts.append(chunk.text)
+                
+                # 메타데이터 생성 (Chunk 타입에 맞게)
+                metadata = {
+                    "doc_id": chunk.doc_id,
+                    "filename": chunk.filename,
+                    "page": str(chunk.page) if chunk.page is not None else "None",
+                    "start_offset": str(chunk.start_offset),
+                    "length": str(chunk.length),
+                    "chunk_index": str(idx),  # 원본 인덱스 저장
+                }
+                
+                # 추가 메타데이터가 있으면 포함
+                if chunk.extra:
+                    for key, value in chunk.extra.items():
+                        # Chroma는 문자열만 지원하므로 변환
+                        metadata[f"extra_{key}"] = str(value)
+                
+                metadatas.append(metadata)
+                ids.append(chunk_id)
             
-            logger.info(f"HNSW index built successfully", 
-                       dim=dim, 
-                       num_vectors=len(embeddings))
-        
-        except ImportError as e:
-            logger.warning("HNSW not available, falling back to simple index", 
-                         error=str(e))
-            self._build_simple_index()
-        
+            # 배치로 추가 (Chroma가 자동으로 임베딩 생성)
+            # 대량 데이터의 경우 배치 처리
+            batch_size = 100
+            for i in range(0, len(texts), batch_size):
+                batch_texts = texts[i:i+batch_size]
+                batch_metadatas = metadatas[i:i+batch_size]
+                batch_ids = ids[i:i+batch_size]
+                
+                self.collection.add(
+                    documents=batch_texts,
+                    metadatas=batch_metadatas,
+                    ids=batch_ids
+                )
+                
+                logger.debug(f"Added batch {i//batch_size + 1}: {len(batch_texts)} documents")
+            
+            logger.info(f"Collection built successfully with {len(self.chunks)} documents")
+            
         except Exception as e:
-            logger.error("Failed to build HNSW index, falling back to simple index", 
-                        error=str(e), exc_info=True)
-            self._build_simple_index()
+            logger.error(f"Failed to build Chroma collection: {e}", exc_info=True)
+            raise EmbeddingError(
+                "Failed to build Chroma collection",
+                cause=e
+            ) from e
     
-    def _build_faiss_index(self) -> None:
-        """FAISS 인덱스 구축/로드 (GPU 가속 지원)"""
-        if not self.index_dir:
-            # 인덱스 디렉토리가 없으면 자동 생성
-            self.index_dir = "vector_store"
-            logger.info(f"Auto-creating index directory: {self.index_dir}")
-        
-        index_path = Path(self.index_dir) / "index.faiss"
-        meta_path = Path(self.index_dir) / "meta.json"
-        
-        # 인덱스 디렉토리 생성
-        Path(self.index_dir).mkdir(parents=True, exist_ok=True)
-        
-        if not (index_path.exists() and meta_path.exists()):
-            # 인덱스가 없으면 자동 생성
-            logger.info(f"FAISS index not found, creating new index at {index_path}")
-            self._create_faiss_index(index_path, meta_path)
-            return
-        
+    def _rebuild_id_mapping(self) -> None:
+        """기존 컬렉션에서 ID 매핑 재구성"""
         try:
-            import faiss
-            import json
+            # 모든 문서 가져오기
+            all_data = self.collection.get(include=["metadatas"])
             
-            # FAISS 인덱스 로드
-            cpu_index = faiss.read_index(str(index_path))
-            
-            # GPU 가속 활성화
-            if self.use_gpu and faiss.get_num_gpus() > 0:
-                try:
-                    gpu_res = faiss.StandardGpuResources()
-                    self.index = faiss.index_cpu_to_gpu(gpu_res, 0, cpu_index)
-                    logger.info("FAISS GPU index loaded successfully")
-                except Exception as gpu_e:
-                    logger.warning(f"GPU FAISS failed, using CPU: {gpu_e}")
-                    self.index = cpu_index
-            else:
-                self.index = cpu_index
-                logger.info("FAISS CPU index loaded")
-            
-            # 메타 정보 로드
-            with open(meta_path, "r") as f:
-                meta = json.load(f)
-                self.dim = meta.get("dim", self.embedder.dim)
-            
-            self.backend = "faiss"
-            logger.info("FAISS index loaded", dim=self.dim)
-        
-        except ImportError:
-            logger.warning("FAISS not available, falling back to simple index")
-            self._build_simple_index()
-        
-        except Exception as e:
-            logger.error(f"Failed to load FAISS index: {e}", exc_info=True)
-            logger.info("Creating new FAISS index...")
-            self._create_faiss_index(index_path, meta_path)
-    
-    def _create_faiss_index(self, index_path: Path, meta_path: Path) -> None:
-        """새로운 FAISS 인덱스 생성"""
-        try:
-            # FAISS import 시 발생할 수 있는 모든 오류 포착
-            try:
-                import faiss
-                import json
-            except (ImportError, ModuleNotFoundError, AttributeError) as import_error:
-                logger.warning("FAISS import failed, falling back to simple index", 
-                             error=str(import_error))
-                self._build_simple_index()
+            if not all_data or not all_data["ids"]:
+                # 빈 컬렉션인 경우 새로 구축
+                logger.warning("Collection is empty, rebuilding...")
+                self._build_collection()
                 return
             
-            logger.info("Creating FAISS index...")
+            # 메타데이터에서 인덱스 추출하여 매핑 재구성
+            self.chunk_index_to_id = [""] * len(self.chunks)
             
-            # 모든 청크 임베딩 생성
-            embeddings = []
-            for i, chunk in enumerate(self.chunks):
-                if i % 100 == 0:
-                    logger.info(f"Embedding progress: {i}/{len(self.chunks)}")
-                
-                embedding = self.embedder.embed_query(chunk.text)
-                embeddings.append(embedding)
+            for i, (id_val, metadata) in enumerate(zip(all_data["ids"], all_data["metadatas"] or [])):
+                chunk_idx_str = metadata.get("chunk_index") if metadata else None
+                if chunk_idx_str:
+                    try:
+                        chunk_idx = int(chunk_idx_str)
+                        if 0 <= chunk_idx < len(self.chunks):
+                            self.chunk_index_to_id[chunk_idx] = id_val
+                    except (ValueError, IndexError):
+                        pass
             
-            # numpy 배열로 변환
-            embeddings_array = np.array(embeddings).astype('float32')
-            
-            # FAISS 인덱스 생성
-            dim = embeddings_array.shape[1]
-            index = faiss.IndexFlatIP(dim)  # Inner Product (cosine similarity)
-            
-            # 정규화 (cosine similarity를 위해)
-            faiss.normalize_L2(embeddings_array)
-            
-            # 인덱스에 벡터 추가
-            index.add(embeddings_array)
-            
-            # 인덱스 저장
-            faiss.write_index(index, str(index_path))
-            
-            # 메타 정보 저장
-            meta = {
-                "dim": dim,
-                "num_vectors": len(embeddings),
-                "index_type": "IndexFlatIP"
-            }
-            with open(meta_path, "w") as f:
-                json.dump(meta, f)
-            
-            self.index = index
-            self.dim = dim
-            self.backend = "faiss"
-            
-            logger.info("FAISS index created successfully", 
-                       dim=dim, 
-                       num_vectors=len(embeddings))
-        
-        except ImportError as e:
-            logger.warning("FAISS not available, falling back to simple index", 
-                         error=str(e))
-            self._build_simple_index()
-        
-        except Exception as e:
-            logger.error("Failed to create FAISS index, falling back to simple index", 
-                        error=str(e), exc_info=True)
-            self._build_simple_index()
-    
-    def _build_gpu_faiss_index(self) -> None:
-        """GPU 가속 FAISS 인덱스 구축"""
-        try:
-            import faiss
-            
-            # GPU 리소스 생성
-            self.gpu_res = faiss.StandardGpuResources()
-            
-            # CPU 인덱스를 GPU로 전환
-            cpu_index = faiss.read_index(str(Path(self.index_dir) / "index.faiss"))
-            self.index = faiss.index_cpu_to_gpu(self.gpu_res, 0, cpu_index)
-            
-            logger.info("FAISS GPU index created successfully")
+            logger.info(f"ID mapping rebuilt: {len([x for x in self.chunk_index_to_id if x])} mappings")
             
         except Exception as e:
-            logger.warning(f"GPU FAISS failed, falling back to CPU: {e}")
-            self._build_cpu_faiss_index()
-    
-    def _build_cpu_faiss_index(self) -> None:
-        """CPU FAISS 인덱스 구축"""
-        try:
-            import faiss
-            
-            # CPU 인덱스 로드
-            index_path = Path(self.index_dir) / "index.faiss"
-            self.index = faiss.read_index(str(index_path))
-            
-            logger.info("FAISS CPU index loaded successfully")
-            
-        except Exception as e:
-            logger.error(f"CPU FAISS failed: {e}")
-            raise
+            logger.warning(f"Failed to rebuild ID mapping: {e}", exc_info=True)
+            # 매핑 재구성 실패 시 새로 구축
+            logger.info("Rebuilding collection due to mapping failure...")
+            self._build_collection()
     
     def search(
         self,
@@ -304,96 +283,77 @@ class VectorRetriever:
             [(청크 인덱스, 유사도), ...] 리스트
         """
         try:
-            # 쿼리 임베딩
-            query_vec = self.embedder.embed_query(query)
+            # Chroma 검색
+            results = self.collection.query(
+                query_texts=[query],
+                n_results=min(top_k, len(self.chunks)),  # 전체 청크 수를 초과하지 않도록
+                include=["metadatas", "distances"]
+            )
             
-            if self.backend == "faiss" and hasattr(self, 'index'):
-                return self._search_faiss(query_vec, top_k)
-            elif self.backend == "hnsw" and hasattr(self, 'index'):
-                return self._search_hnsw(query_vec, top_k)
-            else:
-                return self._search_simple(query_vec, top_k)
-        
-        except Exception as e:
-            logger.error(f"Vector search failed: {e}", exc_info=True)
-            return []
-    
-    def _search_simple(
-        self,
-        query_vec: np.ndarray,
-        top_k: int,
-    ) -> List[Tuple[int, float]]:
-        """간단한 numpy 기반 검색"""
-        if not hasattr(self, 'vectors'):
-            return []
-        
-        # 🚀 최적화 1B: 정규화된 벡터 사용 (dot product만으로 코사인 유사도!)
-        query_normalized = query_vec / (np.linalg.norm(query_vec) + 1e-9)
-        similarities = np.dot(self.vectors, query_normalized)
-        # 두 벡터 모두 정규화되어 있으면: dot(a, b) = cosine_similarity(a, b)
-        
-        # 상위 k개 선택
-        top_indices = np.argsort(similarities)[::-1][:top_k]
-        
-        result = [
-            (int(idx), float(similarities[idx]))
-            for idx in top_indices
-        ]
-        
-        logger.debug(f"Simple vector search completed",
-                    results=len(result),
-                    top_score=result[0][1] if result else 0.0)
-        
-        return result
-    
-    def _search_hnsw(
-        self,
-        query_vec: np.ndarray,
-        top_k: int,
-    ) -> List[Tuple[int, float]]:
-        """HNSW 기반 검색 (매우 빠름)"""
-        try:
-            # HNSW 검색
-            indices, distances = self.index.knn_query(query_vec, k=top_k)
+            # 결과 변환
+            result = []
+            if results and results.get("ids") and results["ids"][0]:
+                for i, (id_val, metadata, distance) in enumerate(zip(
+                    results["ids"][0],
+                    results["metadatas"][0] if results["metadatas"] and results["metadatas"][0] else [],
+                    results["distances"][0]
+                )):
+                    # 청크 인덱스 찾기
+                    chunk_idx = self._find_chunk_index(id_val, metadata)
+                    if chunk_idx is not None:
+                        # 거리를 유사도로 변환 (Chroma는 거리 반환, 코사인 거리의 경우)
+                        # 코사인 거리는 0~2 사이, 유사도는 1 - distance / 2로 변환
+                        similarity = max(0.0, 1.0 - (distance / 2.0))
+                        result.append((chunk_idx, similarity))
             
-            # 거리를 유사도로 변환 (HNSW는 거리 반환)
-            similarities = 1.0 - distances[0]  # 코사인 거리 → 유사도
-            
-            result = [
-                (int(idx), float(sim))
-                for idx, sim in zip(indices[0], similarities)
-            ]
-            
-            logger.debug(f"HNSW search completed",
+            logger.debug(f"Chroma vector search completed",
                         results=len(result),
                         top_score=result[0][1] if result else 0.0)
             
             return result
         
         except Exception as e:
-            logger.error(f"HNSW search failed: {e}", exc_info=True)
+            logger.error(f"Chroma search failed: {e}", exc_info=True)
             return []
     
-    def _search_faiss(
-        self,
-        query_vec: np.ndarray,
-        top_k: int,
-    ) -> List[Tuple[int, float]]:
-        """FAISS 기반 검색"""
-        query_vec = query_vec.reshape(1, -1).astype('float32')
-        
-        # FAISS 검색
-        D, I = self.index.search(query_vec, top_k)
-        
-        result = [
-            (int(idx), float(score))
-            for idx, score in zip(I[0], D[0])
-            if idx >= 0 and idx < len(self.chunks)
-        ]
-        
-        logger.debug(f"FAISS vector search completed",
-                    results=len(result),
-                    top_score=result[0][1] if result else 0.0)
-        
-        return result
-
+    def _find_chunk_index(self, chroma_id: str, metadata: Optional[dict] = None) -> Optional[int]:
+        """Chroma ID로부터 청크 인덱스 찾기"""
+        try:
+            # 방법 1: 메타데이터에서 직접 추출
+            if metadata:
+                chunk_idx_str = metadata.get("chunk_index")
+                if chunk_idx_str:
+                    try:
+                        chunk_idx = int(chunk_idx_str)
+                        if 0 <= chunk_idx < len(self.chunks):
+                            return chunk_idx
+                    except (ValueError, IndexError):
+                        pass
+            
+            # 방법 2: ID 매핑에서 찾기
+            if self.chunk_index_to_id:
+                try:
+                    chunk_idx = self.chunk_index_to_id.index(chroma_id)
+                    if 0 <= chunk_idx < len(self.chunks):
+                        return chunk_idx
+                except ValueError:
+                    pass
+            
+            # 방법 3: ID에서 인덱스 추출 시도 (fallback)
+            # chunk_0_xxxxx 형식에서 인덱스 추출
+            if chroma_id.startswith("chunk_"):
+                parts = chroma_id.split("_")
+                if len(parts) >= 2:
+                    try:
+                        chunk_idx = int(parts[1])
+                        if 0 <= chunk_idx < len(self.chunks):
+                            return chunk_idx
+                    except (ValueError, IndexError):
+                        pass
+            
+            logger.warning(f"Failed to find chunk index for ID: {chroma_id}")
+            return None
+            
+        except Exception as e:
+            logger.warning(f"Error finding chunk index: {e}", exc_info=True)
+            return None

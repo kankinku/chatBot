@@ -1,0 +1,23 @@
+# Django 프록시 서버 의존성
+
+# Django
+Django>=4.2.7
+django-cors-headers>=4.3.0
+python-decouple>=3.8
+
+# Django Ninja (API 프레임워크)
+django-ninja>=1.0.0
+django-ninja-extra>=0.20.2
+# ninja-jwt는 현재 필요하지 않으므로 주석 처리
+# django-ninja-jwt>=1.0.1
+
+# HTTP 클라이언트
+httpx>=0.25.0
+
+# MySQL 연결 (PyMySQL 사용 - 설치가 더 쉬움)
+PyMySQL>=1.1.0
+cryptography>=41.0.0  # MySQL 8.0 인증을 위해 필요
+
+# 기타 유틸리티
+python-dotenv>=1.0.0
+

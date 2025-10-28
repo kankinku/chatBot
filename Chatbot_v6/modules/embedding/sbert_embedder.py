@@ -45,9 +45,18 @@ class SBERTEmbedder(BaseEmbedder):
             from sentence_transformers import SentenceTransformer
             import torch
             
-            # Device 결정 (GPU 강제 사용)
-            if self.config.device == "auto" or self.config.device == "cpu":
+            # Device 결정 (GPU 사용 가능 여부 확인)
+            if self.config.device == "auto":
                 device = "cuda" if torch.cuda.is_available() else "cpu"
+            elif self.config.device == "cpu":
+                device = "cpu"
+            elif self.config.device == "cuda":
+                # CUDA 요청 시 사용 가능 여부 확인
+                if torch.cuda.is_available():
+                    device = "cuda"
+                else:
+                    logger.warning("CUDA requested but not available, falling back to CPU")
+                    device = "cpu"
             else:
                 device = self.config.device
             

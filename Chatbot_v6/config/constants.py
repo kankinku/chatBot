@@ -97,7 +97,7 @@ DEFAULT_BOUNDARY_SNAP_MARGIN_RATIO: Final[float] = 0.10
 # Embedding
 DEFAULT_EMBEDDING_MODEL: Final[str] = "jhgan/ko-sroberta-multitask"
 DEFAULT_EMBEDDING_BATCH_SIZE: Final[int] = 512  # 🚀 GPU 최적화: 배치 크기 대폭 증가 (256→512)
-DEFAULT_EMBEDDING_DEVICE: Final[str] = "cuda"  # GPU 강제 사용
+DEFAULT_EMBEDDING_DEVICE: Final[str] = "auto"  # 자동 (GPU 사용 가능시 GPU, 없으면 CPU)
 
 # LLM
 DEFAULT_LLM_MODEL: Final[str] = "qwen2.5:3b-instruct-q4_K_M"
