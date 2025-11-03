@@ -90,20 +90,22 @@ export const sendAIChatMessage = async (
     // AI 기반 질문 답변 API 호출
     const response = await chatApi.post("/ask", {
       question: message,
-      pdf_id: targetPdfId,
-      use_conversation_context: useContext,
-      max_chunks: 5,
-      use_dual_pipeline: true,
+      top_k: 50,
     });
 
     if (response.data) {
       const data = response.data as any;
+      
+      // 백엔드 응답 형식에 맞게 매핑
+      const metrics = data.metrics || {};
+      const processingTime = metrics.total_time_ms ? metrics.total_time_ms / 1000 : 0;
+      
       const result = {
-        answer: data.answer,
-        confidence_score: data.confidence_score,
-        question_type: data.question_type,
-        generation_time: data.generation_time,
-        model_name: data.model_name,
+        answer: data.answer || '답변을 생성할 수 없습니다.',
+        confidence_score: data.confidence || 0.0,
+        question_type: 'ai_generated',
+        generation_time: processingTime,
+        model_name: 'qwen2.5:3b-instruct-q4_K_M',
         from_cache: false,
       };
 
