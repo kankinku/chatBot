@@ -636,30 +636,30 @@ def main():
         print("✅ 벤치마크 완료!")
         print("=" * 80)
         
-        print("\n📊 평가 결과 요약:")
-        print(f"\n1️⃣  기본 Score (v5):        {stats.get('avg_basic_v5_score', 0)*100:6.1f}%")
-        print(f"2️⃣  도메인 특화 종합:        {stats.get('avg_domain_total_score', 0)*100:6.1f}%")
-        print(f"    - 숫자 정확도:          {stats.get('avg_numeric_accuracy', 0)*100:6.1f}%")
-        print(f"    - 단위 정확도:          {stats.get('avg_unit_accuracy', 0)*100:6.1f}%")
+        # print("\n📊 평가 결과 요약:")
+        # print(f"\n1️⃣  기본 Score (v5):        {stats.get('avg_basic_v5_score', 0)*100:6.1f}%")
+        # print(f"2️⃣  도메인 특화 종합:        {stats.get('avg_domain_total_score', 0)*100:6.1f}%")
+        # print(f"    - 숫자 정확도:          {stats.get('avg_numeric_accuracy', 0)*100:6.1f}%")
+        # print(f"    - 단위 정확도:          {stats.get('avg_unit_accuracy', 0)*100:6.1f}%")
         
-        if 'avg_faithfulness' in stats:
-            print(f"3️⃣  RAG 핵심 지표:")
-            print(f"    - Faithfulness:         {stats['avg_faithfulness']*100:6.1f}%")
-            print(f"    - Answer Correctness:   {stats['avg_answer_correctness']*100:6.1f}%")
-            print(f"    - Context Precision:    {stats['avg_context_precision']*100:6.1f}%")
+        # if 'avg_faithfulness' in stats:
+        #     print(f"3️⃣  RAG 핵심 지표:")
+        #     print(f"    - Faithfulness:         {stats['avg_faithfulness']*100:6.1f}%")
+        #     print(f"    - Answer Correctness:   {stats['avg_answer_correctness']*100:6.1f}%")
+        #     print(f"    - Context Precision:    {stats['avg_context_precision']*100:6.1f}%")
         
-        if 'avg_token_f1' in stats:
-            print(f"4️⃣  학술 표준:")
-            print(f"    - Token F1:             {stats['avg_token_f1']*100:6.1f}%")
-            print(f"    - ROUGE-L:              {stats['avg_rouge_l']*100:6.1f}%")
+        # if 'avg_token_f1' in stats:
+        #     print(f"4️⃣  학술 표준:")
+        #     print(f"    - Token F1:             {stats['avg_token_f1']*100:6.1f}%")
+        #     print(f"    - ROUGE-L:              {stats['avg_rouge_l']*100:6.1f}%")
         
-        print(f"\n⏱️  평균 응답 시간:          {stats['avg_time_ms']/1000:.2f}초")
+        # print(f"\n⏱️  평균 응답 시간:          {stats['avg_time_ms']/1000:.2f}초")
         
-        print("\n📁 결과 파일:")
-        print(f"  - JSON: {args.output}")
-        print(f"  - TXT:  {Path(args.output).parent / f'{Path(args.output).stem}_summary.txt'}")
+        # print("\n📁 결과 파일:")
+        # print(f"  - JSON: {args.output}")
+        # print(f"  - TXT:  {Path(args.output).parent / f'{Path(args.output).stem}_summary.txt'}")
         
-        print("\n" + "=" * 80)
+        # print("\n" + "=" * 80)
         
     except KeyboardInterrupt:
         logger.warning("\n사용자에 의해 중단되었습니다")

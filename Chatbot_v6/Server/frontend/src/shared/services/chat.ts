@@ -260,4 +260,107 @@ export const checkAIServiceStatus = async (): Promise<{
   }
 };
 
+// 프록시 API 인스턴스 (타임아웃 없음)
+const proxyApi = axios.create({
+  baseURL: API_BASE_URL + '/api',
+  timeout: 0, // 타임아웃 제거
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+// PDF 처리 시작 함수
+export const startProcessPDFs = async (): Promise<void> => {
+  try {
+    await proxyApi.post("/process-pdfs");
+  } catch (error: any) {
+    console.error("PDF 처리 시작 오류:", error);
+    throw new Error(
+      error.response?.data?.detail || error.message || "PDF 처리 시작 중 오류가 발생했습니다."
+    );
+  }
+};
+
+// PDF 처리 상태 확인 함수
+export const getProcessPDFsStatus = async (): Promise<{
+  status: string;
+  progress: number;
+  message: string;
+  processed_files: string[];
+  skipped_files: string[];
+  total_chunks: number;
+  processing_time_seconds: number;
+}> => {
+  try {
+    const response = await proxyApi.get("/process-pdfs/status");
+    return response.data as {
+      status: string;
+      progress: number;
+      message: string;
+      processed_files: string[];
+      skipped_files: string[];
+      total_chunks: number;
+      processing_time_seconds: number;
+    };
+  } catch (error: any) {
+    console.error("PDF 처리 상태 확인 오류:", error);
+    throw new Error(
+      error.response?.data?.detail || error.message || "PDF 처리 상태 확인 중 오류가 발생했습니다."
+    );
+  }
+};
+
+// PDF 처리 함수 (비동기 + 폴링)
+export const processPDFs = async (
+  onProgress?: (progress: number, message: string) => void
+): Promise<{
+  success: boolean;
+  message: string;
+  processed_files: string[];
+  skipped_files: string[];
+  total_chunks: number;
+  processing_time_seconds: number;
+}> => {
+  // 처리 시작
+  await startProcessPDFs();
+  
+  // 상태 확인 폴링 (3초마다)
+  return new Promise((resolve, reject) => {
+    const pollInterval = setInterval(async () => {
+      try {
+        const status = await getProcessPDFsStatus();
+        
+        // 진행률 콜백 호출
+        if (onProgress) {
+          onProgress(status.progress, status.message);
+        }
+        
+        if (status.status === "completed") {
+          clearInterval(pollInterval);
+          resolve({
+            success: true,
+            message: status.message,
+            processed_files: status.processed_files || [],
+            skipped_files: status.skipped_files || [],
+            total_chunks: status.total_chunks,
+            processing_time_seconds: status.processing_time_seconds,
+          });
+        } else if (status.status === "error") {
+          clearInterval(pollInterval);
+          reject(new Error(status.message || "PDF 처리 중 오류가 발생했습니다."));
+        }
+      } catch (error: any) {
+        clearInterval(pollInterval);
+        reject(error);
+      }
+    }, 3000); // 3초마다 상태 확인
+    
+    // 최대 대기 시간 (1시간)
+    setTimeout(() => {
+      clearInterval(pollInterval);
+      reject(new Error("PDF 처리 시간이 초과되었습니다."));
+    }, 3600000);
+  });
+};
+
 

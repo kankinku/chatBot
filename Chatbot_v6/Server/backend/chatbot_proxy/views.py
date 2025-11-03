@@ -361,6 +361,23 @@ def proxy_ai_question(request: HttpRequest, data: AIQuestionRequest):
         )
         raise HttpError(500, "AI 질문 처리 중 오류가 발생했습니다.")
 
+@router.post("/process-pdfs")
+def proxy_process_pdfs(request):
+    """PDF 처리 프록시"""
+    try:
+        response_data = sync_make_chatbot_request(
+            method='POST',
+            endpoint='/api/process-pdfs',
+            data={},
+            timeout=300  # PDF 처리 시간을 고려하여 긴 타임아웃
+        )
+        return response_data
+    except HttpError:
+        raise
+    except Exception as e:
+        logger.error(f"PDF 처리 프록시 오류: {str(e)}")
+        raise HttpError(500, "PDF 처리 중 오류가 발생했습니다.")
+
 @router.post("/batch", response=BatchQuestionResponse)
 def proxy_batch_questions(request, data: BatchQuestionRequest):
     """배치 질문 답변 프록시"""

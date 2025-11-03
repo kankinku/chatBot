@@ -208,7 +208,7 @@ export const ChatBotPanel: React.FC<ChatBotPanelProps> = ({
           
           const welcomeMessage: Message = {
             id: "1",
-            content: `${timeGreeting} IFRO 교통 분석 AI 어시스턴트입니다! 🤖\n\n저는 PDF 문서를 기반으로 한 지능형 AI로, 교통 데이터 분석과 대시보드 사용법에 대해 도움을 드릴 수 있습니다.\n\n💾 캐시 기능이 활성화되어 있어 동일한 질문에 대해 빠른 답변을 제공합니다.\n\n🚗 교통량 분석, 📊 통계 조회, 📈 트렌드 분석 등 무엇이든 물어보세요!\n\n🔄 AI 서비스 상태는 실시간으로 모니터링됩니다.`,
+            content: `${timeGreeting} 정수장 운영 AI 어시스턴트입니다! 🤖\n\n저는 PDF 문서를 기반으로 한 지능형 AI로, 정수장 운영, 설비 관리 및 시스템 사용법에 대해 도움을 드릴 수 있습니다.\n\n💾 캐시 기능이 활성화되어 있어 동일한 질문에 대해 빠른 답변을 제공합니다.\n\n💧 정수처리 공정, 📊 설비 모니터링, 🔧 기술 진단, 📈 탄소중립 관리 등 무엇이든 물어보세요!\n\n🔄 AI 서비스 상태는 실시간으로 모니터링됩니다.`,
             sender: "bot",
             timestamp: new Date(),
           };
@@ -218,7 +218,7 @@ export const ChatBotPanel: React.FC<ChatBotPanelProps> = ({
           // 오류 시에도 기본 환영 메시지 표시
           const fallbackMessage: Message = {
             id: "1",
-            content: "안녕하세요! IFRO 교통 분석 어시스턴트입니다! 🚗\n\n서비스에 연결 중입니다. 잠시만 기다려주세요.",
+            content: "안녕하세요! 정수장 운영 AI 어시스턴트입니다! 💧\n\n서비스에 연결 중입니다. 잠시만 기다려주세요.",
             sender: "bot",
             timestamp: new Date(),
           };

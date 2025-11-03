@@ -10,6 +10,12 @@ services:
     environment:
       - OLLAMA_HOST=0.0.0.0
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 5s bash -c ': > /dev/tcp/127.0.0.1/11434' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
     deploy:
       resources:
         reservations:
@@ -18,7 +24,7 @@ services:
               count: all
               capabilities: [gpu]
 
-  # FastAPI 백엔드 (챗봇 서버 - RAG 시스템)
+  # FastAPI 백엔드 (챗봇 서버 - RAG 시스템)c
   chatbot-backend:
     build:
       context: .
@@ -39,13 +45,17 @@ services:
       - PYTHONUNBUFFERED=1
     depends_on:
       ollama:
-        condition: service_started
+        condition: service_healthy
     restart: unless-stopped
     command: >
       sh -c "
         echo 'Waiting for Ollama to be ready...' &&
-        sleep 10 &&
-        uvicorn api.app:app --host 0.0.0.0 --port 8000 --no-reload
+        until curl -f http://ollama:11434/api/tags > /dev/null 2>&1; do
+          echo 'Ollama is not ready yet. Waiting...'
+          sleep 2
+        done &&
+        echo 'Ollama is ready!' &&
+        uvicorn api.app:app --host 0.0.0.0 --port 8000
       "
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
@@ -69,6 +79,12 @@ services:
       - mysql_data:/var/lib/mysql
     restart: unless-stopped
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p1234"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
 
   # Django 프록시 서버
   backend-proxy:
@@ -91,13 +107,21 @@ services:
       - SECRET_KEY=chatbot-secret-key-change-in-production
       - DEBUG=True
     depends_on:
-      - chatbot-backend
-      - mysql
+      chatbot-backend:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
     restart: unless-stopped
     command: >
       sh -c "
         echo 'Waiting for MySQL to be ready...' &&
-        sleep 10 &&
+        python wait-for-mysql.py &&
+        echo 'Waiting for backend to be ready...' &&
+        until curl -f http://chatbot-backend:8000/healthz > /dev/null 2>&1; do
+          echo 'Backend is not ready yet. Waiting...'
+          sleep 2
+        done &&
+        echo 'Backend is ready!' &&
         python manage.py migrate &&
         python manage.py runserver 0.0.0.0:8000
       "
@@ -119,7 +143,8 @@ services:
     ports:
       - "3000:80"
     depends_on:
-      - backend-proxy
+      backend-proxy:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - default

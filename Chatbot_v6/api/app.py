@@ -13,7 +13,7 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from fastapi import FastAPI, HTTPException, Request, APIRouter
+from fastapi import FastAPI, HTTPException, Request, APIRouter, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -21,6 +21,8 @@ from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
 import uuid
 import time
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 
 from config.pipeline_config import PipelineConfig
 from config.environment import get_env_config
@@ -62,6 +64,17 @@ app.add_middleware(
 # 전역 파이프라인 (초기화는 startup에서)
 pipeline: Optional[RAGPipeline] = None
 question_analyzer: Optional[QuestionAnalyzer] = None
+
+# PDF 처리 작업 상태 저장
+pdf_processing_status: Dict[str, Any] = {
+    "status": "idle",  # idle, processing, completed, error
+    "progress": 0,
+    "message": "",
+    "processed_files": [],
+    "skipped_files": [],
+    "total_chunks": 0,
+    "processing_time_seconds": 0,
+}
 
 # 인사말 응답 리스트
 GREETING_RESPONSES = [
@@ -191,10 +204,11 @@ async def startup_event():
             ]
         
         # 파이프라인 초기화 (자동 임베딩 포함)
-        logger.info("Initializing RAG pipeline with embedding...")
+        logger.info("Initializing RAG pipeline with embedding... (evaluation mode enabled)")
         pipeline = RAGPipeline(
             chunks=chunks,
             pipeline_config=pipeline_config,
+            evaluation_mode=True,  # 평가 모드 활성화
         )
         
         logger.info(f"API server started successfully with {len(chunks)} chunks")
@@ -243,6 +257,192 @@ async def get_status():
         "total_pdfs": unique_files,
         "total_chunks": total_chunks,
     }
+
+
+class ProcessPDFsResponse(BaseModel):
+    success: bool
+    message: str
+    processed_files: List[str]
+    skipped_files: List[str]
+    total_chunks: int
+    processing_time_seconds: float
+
+
+def process_pdfs_background():
+    """백그라운드에서 PDF 처리 (병렬 임베딩 포함)"""
+    global pipeline, pdf_processing_status
+    
+    try:
+        pdf_processing_status["status"] = "processing"
+        pdf_processing_status["progress"] = 0
+        pdf_processing_status["message"] = "PDF 처리 시작..."
+        
+        if not pipeline:
+            pdf_processing_status["status"] = "error"
+            pdf_processing_status["message"] = "Pipeline not initialized"
+            return
+        
+        start_time = time.time()
+        data_dir = project_root / "data"
+        cache_path = data_dir / "chunks_cache.pkl"
+        
+        # 기존 처리된 파일 목록 확인 (캐시에서)
+        processed_files = set()
+        if cache_path.exists():
+            try:
+                import pickle
+                with open(cache_path, 'rb') as f:
+                    cached_data = pickle.load(f)
+                    cached_chunks = cached_data.get("chunks", [])
+                processed_files = {c.filename for c in cached_chunks if isinstance(c, Chunk)}
+                logger.info(f"Found {len(processed_files)} already processed files in cache")
+            except Exception as e:
+                logger.warning(f"Failed to load cache for comparison: {e}")
+        
+        # 현재 디렉토리의 PDF 파일 목록
+        pdf_files = list(data_dir.glob("*.pdf")) + list(data_dir.glob("*.PDF"))
+        
+        # 처리되지 않은 파일 필터링
+        new_files = [f for f in pdf_files if f.name not in processed_files]
+        skipped_files = [f.name for f in pdf_files if f.name in processed_files]
+        
+        pdf_processing_status["progress"] = 10
+        pdf_processing_status["message"] = f"{len(new_files)}개 새 PDF 파일 발견"
+        
+        if not new_files:
+            pdf_processing_status["status"] = "completed"
+            pdf_processing_status["message"] = f"처리할 새 PDF 파일이 없습니다. (이미 처리된 파일: {len(skipped_files)}개)"
+            pdf_processing_status["skipped_files"] = skipped_files
+            pdf_processing_status["total_chunks"] = len(pipeline.chunks) if hasattr(pipeline, 'chunks') else 0
+            pdf_processing_status["processing_time_seconds"] = time.time() - start_time
+            return
+        
+        logger.info(f"Processing {len(new_files)} new PDF file(s): {[f.name for f in new_files]}")
+        
+        # DocumentLoader로 새 파일들 병렬 처리
+        pdf_processing_status["progress"] = 20
+        pdf_processing_status["message"] = "PDF 텍스트 추출 중..."
+        
+        doc_loader = DocumentLoader(str(data_dir))
+        new_chunks = []
+        
+        # ThreadPoolExecutor로 병렬 처리
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            futures = []
+            for pdf_path in new_files:
+                future = executor.submit(doc_loader._load_pdf, pdf_path)
+                futures.append((future, pdf_path))
+            
+            for i, (future, pdf_path) in enumerate(futures):
+                try:
+                    chunks = future.result()
+                    new_chunks.extend(chunks)
+                    logger.info(f"Processed {pdf_path.name}: {len(chunks)} chunks")
+                    
+                    progress = 20 + int((i + 1) / len(futures) * 30)
+                    pdf_processing_status["progress"] = progress
+                    pdf_processing_status["message"] = f"PDF 처리 중... ({i+1}/{len(futures)}): {pdf_path.name}"
+                except Exception as e:
+                    logger.error(f"Failed to process {pdf_path.name}: {e}", exc_info=True)
+                    continue
+        
+        pdf_processing_status["progress"] = 50
+        pdf_processing_status["message"] = "임베딩 준비 중..."
+        
+        # 기존 청크와 새 청크 병합 후 캐시 저장
+        if new_chunks:
+            # 기존 캐시에서 청크 로드
+            existing_chunks = []
+            if hasattr(pipeline, 'chunks'):
+                existing_chunks = pipeline.chunks
+            
+            # 모든 청크 병합
+            all_chunks_for_cache = existing_chunks + new_chunks
+            
+            # 캐시에 저장
+            doc_loader.chunks = all_chunks_for_cache
+            doc_loader.save_to_cache(str(cache_path))
+            logger.info(f"Cache updated: {len(existing_chunks)} existing + {len(new_chunks)} new = {len(all_chunks_for_cache)} total chunks")
+        
+        if not new_chunks:
+            pdf_processing_status["status"] = "error"
+            pdf_processing_status["message"] = "새 PDF 파일에서 청크를 추출할 수 없었습니다."
+            return
+        
+        # 기존 청크와 새 청크 병합
+        if hasattr(pipeline, 'chunks'):
+            all_chunks = pipeline.chunks + new_chunks
+        else:
+            all_chunks = new_chunks
+        
+        # 파이프라인 재초기화 (새 청크 포함) - 임베딩은 파이프라인 초기화 시 자동으로 수행됨
+        pdf_processing_status["progress"] = 60
+        pdf_processing_status["message"] = "임베딩 및 벡터 저장 중... (이 작업은 시간이 걸릴 수 있습니다)"
+        
+        from config.pipeline_config import PipelineConfig
+        config_path = project_root / "config" / "default.yaml"
+        pipeline_config = PipelineConfig.from_file(config_path)
+        
+        # 파이프라인 재초기화 (임베딩 자동 수행)
+        pipeline = RAGPipeline(
+            chunks=all_chunks,
+            pipeline_config=pipeline_config,
+        )
+        
+        processing_time = time.time() - start_time
+        
+        # 완료 상태 업데이트
+        pdf_processing_status["status"] = "completed"
+        pdf_processing_status["progress"] = 100
+        pdf_processing_status["message"] = f"{len(new_files)}개 PDF 파일 처리 완료"
+        pdf_processing_status["processed_files"] = [f.name for f in new_files]
+        pdf_processing_status["skipped_files"] = skipped_files
+        pdf_processing_status["total_chunks"] = len(all_chunks)
+        pdf_processing_status["processing_time_seconds"] = processing_time
+        
+        logger.info(
+            f"Successfully processed {len(new_files)} PDF file(s)",
+            extra={
+                "processed_files": [f.name for f in new_files],
+                "total_chunks": len(all_chunks),
+                "new_chunks": len(new_chunks),
+                "processing_time": processing_time
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Failed to process PDFs: {e}", exc_info=True)
+        pdf_processing_status["status"] = "error"
+        pdf_processing_status["message"] = f"PDF 처리 중 오류 발생: {str(e)}"
+
+
+@app.post("/api/process-pdfs")
+async def start_process_pdfs(background_tasks: BackgroundTasks):
+    """PDF 처리 시작 (비동기)"""
+    global pdf_processing_status
+    
+    # 이미 처리 중이면 시작하지 않음
+    if pdf_processing_status["status"] == "processing":
+        return {
+            "success": True,
+            "message": "이미 처리 중입니다.",
+            "status": "processing"
+        }
+    
+    # 백그라운드 작업 시작
+    background_tasks.add_task(process_pdfs_background)
+    
+    return {
+        "success": True,
+        "message": "PDF 처리가 시작되었습니다.",
+        "status": "processing"
+    }
+
+
+@app.get("/api/process-pdfs/status")
+async def get_process_pdfs_status():
+    """PDF 처리 상태 확인"""
+    return pdf_processing_status
 
 
 # 기존 엔드포인트 (하위 호환성을 위해 유지)
