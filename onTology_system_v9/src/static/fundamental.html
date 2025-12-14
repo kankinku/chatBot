@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OntoFin - 펀더멘털 분석</title>
+    <link rel="stylesheet" crossorigin
+        href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+    <link rel="stylesheet" href="/static/style.css?v=2">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Quick Tickers */
+        .quick-tickers {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        .quick-ticker {
+            padding: 8px 16px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-ticker:hover {
+            background: var(--card-hover);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* Result Container */
+        #resultContainer {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Stock Header */
+        .stock-header {
+            background: linear-gradient(145deg, var(--card-bg), #1a1a1f);
+            border-radius: var(--radius-xl);
+            padding: 32px;
+            margin-bottom: 24px;
+            border: 1px solid var(--card-border);
+        }
+
+        .stock-header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+        }
+
+        .stock-title {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .stock-ticker {
+            font-size: 14px;
+            font-weight: 700;
+            padding: 8px 16px;
+            background: var(--accent-light);
+            color: var(--accent);
+            border-radius: var(--radius-s);
+        }
+
+        .stock-name {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .stock-sector {
+            font-size: 14px;
+            color: var(--text-tertiary);
+            margin-top: 4px;
+        }
+
+        .stock-price {
+            text-align: right;
+        }
+
+        .price-value {
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .price-currency {
+            font-size: 16px;
+            color: var(--text-tertiary);
+        }
+
+        .stock-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 16px;
+        }
+
+        .meta-item {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 16px;
+            border-radius: var(--radius-m);
+        }
+
+        .meta-label {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .meta-value {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        /* Score Cards */
+        .scores-section {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        @media (max-width: 1024px) {
+            .scores-section {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .scores-section {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .score-card {
+            background: var(--card-bg);
+            border-radius: var(--radius-l);
+            padding: 24px;
+            border: 1px solid var(--card-border);
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .score-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent);
+        }
+
+        .score-card.total {
+            background: linear-gradient(145deg, rgba(59, 130, 246, 0.1), var(--card-bg));
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        .score-label {
+            font-size: 13px;
+            color: var(--text-tertiary);
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .score-gauge {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 16px;
+        }
+
+        .score-gauge canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .score-value-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .score-number {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .score-grade {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        /* Metrics Table */
+        .metrics-section {
+            background: var(--card-bg);
+            border-radius: var(--radius-xl);
+            padding: 28px;
+            margin-bottom: 32px;
+            border: 1px solid var(--card-border);
+            overflow-x: auto;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .metrics-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 700px;
+        }
+
+        .metrics-table th,
+        .metrics-table td {
+            padding: 14px 16px;
+            text-align: center;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .metrics-table th {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metrics-table th.metric-name {
+            text-align: left;
+            min-width: 160px;
+        }
+
+        .metrics-table td.metric-name {
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .metrics-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        /* Color coding for values */
+        .value-cell {
+            font-weight: 600;
+            font-size: 14px;
+            border-radius: 6px;
+            padding: 6px 10px;
+            display: inline-block;
+            min-width: 70px;
+        }
+
+        .value-good {
+            background: var(--success-light);
+            color: var(--success);
+        }
+
+        .value-bad {
+            background: var(--danger-light);
+            color: var(--danger);
+        }
+
+        .value-neutral {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-secondary);
+        }
+
+        .value-na {
+            color: var(--text-tertiary);
+            font-size: 12px;
+        }
+
+        /* Metric Category */
+        .metric-category {
+            background: var(--card-hover);
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .metric-category td {
+            text-align: left !important;
+            padding: 12px 16px;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Debt Info */
+        .debt-section {
+            background: var(--card-bg);
+            border-radius: var(--radius-xl);
+            padding: 28px;
+            border: 1px solid var(--card-border);
+        }
+
+        .debt-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .debt-card {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: var(--radius-m);
+            padding: 20px;
+        }
+
+        .debt-label {
+            font-size: 13px;
+            color: var(--text-tertiary);
+            margin-bottom: 8px;
+        }
+
+        .debt-value {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .cb-notice {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: var(--radius-m);
+            padding: 16px 20px;
+            margin-top: 20px;
+            font-size: 14px;
+            color: var(--warning);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Loading State */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(10, 10, 11, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid var(--card-border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-text {
+            color: var(--text-secondary);
+            font-size: 16px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--text-tertiary);
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        /* Error State */
+        .error-banner {
+            background: var(--danger-light);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: var(--radius-m);
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            color: var(--danger);
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="sidebar">
+        <a href="/" class="brand">OntoFin</a>
+        <a href="/" class="nav-item">대시보드</a>
+        <a href="/pair_trading" class="nav-item">페어 트레이딩</a>
+        <a href="/fundamental" class="nav-item active">펀더멘털</a>
+        <a href="/graph_view" class="nav-item">지식 그래프</a>
+        <a href="/scenario" class="nav-item">시나리오</a>
+        <div class="nav-divider"></div>
+        <div style="font-size:12px; color:var(--text-secondary); padding: 0 16px; margin-bottom:12px;">설정</div>
+        <div class="nav-item" style="cursor:pointer; opacity:0.5;">설정 (준비중)</div>
+    </nav>
+    <main class="main-content">
+        <header class="page-header">
+            <h1>펀더멘털 분석</h1>
+            <p class="subtitle">종목의 재무제표를 분석하고 투자 점수를 확인하세요</p>
+        </header>
+
+        <!-- Search -->
+        <div class="search-container">
+            <div class="search-box">
+                <input type="text" class="search-input" id="tickerInput" placeholder="티커 입력 (예: AAPL, MSFT, NVDA)"
+                    onkeypress="if(event.key==='Enter') searchStock()">
+                <button class="btn btn-primary" id="searchBtn" onclick="searchStock()">분석</button>
+            </div>
+            <div class="quick-tickers">
+                <span class="quick-ticker" onclick="quickSearch('AAPL')">AAPL</span>
+                <span class="quick-ticker" onclick="quickSearch('MSFT')">MSFT</span>
+                <span class="quick-ticker" onclick="quickSearch('NVDA')">NVDA</span>
+                <span class="quick-ticker" onclick="quickSearch('GOOGL')">GOOGL</span>
+                <span class="quick-ticker" onclick="quickSearch('AMZN')">AMZN</span>
+                <span class="quick-ticker" onclick="quickSearch('TSLA')">TSLA</span>
+            </div>
+        </div>
+
+        <!-- Error Banner -->
+        <div class="error-banner" id="errorBanner"></div>
+
+        <!-- Result Container -->
+        <div id="resultContainer">
+            <!-- Stock Header -->
+            <div class="stock-header" id="stockHeader">
+                <!-- Dynamic content -->
+            </div>
+
+            <!-- Score Cards -->
+            <div class="scores-section" id="scoresSection">
+                <!-- Dynamic content -->
+            </div>
+
+            <!-- Metrics Table -->
+            <div class="metrics-section">
+                <div class="section-title">재무 지표 분석</div>
+                <table class="metrics-table" id="metricsTable">
+                    <thead>
+                        <tr>
+                            <th class="metric-name">지표</th>
+                            <!-- Dynamic year headers -->
+                        </tr>
+                    </thead>
+                    <tbody id="metricsBody">
+                        <!-- Dynamic content -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Debt Info -->
+            <div class="debt-section">
+                <div class="section-title">부채 및 전환사채 현황</div>
+                <div class="debt-grid" id="debtGrid">
+                    <!-- Dynamic content -->
+                </div>
+                <div class="cb-notice" id="cbNotice">
+                    <span>ℹ️</span>
+                    <span>전환사채(CB) 상세 정보는 SEC EDGAR 연동 후 제공 예정입니다.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty-state" id="emptyState">
+            <div class="empty-icon">📊</div>
+            <p style="font-size: 18px; margin-bottom: 8px;">종목을 검색하세요</p>
+            <p style="font-size: 14px;">티커를 입력하면 재무제표 분석 결과를 확인할 수 있습니다</p>
+            showLoading(true);
+            hideError();
+
+            try {
+            const response = await fetch(`${API_BASE}/analysis/${ticker}`);
+            const result = await response.json();
+
+            if (!response.ok || !result.success) {
+            throw new Error(result.detail || result.error || '분석에 실패했습니다');
+            }
+
+            renderResults(result.data);
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('resultContainer').style.display = 'block';
+
+            } catch (error) {
+            console.error('Analysis error:', error);
+            showError(error.message);
+            } finally {
+            showLoading(false);
+            }
+            }
+
+            function quickSearch(ticker) {
+            document.getElementById('tickerInput').value = ticker;
+            searchStock();
+            }
+
+            function showLoading(show) {
+            document.getElementById('loadingOverlay').classList.toggle('active', show);
+            document.getElementById('searchBtn').disabled = show;
+            }
+
+            function showError(message) {
+            const banner = document.getElementById('errorBanner');
+            banner.textContent = message;
+            banner.style.display = 'block';
+            }
+
+            function hideError() {
+            document.getElementById('errorBanner').style.display = 'none';
+            }
+
+            function renderResults(data) {
+            renderStockHeader(data.info);
+            renderScores(data.scores);
+            renderMetrics(data.metrics);
+            renderDebt(data.convertible_bonds);
+            }
+
+            function renderStockHeader(info) {
+            const container = document.getElementById('stockHeader');
+            const price = info.current_price ? formatNumber(info.current_price) : 'N/A';
+            const marketCap = info.market_cap ? formatLargeNumber(info.market_cap) : 'N/A';
+
+            container.innerHTML = `
+            <div class="stock-header-top">
+                <div class="stock-title">
+                    <span class="stock-ticker">${info.ticker}</span>
+                    <div>
+                        <div class="stock-name">${info.name}</div>
+                        <div class="stock-sector">${info.sector || 'N/A'} · ${info.industry || 'N/A'}</div>
+                    </div>
+                </div>
+                <div class="stock-price">
+                    <div class="price-value">${price}</div>
+                    <div class="price-currency">${info.currency || 'USD'}</div>
+                </div>
+            </div>
+            <div class="stock-meta">
+                <div class="meta-item">
+                    <div class="meta-label">시가총액</div>
+                    <div class="meta-value">${marketCap}</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">P/E Ratio</div>
+                    <div class="meta-value">${info.pe_ratio ? info.pe_ratio.toFixed(2) : 'N/A'}</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">P/B Ratio</div>
+                    <div class="meta-value">${info.pb_ratio ? info.pb_ratio.toFixed(2) : 'N/A'}</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">52주 최고</div>
+                    <div class="meta-value">${info.fifty_two_week_high ? formatNumber(info.fifty_two_week_high) : 'N/A'}
+                    </div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">52주 최저</div>
+                    <div class="meta-value">${info.fifty_two_week_low ? formatNumber(info.fifty_two_week_low) : 'N/A'}
+                    </div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">베타</div>
+                    <div class="meta-value">${info.beta ? info.beta.toFixed(2) : 'N/A'}</div>
+                </div>
+            </div>
+            `;
+            }
+
+            function renderScores(scores) {
+            const container = document.getElementById('scoresSection');
+
+            const categories = [
+            { key: 'total', label: '종합 점수', score: scores.total_score, grade: scores.total_grade, isTotal: true },
+            { key: 'growth', label: '성장성', score: scores.categories.growth.score, grade: scores.categories.growth.grade
+            },
+            { key: 'profitability', label: '수익성', score: scores.categories.profitability.score, grade:
+            scores.categories.profitability.grade },
+            { key: 'stability', label: '안정성', score: scores.categories.stability.score, grade:
+            scores.categories.stability.grade },
+            ];
+
+            container.innerHTML = categories.map(cat => `
+            <div class="score-card ${cat.isTotal ? 'total' : ''}">
+                <div class="score-label">${cat.label}</div>
+                <div class="score-gauge">
+                    <canvas id="gauge-${cat.key}"></canvas>
+                    <div class="score-value-overlay">
+                        <div class="score-number" style="color: ${getScoreColor(cat.score)}">${cat.score.toFixed(1)}
+                        </div>
+                        <div class="score-grade">${cat.grade}</div>
+                    </div>
+                </div>
+            </div>
+            `).join('');
+
+            // Render gauges
+            categories.forEach(cat => {
+            renderGauge(`gauge-${cat.key}`, cat.score);
+            });
+            }
+
+            function renderGauge(canvasId, score) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+
+            // Destroy existing chart
+            if (gaugeCharts[canvasId]) {
+            gaugeCharts[canvasId].destroy();
+            }
+
+            const ctx = canvas.getContext('2d');
+            const color = getScoreColor(score);
+
+            gaugeCharts[canvasId] = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+            datasets: [{
+            data: [score, 100 - score],
+            backgroundColor: [color, 'rgba(255,255,255,0.05)'],
+            borderWidth: 0,
+            }]
+            },
+            options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            circumference: 270,
+            rotation: 225,
+            cutout: '75%',
+            plugins: {
+            legend: { display: false },
+            tooltip: { enabled: false }
+            }
+            }
+            });
+            }
+
+            function getScoreColor(score) {
+            if (score >= 70) return '#22c55e';
+            if (score >= 50) return '#f59e0b';
+            return '#ef4444';
+            }
+
+            function renderMetrics(metricsData) {
+            const metrics = metricsData.metrics;
+            if (!metrics || metrics.length === 0) return;
+
+            // Update headers
+            const thead = document.querySelector('#metricsTable thead tr');
+            thead.innerHTML = '<th class="metric-name">지표</th>' +
+            metrics.map(m => `<th>${m.year}</th>`).join('');
+
+            // Define metric rows
+            const rows = [
+            { category: '성장 지표' },
+            { key: 'revenue_growth', label: '매출 성장률 (%)', good: 10, bad: -5 },
+            { key: 'earnings_growth', label: '순이익 성장률 (%)', good: 15, bad: -10 },
+            { key: 'asset_growth', label: '자산 성장률 (%)', good: 8, bad: -3 },
+            { category: '수익성 지표' },
+            { key: 'gross_margin', label: '매출총이익률 (%)', good: 30, bad: 10 },
+            { key: 'operating_margin', label: '영업이익률 (%)', good: 15, bad: 0 },
+            { key: 'net_margin', label: '순이익률 (%)', good: 10, bad: 0 },
+            { key: 'roe', label: 'ROE (%)', good: 15, bad: 5 },
+            { key: 'roa', label: 'ROA (%)', good: 8, bad: 2 },
+            { category: '안정성 지표' },
+            { key: 'debt_to_equity', label: '부채비율 (%)', good: 50, bad: 150, inverse: true },
+            { key: 'current_ratio', label: '유동비율', good: 1.5, bad: 1.0 },
+            { category: '절대값' },
+            { key: 'revenue', label: '매출액', format: 'large' },
+            { key: 'net_income', label: '순이익', format: 'large' },
+            { key: 'total_assets', label: '총자산', format: 'large' },
+            { key: 'total_debt', label: '총부채', format: 'large' },
+            ];
+
+            const tbody = document.getElementById('metricsBody');
+            tbody.innerHTML = rows.map(row => {
+            if (row.category) {
+            return `<tr class="metric-category">
+                <td colspan="${metrics.length + 1}">${row.category}</td>
+            </tr>`;
+            }
+
+            const cells = metrics.map(m => {
+            const value = m[row.key];
+            return renderValueCell(value, row);
+            }).join('');
+
+            return `<tr>
+                <td class="metric-name">${row.label}</td>
+                ${cells}
+            </tr>`;
+            }).join('');
+            }
+
+            function renderValueCell(value, config) {
+            if (value === null || value === undefined) {
+            return '<td><span class="value-na">N/A</span></td>';
+            }
+
+            let displayValue;
+            let className = 'value-neutral';
+
+            if (config.format === 'large') {
+            displayValue = formatLargeNumber(value);
+            } else {
+            displayValue = value.toFixed(1);
+
+            // Determine color
+            if (config.good !== undefined && config.bad !== undefined) {
+            if (config.inverse) {
+            // Lower is better
+            if (value <= config.good) className='value-good' ; else if (value>= config.bad) className = 'value-bad';
+                } else {
+                // Higher is better
+                if (value >= config.good) className = 'value-good';
+                else if (value <= config.bad) className='value-bad' ; } } } return `<td><span
+                        class="value-cell ${className}">${displayValue}</span></td>`;
+                    }
+
+                    function renderDebt(cbData) {
+                    const container = document.getElementById('debtGrid');
+
+                    const debtInfo = cbData.debt_info || {};
+                    const totalDebt = debtInfo.total_debt ? formatLargeNumber(debtInfo.total_debt) : 'N/A';
+                    const longTermDebt = debtInfo.long_term_debt ? formatLargeNumber(debtInfo.long_term_debt) : 'N/A';
+                    const currentPrice = cbData.current_price ? formatNumber(cbData.current_price) : 'N/A';
+
+                    container.innerHTML = `
+                    <div class="debt-card">
+                        <div class="debt-label">현재 주가</div>
+                        <div class="debt-value">${currentPrice} ${cbData.currency || 'USD'}</div>
+                    </div>
+                    <div class="debt-card">
+                        <div class="debt-label">총 부채</div>
+                        <div class="debt-value">${totalDebt}</div>
+                    </div>
+                    <div class="debt-card">
+                        <div class="debt-label">장기 부채</div>
+                        <div class="debt-value">${longTermDebt}</div>
+                    </div>
+                    `;
+                    }
+
+                    function formatNumber(num) {
+                    if (num === null || num === undefined) return 'N/A';
+                    return new Intl.NumberFormat('en-US', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                    }).format(num);
+                    }
+
+                    function formatLargeNumber(num) {
+                    if (num === null || num === undefined) return 'N/A';
+                    if (Math.abs(num) >= 1e12) return (num / 1e12).toFixed(2) + 'T';
+                    if (Math.abs(num) >= 1e9) return (num / 1e9).toFixed(2) + 'B';
+                    if (Math.abs(num) >= 1e6) return (num / 1e6).toFixed(2) + 'M';
+                    if (Math.abs(num) >= 1e3) return (num / 1e3).toFixed(2) + 'K';
+                    return num.toFixed(2);
+                    }
+
+                    // Check URL params on load
+                    document.addEventListener('DOMContentLoaded', () => {
+                    const params = new URLSearchParams(window.location.search);
+                    const ticker = params.get('ticker');
+                    if (ticker) {
+                    document.getElementById('tickerInput').value = ticker;
+                    searchStock();
+                    }
+                    });
+                    </script>
+    </main>
+</body>
+
+</html>

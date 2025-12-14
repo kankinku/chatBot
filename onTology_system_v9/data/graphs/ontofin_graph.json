@@ -1,0 +1,74 @@
+{
+  "directed": true,
+  "multigraph": false,
+  "graph": {},
+  "nodes": [
+    {
+      "id": "NODE_INTEREST_RATE"
+    },
+    {
+      "id": "NODE_MARKET_LIQUIDITY"
+    },
+    {
+      "id": "NODE_ASSET_PRICE"
+    }
+  ],
+  "links": [
+    {
+      "relation_id": "REL_05BBDFBE",
+      "predicate": "P_DECREASES",
+      "conditions": {
+        "time": null,
+        "context": "긴축 효과",
+        "raw_kind": "PROPORTIONAL"
+      },
+      "weight": 0.9,
+      "relation_object": {
+        "rel_id": "REL_05BBDFBE",
+        "subject_id": "NODE_INTEREST_RATE",
+        "predicate": "P_DECREASES",
+        "object_id": "NODE_MARKET_LIQUIDITY",
+        "conditions": {
+          "time": null,
+          "context": "긴축 효과",
+          "raw_kind": "PROPORTIONAL"
+        },
+        "rationale_ids": [],
+        "relation_kind": "PROPORTIONAL",
+        "sign": -1,
+        "strength": 0.9,
+        "lag_days": 0
+      },
+      "source": "NODE_INTEREST_RATE",
+      "target": "NODE_MARKET_LIQUIDITY"
+    },
+    {
+      "relation_id": "REL_F71A5444",
+      "predicate": "P_INCREASES",
+      "conditions": {
+        "time": null,
+        "context": "자금 유입 효과",
+        "raw_kind": "PROPORTIONAL"
+      },
+      "weight": 0.8,
+      "relation_object": {
+        "rel_id": "REL_F71A5444",
+        "subject_id": "NODE_MARKET_LIQUIDITY",
+        "predicate": "P_INCREASES",
+        "object_id": "NODE_ASSET_PRICE",
+        "conditions": {
+          "time": null,
+          "context": "자금 유입 효과",
+          "raw_kind": "PROPORTIONAL"
+        },
+        "rationale_ids": [],
+        "relation_kind": "PROPORTIONAL",
+        "sign": 1,
+        "strength": 0.8,
+        "lag_days": 7
+      },
+      "source": "NODE_MARKET_LIQUIDITY",
+      "target": "NODE_ASSET_PRICE"
+    }
+  ]
+}

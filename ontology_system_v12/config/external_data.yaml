@@ -1,0 +1,51 @@
+# External Data Configuration
+# 외부 데이터 소스 및 API 설정, 티커 매핑 정보
+
+market_data:
+  provider: "yfinance"
+  
+  # API Keys configuration (referenced by environment variables usually)
+  api_keys:
+    fred_api_key_env: "FRED_API_KEY"  # .env 파일에서 읽어올 환경 변수 이름
+
+  # Entity to Ticker Mapping
+  # InferenceService 사용 시 Entity Name -> Ticker 변환에 사용
+  tickers:
+    # --- Market Indices ---
+    "S&P500": "^GSPC"
+    "나스닥": "^IXIC"
+    "코스피": "^KS11"
+    "달러인덱스": "DX-Y.NYB"
+    "VIX지수": "^VIX"
+    
+    # --- Commodities ---
+    "금": "GC=F"
+    "원유(WTI)": "CL=F"
+    "구리": "HG=F"
+    
+    # --- Rates ---
+    "금리": "^TNX"       # Default to US 10Y
+    "기준금리": "^TNX"   # 임시 매핑
+    "미국채10년물": "^TNX"
+    # "미국채2년물": "^IRX" # 필요 시 활성화
+    
+    # --- Forex ---
+    "달러": "KRW=X"
+    "환율": "KRW=X"
+    
+    # --- Crypto ---
+    "비트코인": "BTC-USD"
+    
+    # --- Stocks (Korean) ---
+    "삼성전자": "005930.KS"
+    "SK하이닉스": "000660.KS"
+    "현대차": "005380.KS"
+    "네이버": "035420.KS"
+    "카카오": "035720.KS"
+    
+    # --- Stocks (US) ---
+    "애플": "AAPL"
+    "테슬라": "TSLA"
+    "엔비디아": "NVDA"
+    "마이크로소프트": "MSFT"
+    "구글": "GOOGL"

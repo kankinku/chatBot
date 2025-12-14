@@ -1,0 +1,167 @@
+# Features Configuration
+# 증분 계산 Feature 정의
+
+features:
+  # =========================================================================
+  # Spread Features
+  # =========================================================================
+  SOFR_EFFR_SPREAD:
+    name: SOFR-EFFR Spread
+    type: spread
+    inputs: [SOFR, EFFR]
+    window_days: 0
+    unit: bps
+    description: SOFR와 EFFR의 스프레드
+
+  T10Y2Y:
+    name: 10Y-2Y Yield Spread
+    type: raw
+    inputs: [T10Y2Y]
+    window_days: 0
+    unit: '%'
+    description: 수익률 곡선 (10년-2년)
+
+  # =========================================================================
+  # Rate of Change (ROC) Features
+  # =========================================================================
+  SOFR_ROC_30D:
+    name: SOFR 30D ROC
+    type: roc
+    inputs: [SOFR]
+    window_days: 30
+    unit: '%'
+    description: SOFR 30일 변화율
+
+  SOFR_ROC_90D:
+    name: SOFR 90D ROC
+    type: roc
+    inputs: [SOFR]
+    window_days: 90
+    unit: '%'
+    description: SOFR 90일 변화율
+
+  VIX_ROC_5D:
+    name: VIX 5D ROC
+    type: roc
+    inputs: [VIX]
+    window_days: 5
+    unit: '%'
+    description: VIX 5일 변화율
+
+  VIX_ROC_20D:
+    name: VIX 20D ROC
+    type: roc
+    inputs: [VIX]
+    window_days: 20
+    unit: '%'
+    description: VIX 20일 변화율
+
+  SPY_ROC_20D:
+    name: SPY 20D ROC
+    type: roc
+    inputs: [SPY]
+    window_days: 20
+    unit: '%'
+    description: SPY 20일 변화율
+
+  SPY_ROC_90D:
+    name: SPY 90D ROC
+    type: roc
+    inputs: [SPY]
+    window_days: 90
+    unit: '%'
+    description: SPY 90일 변화율
+
+  GLD_ROC_30D:
+    name: Gold 30D ROC
+    type: roc
+    inputs: [GLD]
+    window_days: 30
+    unit: '%'
+    description: 금 30일 변화율
+
+  # =========================================================================
+  # Z-Score Features
+  # =========================================================================
+  SOFR_ZSCORE_90D:
+    name: SOFR 90D Z-Score
+    type: zscore
+    inputs: [SOFR]
+    window_days: 90
+    description: SOFR 90일 Z-Score
+
+  VIX_ZSCORE_30D:
+    name: VIX 30D Z-Score
+    type: zscore
+    inputs: [VIX]
+    window_days: 30
+    description: VIX 30일 Z-Score
+
+  VIX_ZSCORE_60D:
+    name: VIX 60D Z-Score
+    type: zscore
+    inputs: [VIX]
+    window_days: 60
+    description: VIX 60일 Z-Score
+
+  # =========================================================================
+  # Year over Year (YoY) Features
+  # =========================================================================
+  CPI_YOY:
+    name: CPI YoY
+    type: yoy
+    inputs: [CPIAUCSL]
+    window_days: 365
+    unit: '%'
+    description: CPI 전년 대비 변화율
+
+  # =========================================================================
+  # Volatility Features
+  # =========================================================================
+  SPY_VOL_20D:
+    name: SPY 20D Volatility
+    type: volatility
+    inputs: [SPY]
+    window_days: 20
+    unit: '%'
+    description: SPY 20일 실현 변동성 (연율화)
+
+  SPY_VOL_60D:
+    name: SPY 60D Volatility
+    type: volatility
+    inputs: [SPY]
+    window_days: 60
+    unit: '%'
+    description: SPY 60일 실현 변동성 (연율화)
+
+  # =========================================================================
+  # Correlation Features
+  # =========================================================================
+  SOFR_SPY_CORR_60D:
+    name: SOFR-SPY 60D Correlation
+    type: correlation
+    inputs: [SOFR, SPY]
+    window_days: 60
+    description: SOFR와 SPY의 60일 상관계수
+
+  VIX_SPY_CORR_30D:
+    name: VIX-SPY 30D Correlation
+    type: correlation
+    inputs: [VIX, SPY]
+    window_days: 30
+    description: VIX와 SPY의 30일 상관계수
+
+  # =========================================================================
+  # Percentile Features
+  # =========================================================================
+  VIX_PERCENTILE_252D:
+    name: VIX 1Y Percentile
+    type: percentile
+    inputs: [VIX]
+    window_days: 252
+    description: VIX 1년 백분위
+
+# Default calculation parameters
+defaults:
+  min_observations: 5
+  handle_missing: forward_fill

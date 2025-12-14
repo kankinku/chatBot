@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OntoFin - Financial AI Platform</title>
+    <link rel="stylesheet" crossorigin
+        href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        body {
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .logo {
+            font-size: 48px;
+            font-weight: 800;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, var(--primary), #22d3ee);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+        }
+
+        .card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            height: 100%;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            border-color: var(--primary);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .card-icon {
+            font-size: 48px;
+            margin-bottom: 24px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 80px;
+            color: var(--text-tertiary);
+            font-size: 14px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">OntoFin</div>
+            <div class="subtitle">AI 기반 금융 시나리오 분석 및 트레이딩 시스템</div>
+        </header>
+
+        <div class="grid">
+            <a href="/dashboard" class="card">
+                <div class="card-icon">📊</div>
+                <div class="card-title">Dashboard</div>
+                <div class="card-desc">
+                    시장 동향, 주요 지표 및<br>실시간 리포트를 한눈에 확인
+                </div>
+            </a>
+
+            <a href="/pair_trading" class="card">
+                <div class="card-icon">⚖️</div>
+                <div class="card-title">Pair Trading</div>
+                <div class="card-desc">
+                    상관계수 기반 롱숏 기회 포착<br>및 통계적 차익거래 전략
+                </div>
+            </a>
+
+            <a href="/fundamental" class="card">
+                <div class="card-icon">📈</div>
+                <div class="card-title">Fundamental</div>
+                <div class="card-desc">
+                    기업 재무제표 분석 및<br>투자 적합성 점수 평가
+                </div>
+            </a>
+
+            <a href="/graph_view" class="card">
+                <div class="card-icon">🕸️</div>
+                <div class="card-title">Knowledge Graph</div>
+                <div class="card-desc">
+                    금융 지식 베이스 시각화 및<br>인과 관계 탐색
+                </div>
+            </a>
+
+            <a href="/scenario" class="card">
+                <div class="card-icon">🧠</div>
+                <div class="card-title">Scenario AI</div>
+                <div class="card-desc">
+                    가상 시나리오에 따른<br>시장 영향 파급 효과 시뮬레이션
+                </div>
+            </a>
+        </div>
+
+        <footer class="footer">
+            © 2025 OntoFin System. All rights reserved.
+        </footer>
+    </div>
+</body>
+
+</html>

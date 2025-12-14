@@ -1,0 +1,121 @@
+# Regimes Configuration
+# 시장 레짐(국면) 정의
+
+regimes:
+  # =========================================================================
+  # 위험 선호/회피
+  # =========================================================================
+  - name: risk_on
+    description: 위험 선호 국면 - 낮은 변동성, 상승 추세
+    conditions:
+      - feature: VIX
+        operator: "<"
+        threshold: 20
+      - feature: SPY_ROC_20D
+        operator: ">"
+        threshold: 0
+    priority: 1
+
+  - name: risk_off
+    description: 위험 회피 국면 - 높은 변동성
+    conditions:
+      - feature: VIX
+        operator: ">="
+        threshold: 25
+    priority: 2
+
+  # =========================================================================
+  # 인플레이션
+  # =========================================================================
+  - name: inflation_up
+    description: 인플레이션 상승 국면 - CPI YoY > 3%
+    conditions:
+      - feature: CPI_YOY
+        operator: ">"
+        threshold: 0.03
+    priority: 1
+
+  - name: disinflation
+    description: 디스인플레이션 국면 - CPI YoY < 2%
+    conditions:
+      - feature: CPI_YOY
+        operator: "<"
+        threshold: 0.02
+    priority: 2
+
+  # =========================================================================
+  # 성장
+  # =========================================================================
+  - name: growth_up
+    description: 성장 상승 국면
+    conditions:
+      - feature: SPY_ROC_90D
+        operator: ">"
+        threshold: 0.05
+    priority: 1
+
+  - name: growth_down
+    description: 성장 하락 국면
+    conditions:
+      - feature: SPY_ROC_90D
+        operator: "<"
+        threshold: -0.05
+    priority: 2
+
+  # =========================================================================
+  # 유동성
+  # =========================================================================
+  - name: liquidity_abundant
+    description: 유동성 풍부 국면 - 금리 낮은 상태
+    conditions:
+      - feature: SOFR_ZSCORE_90D
+        operator: "<"
+        threshold: -1
+    priority: 1
+
+  - name: liquidity_tight
+    description: 유동성 긴축 국면 - 금리 높은 상태
+    conditions:
+      - feature: SOFR_ZSCORE_90D
+        operator: ">"
+        threshold: 1
+    priority: 2
+
+  # =========================================================================
+  # 복합 레짐 (여러 조건 동시 충족)
+  # =========================================================================
+  - name: stagflation
+    description: 스태그플레이션 - 고인플레, 저성장
+    conditions:
+      - feature: CPI_YOY
+        operator: ">"
+        threshold: 0.04
+      - feature: SPY_ROC_90D
+        operator: "<"
+        threshold: 0
+    priority: 3
+
+  - name: goldilocks
+    description: 골디락스 - 저인플레, 적정 성장
+    conditions:
+      - feature: CPI_YOY
+        operator: "between"
+        threshold: [0.01, 0.025]
+      - feature: SPY_ROC_90D
+        operator: ">"
+        threshold: 0.03
+      - feature: VIX
+        operator: "<"
+        threshold: 18
+    priority: 3
+
+# Classification settings
+settings:
+  # 레짐 판단 최소 확률
+  min_probability: 0.5
+  
+  # 레짐 전환 인식 임계값 (hysteresis)
+  transition_threshold: 0.6
+  
+  # 불확실 구간 레짐 (여러 레짐 동시 가능성)
+  allow_multiple: true

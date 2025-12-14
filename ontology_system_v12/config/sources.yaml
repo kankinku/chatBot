@@ -1,0 +1,71 @@
+# Sources Configuration
+# 데이터 소스별 Delta 수집 방식 정의
+
+sources:
+  # FRED (Federal Reserve Economic Data)
+  - source_id: fred
+    name: FRED API
+    source_type: api
+    delta_method: since_timestamp
+    endpoint: https://api.stlouisfed.org/fred/series/observations
+    credentials_key: FRED_API_KEY
+    refresh_interval_minutes: 60
+    retry_count: 3
+    timeout_seconds: 30
+    is_active: true
+    provides_series:
+      - SOFR
+      - EFFR
+      - DFF       # Federal Funds Rate
+      - CPIAUCSL  # CPI
+      - UNRATE    # Unemployment Rate
+      - GDP
+      - T10Y2Y    # 10Y-2Y Spread
+      - BAMLH0A0HYM2  # High Yield Spread
+
+  # Yahoo Finance
+  - source_id: yahoo
+    name: Yahoo Finance
+    source_type: api
+    delta_method: since_timestamp
+    endpoint: https://query1.finance.yahoo.com/v8/finance/chart
+    refresh_interval_minutes: 15
+    retry_count: 3
+    timeout_seconds: 30
+    is_active: true
+    provides_series:
+      - SPY
+      - QQQ
+      - VIX
+      - GLD      # Gold
+      - TLT      # Long Term Treasury
+      - HYG      # High Yield Bond
+      - LQD      # Investment Grade Bond
+
+  # News Sources
+  - source_id: news_feed
+    name: Financial News Feed
+    source_type: api
+    delta_method: cursor
+    endpoint: https://newsapi.org/v2/everything
+    credentials_key: NEWS_API_KEY
+    refresh_interval_minutes: 30
+    retry_count: 3
+    is_active: true
+    provides_series: []  # Events only
+
+  # Manual Data
+  - source_id: manual
+    name: Manual Input
+    source_type: manual
+    delta_method: full_replace
+    refresh_interval_minutes: 0
+    is_active: true
+    provides_series: []
+
+# Default settings
+defaults:
+  refresh_interval_minutes: 60
+  retry_count: 3
+  timeout_seconds: 30
+  delta_method: since_timestamp

@@ -1,0 +1,9 @@
+{
+  "version": "v1.0",
+  "default_mode": "hybrid_search",
+  "rules": {},
+  "thresholds": {
+    "high_conflict": 0.7,
+    "low_evidence": 0.3
+  }
+}

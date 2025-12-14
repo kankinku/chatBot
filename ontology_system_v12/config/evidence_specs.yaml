@@ -1,0 +1,180 @@
+# Evidence Specs Configuration
+# 관계 타입/패턴별 검증에 사용할 Feature 정의
+
+edge_evidence:
+  # =========================================================================
+  # 금리 → 자산 관계
+  # =========================================================================
+  - name: interest_rate_growth_stock
+    description: 금리 상승이 성장주에 미치는 영향
+    edge_pattern:
+      head_contains: [금리, interest_rate, SOFR, fed_funds, 기준금리]
+      tail_contains: [성장주, growth_stock, NASDAQ, tech, 기술주]
+      relation_type: Affect
+      polarity: "-"
+    evidence_features:
+      - feature: SOFR_ROC_30D
+        direction: positive
+        weight: 0.4
+      - feature: VIX_ROC_5D
+        direction: positive
+        weight: 0.3
+      - feature: SPY_VOL_20D
+        direction: positive
+        weight: 0.2
+    thresholds:
+      strong_pro: 0.7
+      weak_pro: 0.3
+      neutral_low: -0.3
+      neutral_high: 0.3
+      weak_con: -0.3
+      strong_con: -0.7
+    lag_days: [0, 30, 60]
+    regime_applicability:
+      risk_on: 0.8
+      risk_off: 1.2
+      inflation_up: 1.0
+      liquidity_tight: 1.3
+    is_active: true
+
+  - name: interest_rate_value_stock
+    description: 금리 상승이 가치주에 미치는 영향 (상대적 약함)
+    edge_pattern:
+      head_contains: [금리, interest_rate, SOFR]
+      tail_contains: [가치주, value_stock, 배당주]
+      relation_type: Affect
+      polarity: "-"
+    evidence_features:
+      - feature: SOFR_ROC_30D
+        direction: positive
+        weight: 0.3
+      - feature: T10Y2Y
+        direction: negative
+        weight: 0.3
+    thresholds:
+      strong_pro: 0.6
+      weak_pro: 0.2
+    lag_days: [0, 30]
+    is_active: true
+
+  # =========================================================================
+  # VIX → 주식 관계
+  # =========================================================================
+  - name: vix_equity
+    description: VIX 상승이 주식에 미치는 영향
+    edge_pattern:
+      head_contains: [VIX, 변동성, volatility, 공포지수]
+      tail_contains: [주식, stock, equity, S&P, SPY, NASDAQ]
+      relation_type: Affect
+      polarity: "-"
+    evidence_features:
+      - feature: VIX_ZSCORE_30D
+        direction: positive
+        weight: 0.5
+      - feature: SPY_VOL_20D
+        direction: positive
+        weight: 0.3
+    thresholds:
+      strong_pro: 0.6
+      weak_pro: 0.2
+    lag_days: [0, 5]
+    regime_applicability:
+      risk_on: 0.6
+      risk_off: 1.4
+    is_active: true
+
+  # =========================================================================
+  # 인플레이션 관계
+  # =========================================================================
+  - name: inflation_gold
+    description: 인플레이션이 금에 미치는 영향
+    edge_pattern:
+      head_contains: [인플레, CPI, inflation, 물가]
+      tail_contains: [금, gold, GLD, 귀금속]
+      relation_type: Affect
+      polarity: "+"
+    evidence_features:
+      - feature: CPI_YOY
+        direction: positive
+        weight: 0.6
+      - feature: GLD_ROC_30D
+        direction: positive
+        weight: 0.3
+    thresholds:
+      strong_pro: 0.5
+    lag_days: [0, 30, 90]
+    regime_applicability:
+      inflation_up: 1.3
+      disinflation: 0.7
+    is_active: true
+
+  - name: inflation_bond
+    description: 인플레이션이 채권에 미치는 영향
+    edge_pattern:
+      head_contains: [인플레, CPI, inflation]
+      tail_contains: [채권, bond, TLT, 국채]
+      relation_type: Affect
+      polarity: "-"
+    evidence_features:
+      - feature: CPI_YOY
+        direction: positive
+        weight: 0.5
+      - feature: SOFR_ROC_90D
+        direction: positive
+        weight: 0.3
+    thresholds:
+      strong_pro: 0.6
+    lag_days: [0, 30, 60]
+    regime_applicability:
+      inflation_up: 1.2
+      disinflation: 0.8
+    is_active: true
+
+  # =========================================================================
+  # 유동성 관계
+  # =========================================================================
+  - name: liquidity_equity
+    description: 유동성이 주식에 미치는 영향
+    edge_pattern:
+      head_contains: [유동성, liquidity, M2, 통화량]
+      tail_contains: [주식, equity, stock]
+      relation_type: Affect
+      polarity: "+"
+    evidence_features:
+      - feature: SOFR_ZSCORE_90D
+        direction: negative
+        weight: 0.5
+    thresholds:
+      strong_pro: 0.5
+    lag_days: [0, 30, 60, 90]
+    regime_applicability:
+      liquidity_abundant: 1.3
+      liquidity_tight: 0.7
+    is_active: true
+
+  # =========================================================================
+  # 상관관계 (Correlate)
+  # =========================================================================
+  - name: vix_credit_spread
+    description: VIX와 신용 스프레드의 상관관계
+    edge_pattern:
+      head_contains: [VIX]
+      tail_contains: [신용스프레드, credit_spread, high_yield]
+      relation_type: CorrelateWith
+    evidence_features:
+      - feature: VIX_ZSCORE_60D
+        direction: positive
+        weight: 0.5
+    lag_days: [0, 5, 10]
+    is_active: true
+
+# Default settings
+defaults:
+  lag_days: [0, 30, 60]
+  thresholds:
+    strong_pro: 0.7
+    weak_pro: 0.3
+    neutral_low: -0.3
+    neutral_high: 0.3
+    weak_con: -0.3
+    strong_con: -0.7

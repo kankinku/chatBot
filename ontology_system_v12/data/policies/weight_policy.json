@@ -1,0 +1,9 @@
+{
+    "version": "v1.0",
+    "weights": {
+        "domain_score": 0.4,
+        "evidence_strength": 0.3,
+        "user_preference": 0.3
+    },
+    "decay_factor": 0.95
+}
