@@ -1,0 +1,38 @@
+﻿# Static Domain Rules
+# Leave empty for domain-agnostic usage.
+
+static_rules: []
+
+sign_patterns:
+  positive:
+    - "increase"
+    - "rise"
+    - "grow"
+    - "improve"
+    - "boost"
+    - "up"
+  negative:
+    - "decrease"
+    - "fall"
+    - "drop"
+    - "decline"
+    - "reduce"
+    - "down"
+  inverse:
+    - "inverse"
+    - "opposite"
+    - "negatively correlated"
+
+semantic_patterns:
+  exaggeration:
+    - "always"
+    - "never"
+    - "guaranteed"
+  correlation_as_causation:
+    - "correlates with"
+    - "goes with"
+  weak_evidence:
+    - "maybe"
+    - "might"
+    - "rumor"
+    - "alleged"

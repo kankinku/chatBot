@@ -1,0 +1,71 @@
+﻿# Entity Types definition
+# Update as needed for the target domain.
+
+entity_types:
+  Instrument:
+    description: "Generic artifact, tool, or resource."
+    examples:
+      - "device"
+      - "sensor"
+      - "software module"
+    subtypes:
+      - Tool
+      - Device
+      - Resource
+      - Service
+
+  Indicator:
+    description: "Measured metric or signal."
+    examples:
+      - "temperature"
+      - "latency"
+      - "error_rate"
+    subtypes:
+      - Metric
+      - Signal
+      - Status
+
+  Agent:
+    description: "Actor or organization."
+    examples:
+      - "user"
+      - "system"
+      - "team"
+    subtypes:
+      - Person
+      - Organization
+      - System
+      - Team
+
+  Event:
+    description: "Time-bounded occurrence."
+    examples:
+      - "outage"
+      - "deployment"
+      - "incident"
+    subtypes:
+      - SystemEvent
+      - ProcessEvent
+      - ExternalEvent
+
+  Quantity:
+    description: "Numeric value or measured amount."
+    examples:
+      - "5"
+      - "10%"
+      - "2 hours"
+    subtypes:
+      - Percentage
+      - Duration
+      - Amount
+
+  Concept:
+    description: "Abstract idea or state."
+    examples:
+      - "reliability"
+      - "risk"
+      - "capacity"
+    subtypes:
+      - State
+      - Property
+      - Category

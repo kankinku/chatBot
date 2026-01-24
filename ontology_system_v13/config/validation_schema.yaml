@@ -1,0 +1,88 @@
+﻿# Validation Schema
+# Allowed and forbidden type combinations.
+
+validation_rules:
+  allowed_combinations:
+    - head_type: Event
+      tail_type: Indicator
+      relations: [Affect, Cause]
+    - head_type: Event
+      tail_type: Instrument
+      relations: [Affect, Cause]
+    - head_type: Event
+      tail_type: Concept
+      relations: [Affect, Cause]
+    - head_type: Event
+      tail_type: Agent
+      relations: [Affect]
+
+    - head_type: Indicator
+      tail_type: Instrument
+      relations: [Affect, Cause, CorrelateWith]
+    - head_type: Indicator
+      tail_type: Indicator
+      relations: [Affect, Cause, CorrelateWith, DependOn]
+    - head_type: Indicator
+      tail_type: Concept
+      relations: [Affect, Cause]
+
+    - head_type: Agent
+      tail_type: Event
+      relations: [Cause]
+    - head_type: Agent
+      tail_type: Indicator
+      relations: [Affect, Cause]
+    - head_type: Agent
+      tail_type: Instrument
+      relations: [Affect]
+    - head_type: Agent
+      tail_type: Quantity
+      relations: [Affect]
+
+    - head_type: Concept
+      tail_type: Indicator
+      relations: [Affect, Cause]
+    - head_type: Concept
+      tail_type: Instrument
+      relations: [Affect, Cause]
+    - head_type: Concept
+      tail_type: Concept
+      relations: [Affect, Cause, CorrelateWith]
+
+    - head_type: Instrument
+      tail_type: Instrument
+      relations: [CorrelateWith, PartOf]
+    - head_type: Instrument
+      tail_type: Indicator
+      relations: [DependOn]
+
+    - head_type: Quantity
+      tail_type: Indicator
+      relations: [Affect]
+    - head_type: Quantity
+      tail_type: Concept
+      relations: [Affect]
+
+  forbidden_combinations:
+    - head_type: Quantity
+      tail_type: Agent
+      relations: [TemporalBefore, TemporalAfter, Cause]
+      reason: "Quantity should not directly cause or precede an agent."
+
+    - head_type: Instrument
+      tail_type: Event
+      relations: [Cause]
+      reason: "An instrument should not directly cause an event."
+
+    - head_type: Quantity
+      tail_type: Event
+      relations: [Cause, TemporalBefore]
+      reason: "Quantity should not directly cause or precede an event."
+
+  confidence_thresholds:
+    domain_candidate: 0.55
+
+  confidence_weights:
+    student_conf: 0.4
+    sign_score: 0.3
+    semantic_conf: 0.3

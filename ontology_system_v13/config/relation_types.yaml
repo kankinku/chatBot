@@ -1,0 +1,66 @@
+﻿# Relation Types definition
+
+relation_types:
+  Affect:
+    description: "A influences B."
+    has_polarity: true
+    examples:
+      - "A increases B"
+    patterns:
+      - "{head} affects {tail}"
+
+  Cause:
+    description: "A causes B."
+    has_polarity: true
+    examples:
+      - "A causes B"
+    patterns:
+      - "{head} causes {tail}"
+
+  DependOn:
+    description: "A depends on B."
+    has_polarity: false
+    examples:
+      - "A depends on B"
+    patterns:
+      - "{head} depends on {tail}"
+
+  TemporalBefore:
+    description: "A happens before B."
+    has_polarity: false
+    examples:
+      - "A happens before B"
+    patterns:
+      - "{head} happens before {tail}"
+
+  TemporalAfter:
+    description: "A happens after B."
+    has_polarity: false
+    examples:
+      - "A happens after B"
+    patterns:
+      - "{head} happens after {tail}"
+
+  CorrelateWith:
+    description: "A correlates with B."
+    has_polarity: true
+    examples:
+      - "A correlates with B"
+    patterns:
+      - "{head} correlates with {tail}"
+
+  PartOf:
+    description: "A is part of B."
+    has_polarity: false
+    examples:
+      - "A is part of B"
+    patterns:
+      - "{head} is part of {tail}"
+
+  ConditionalOn:
+    description: "A holds under condition B."
+    has_polarity: false
+    examples:
+      - "A occurs when B"
+    patterns:
+      - "{head} occurs when {tail}"
