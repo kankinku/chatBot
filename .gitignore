@@ -114,6 +114,9 @@ out/
 # IDE 및 에디터
 # ============================================================================
 
+# Codex/Superpowers isolated worktrees
+.worktrees/
+
 # VSCode
 .vscode/
 *.code-workspace
