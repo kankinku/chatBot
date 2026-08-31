@@ -111,7 +111,7 @@ router = Router()
 class ChatMessageRequest(Schema):
     message: str
 
-class ChatMessageResponse(Schema):
+class SimpleChatResponse(Schema):
     success: bool
     response: str
     timestamp: str
@@ -196,7 +196,7 @@ def sync_make_chatbot_request(method: str, endpoint: str, data: Dict[str, Any] =
 
 # API 엔드포인트들
 
-@router.post("/chat", response=ChatMessageResponse)
+@router.post("/chat", response=SimpleChatResponse)
 def proxy_simple_chat(request, data: ChatMessageRequest):
     """간단한 챗봇 메시지 프록시"""
     try:
@@ -207,7 +207,7 @@ def proxy_simple_chat(request, data: ChatMessageRequest):
             timeout=120  # AI 처리 시간을 고려하여 타임아웃 증가
         )
         
-        return ChatMessageResponse(
+        return SimpleChatResponse(
             success=True,
             response=response_data.get('answer', ''),
             timestamp=str(response_data.get('timestamp', ''))
@@ -487,7 +487,7 @@ class ConversationResponse(Schema):
     is_active: bool
     message_count: int
 
-class ChatMessageResponse(Schema):
+class StoredChatMessageResponse(Schema):
     id: int
     message_type: str
     content: str
@@ -498,7 +498,7 @@ class ChatMessageResponse(Schema):
 
 class ConversationDetailResponse(Schema):
     conversation: ConversationResponse
-    messages: List[ChatMessageResponse]
+    messages: List[StoredChatMessageResponse]
 
 @router.get("/conversations", response=List[ConversationResponse])
 def get_conversations(request: HttpRequest):
@@ -542,7 +542,7 @@ def get_conversation_detail(request: HttpRequest, session_id: str):
         
         messages_data = []
         for msg in messages:
-            messages_data.append(ChatMessageResponse(
+            messages_data.append(StoredChatMessageResponse(
                 id=msg.id,
                 message_type=msg.message_type,
                 content=msg.content,
