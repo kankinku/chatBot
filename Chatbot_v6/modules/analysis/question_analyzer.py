@@ -175,7 +175,7 @@ class QuestionAnalyzer:
             "technical_spec": r"(모델|알고리즘|성능|지표|입력변수|설정값|고려사항)",
             "operational": r"(운영|모드|제어|알람|진단|결함|정보|현황)",
         }
-        
+
         # 도메인 사전 패턴 추가
         if self.domain_dict:
             for key in ["definition", "procedural", "comparative", "problem"]:
@@ -193,6 +193,14 @@ class QuestionAnalyzer:
         
         if has_number or has_unit:
             return "numeric"
+
+        # "운영 현황"처럼 상태를 묻는 표현에는 "운영"과 "현황"이
+        # 함께 나타날 수 있다. 숫자/단위 질문은 먼저 numeric으로
+        # 판정하고, 그 외에는 일반 절차 패턴보다 구체적인 상태 조회를
+        # 먼저 판정해 분류 우선순위를 명시한다.
+        operational_status_pattern = r"(운영\s*(현황|상태|정보)|현재\s*운영\s*(현황|상태|정보)|현재\s*(상태|현황)|실시간\s*(상태|현황))"
+        if re.search(operational_status_pattern, question, re.IGNORECASE):
+            return "operational"
         
         # 패턴 매칭
         for qtype, pattern in patterns.items():
