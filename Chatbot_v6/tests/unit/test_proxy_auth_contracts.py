@@ -16,6 +16,7 @@ MIGRATION_PATH = (
     / "0002_add_owner_key.py"
 )
 URLS_PATH = REPO_ROOT / "Server" / "backend" / "chatbot_backend" / "urls.py"
+COMPOSE_PATH = REPO_ROOT / "docker-compose.yml"
 
 
 def _tree(path: Path) -> ast.Module:
@@ -80,6 +81,15 @@ def test_detailed_status_requires_operator_but_health_remains_public():
     functions = _functions(VIEWS_PATH)
     assert _has_actor_call(functions["proxy_chatbot_status"], operator=True)
     assert not _calls(functions["proxy_health_check"], "_require_actor")
+
+
+def test_fastapi_backend_is_internal_only_behind_the_django_proxy():
+    source = COMPOSE_PATH.read_text(encoding="utf-8")
+    service = source.split("  chatbot-backend:", 1)[1].split(
+        "  # MySQL 데이터베이스", 1
+    )[0]
+    assert "ports:" not in service
+    assert 'expose:\n      - "8000"' in service
 
 
 def test_route_boundary_translates_policy_failures_to_http_errors():

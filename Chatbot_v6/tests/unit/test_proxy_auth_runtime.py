@@ -58,6 +58,8 @@ call_command("migrate", verbosity=0, interactive=False)
 from chatbot_proxy import views
 from chatbot_proxy.models import ChatLog, ChatMetrics, Conversation
 from chatbot_proxy.security import PermissionDenied
+from django.contrib.auth import get_user_model
+from django.db.migrations.recorder import MigrationRecorder
 
 
 client = Client()
@@ -66,6 +68,14 @@ assert client.get("/api/chatbot/logs").status_code == 401
 
 views.sync_make_chatbot_request = lambda **kwargs: {"status": "ok"}
 assert client.get("/api/chatbot/health").status_code == 200
+
+User = get_user_model()
+regular_user = User.objects.create_user(username="regular")
+operator_user = User.objects.create_user(username="operator", is_staff=True)
+client.force_login(regular_user)
+assert client.get("/api/chatbot/status").status_code == 403
+client.force_login(operator_user)
+assert client.get("/api/chatbot/status").status_code == 200
 
 request = RequestFactory().get("/api/chatbot/status")
 request.user = SimpleNamespace(
@@ -112,6 +122,9 @@ assert [item.session_id for item in conversations] == ["owned"]
 assert Conversation._meta.get_field("owner_key").null is True
 assert ChatLog._meta.get_field("owner_key").null is True
 assert ChatMetrics._meta.get_field("owner_key").null is True
+assert MigrationRecorder(connections["default"]).migration_qs.filter(
+    app="chatbot_proxy", name="0002_add_owner_key"
+).exists()
 
 original_save_chat_log = views.save_chat_log
 views.save_chat_log = lambda *args, **kwargs: (_ for _ in ()).throw(
@@ -126,6 +139,29 @@ views.update_chat_metrics = lambda *args, **kwargs: (_ for _ in ()).throw(
 )
 views._safe_update_chat_metrics("owned", True, 0.1, owner_key="user:1")
 views.update_chat_metrics = original_update_chat_metrics
+
+client.force_login(regular_user)
+views.sync_make_chatbot_request = lambda **kwargs: {
+    "answer": "runtime answer",
+    "confidence": 0.9,
+    "sources": [],
+    "metrics": {},
+    "fallback_used": False,
+}
+views.save_chat_log = lambda *args, **kwargs: (_ for _ in ()).throw(
+    RuntimeError("expected request telemetry failure")
+)
+views.update_chat_metrics = lambda *args, **kwargs: (_ for _ in ()).throw(
+    RuntimeError("expected request telemetry failure")
+)
+response = client.post(
+    "/api/chatbot/ask",
+    data={"question": "runtime question", "mode": "accuracy", "k": "auto"},
+    content_type="application/json",
+    HTTP_X_SESSION_ID="runtime-session",
+)
+assert response.status_code == 200, response.content
+assert response.json()["answer"] == "runtime answer"
 '''
 
 
