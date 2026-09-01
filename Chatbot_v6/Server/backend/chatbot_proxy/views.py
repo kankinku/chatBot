@@ -19,6 +19,7 @@ import os
 
 # 모델 import 추가
 from .models import Conversation, ChatMessage, ChatLog, ChatMetrics
+from .security import Actor, AuthenticationRequired, PermissionDenied, require_owner, resolve_actor
 
 logger = logging.getLogger(__name__)
 
@@ -26,17 +27,48 @@ logger = logging.getLogger(__name__)
 CHATBOT_BASE_URL = os.getenv('CHATBOT_URL', 'http://localhost:8000')
 logger.info(f"Chatbot server URL configured: {CHATBOT_BASE_URL}")
 
+
+def _require_actor(request: HttpRequest, operator: bool = False):
+    """Resolve the request actor and translate policy failures at the HTTP boundary."""
+    try:
+        actor = resolve_actor(
+            getattr(request, 'user', None),
+            getattr(request, 'META', {}).get('REMOTE_ADDR'),
+            debug=settings.DEBUG,
+            allow_anonymous_local=getattr(settings, 'CHATBOT_ALLOW_ANONYMOUS_LOCAL', False),
+        )
+    except AuthenticationRequired:
+        raise HttpError(401, "인증이 필요합니다.")
+    except PermissionDenied:
+        raise HttpError(403, "접근 권한이 없습니다.")
+
+    if operator and not actor.is_operator:
+        raise HttpError(403, "운영자 권한이 필요합니다.")
+    return actor
+
+
 # 대화 기록 관리 헬퍼 함수들
-def get_or_create_conversation(session_id: str, user_ip: str = None) -> Conversation:
+def get_or_create_conversation(
+    session_id: str,
+    owner_key: str,
+    user_ip: str = None,
+) -> Conversation:
     """대화 세션을 가져오거나 새로 생성"""
+    if not owner_key:
+        raise PermissionDenied("conversation owner is required")
     conversation, created = Conversation.objects.get_or_create(
         session_id=session_id,
         defaults={
+            'owner_key': owner_key,
             'user_ip': user_ip,
             'is_active': True
         }
     )
     if not created:
+        require_owner(
+            Actor(owner_key=owner_key, authenticated=True, is_operator=False),
+            conversation.owner_key,
+        )
         conversation.updated_at = timezone.now()
         conversation.save()
     return conversation
@@ -55,20 +87,27 @@ def save_chat_message(conversation: Conversation, message_type: str, content: st
     )
 
 def save_chat_log(level: str, message: str, module: str = None, 
-                 user_ip: str = None, session_id: str = None):
+                 user_ip: str = None, session_id: str = None, owner_key: str = None):
     """챗봇 로그를 데이터베이스에 저장"""
+    if not owner_key:
+        raise PermissionDenied("log owner is required")
     ChatLog.objects.create(
         level=level,
         message=message,
         module=module,
         user_ip=user_ip,
-        session_id=session_id
+        session_id=session_id,
+        owner_key=owner_key,
     )
 
-def update_chat_metrics(session_id: str, success: bool, response_time: float, confidence: float = None):
+def update_chat_metrics(session_id: str, success: bool, response_time: float,
+                        confidence: float = None, owner_key: str = None):
     """챗봇 메트릭 업데이트"""
+    if not owner_key:
+        raise PermissionDenied("metrics owner is required")
     metrics, created = ChatMetrics.objects.get_or_create(
         session_id=session_id,
+        owner_key=owner_key,
         defaults={
             'total_requests': 0,
             'successful_requests': 0,
@@ -104,6 +143,23 @@ def update_chat_metrics(session_id: str, success: bool, response_time: float, co
             )
     
     metrics.save()
+
+
+def _safe_save_chat_log(*args, **kwargs):
+    """Persist telemetry without changing the outcome of the main request."""
+    try:
+        save_chat_log(*args, **kwargs)
+    except Exception:
+        logger.exception("챗봇 로그 저장 실패")
+
+
+def _safe_update_chat_metrics(*args, **kwargs):
+    """Update telemetry without masking the main request result."""
+    try:
+        update_chat_metrics(*args, **kwargs)
+    except Exception:
+        logger.exception("챗봇 메트릭 저장 실패")
+
 
 router = Router()
 
@@ -199,6 +255,7 @@ def sync_make_chatbot_request(method: str, endpoint: str, data: Dict[str, Any] =
 @router.post("/chat", response=SimpleChatResponse)
 def proxy_simple_chat(request, data: ChatMessageRequest):
     """간단한 챗봇 메시지 프록시"""
+    _require_actor(request)
     try:
         response_data = sync_make_chatbot_request(
             method='POST',
@@ -222,13 +279,14 @@ def proxy_simple_chat(request, data: ChatMessageRequest):
 @router.post("/ask", response=AIQuestionResponse)
 def proxy_ai_question(request: HttpRequest, data: AIQuestionRequest):
     """AI 질문 답변 프록시 (대화 기록 저장 포함)"""
+    actor = _require_actor(request)
     start_time = time.time()
     session_id = request.headers.get('X-Session-ID', str(uuid.uuid4()))
     user_ip = request.META.get('REMOTE_ADDR')
     
     try:
         # 대화 세션 가져오기 또는 생성
-        conversation = get_or_create_conversation(session_id, user_ip)
+        conversation = get_or_create_conversation(session_id, actor.owner_key, user_ip)
         
         # 사용자 질문 저장
         save_chat_message(
@@ -248,12 +306,13 @@ def proxy_ai_question(request: HttpRequest, data: AIQuestionRequest):
                 "k": data.k
             }
         )
-        save_chat_log(
+        _safe_save_chat_log(
             level='INFO',
             message=f"사용자 질문 수신: {data.question[:100]}...",
             module='proxy_ai_question',
             user_ip=user_ip,
-            session_id=session_id
+            session_id=session_id,
+            owner_key=actor.owner_key,
         )
         
         # top_k 값 계산 (mode와 k를 기반으로)
@@ -313,15 +372,16 @@ def proxy_ai_question(request: HttpRequest, data: AIQuestionRequest):
         )
         
         # 메트릭 업데이트
-        update_chat_metrics(session_id, True, processing_time, confidence)
+        _safe_update_chat_metrics(session_id, True, processing_time, confidence, actor.owner_key)
         
         # 성공 로그 저장
-        save_chat_log(
+        _safe_save_chat_log(
             level='INFO',
             message=f"AI 답변 생성 완료: 신뢰도 {confidence:.2f}, 처리시간 {processing_time:.2f}초",
             module='proxy_ai_question',
             user_ip=user_ip,
-            session_id=session_id
+            session_id=session_id,
+            owner_key=actor.owner_key,
         )
             
         return AIQuestionResponse(
@@ -332,38 +392,43 @@ def proxy_ai_question(request: HttpRequest, data: AIQuestionRequest):
             fallback_used=fallback_used
         )
         
+    except PermissionDenied:
+        raise HttpError(403, "대화 세션에 접근할 권한이 없습니다.")
     except HttpError:
         # 실패 메트릭 업데이트
         processing_time = time.time() - start_time
-        update_chat_metrics(session_id, False, processing_time)
+        _safe_update_chat_metrics(session_id, False, processing_time, owner_key=actor.owner_key)
         
         # 실패 로그 저장
-        save_chat_log(
+        _safe_save_chat_log(
             level='ERROR',
             message=f"AI 질문 처리 실패: {data.question[:100]}...",
             module='proxy_ai_question',
             user_ip=user_ip,
-            session_id=session_id
+            session_id=session_id,
+            owner_key=actor.owner_key,
         )
         raise
     except Exception as e:
         # 실패 메트릭 업데이트
         processing_time = time.time() - start_time
-        update_chat_metrics(session_id, False, processing_time)
+        _safe_update_chat_metrics(session_id, False, processing_time, owner_key=actor.owner_key)
         
         logger.error(f"AI 질문 프록시 오류: {str(e)}")
-        save_chat_log(
+        _safe_save_chat_log(
             level='ERROR',
             message=f"AI 질문 프록시 예외: {str(e)}",
             module='proxy_ai_question',
             user_ip=user_ip,
-            session_id=session_id
+            session_id=session_id,
+            owner_key=actor.owner_key,
         )
         raise HttpError(500, "AI 질문 처리 중 오류가 발생했습니다.")
 
 @router.post("/process-pdfs")
 def proxy_process_pdfs(request):
     """PDF 처리 프록시"""
+    _require_actor(request, operator=True)
     try:
         response_data = sync_make_chatbot_request(
             method='POST',
@@ -381,6 +446,7 @@ def proxy_process_pdfs(request):
 @router.post("/batch", response=BatchQuestionResponse)
 def proxy_batch_questions(request, data: BatchQuestionRequest):
     """배치 질문 답변 프록시"""
+    _require_actor(request)
     try:
         request_data = {
             'items': data.items,
@@ -453,6 +519,7 @@ def proxy_health_check(request):
 @router.get("/metrics")
 def proxy_metrics(request):
     """챗봇 서버 메트릭 조회 프록시"""
+    _require_actor(request, operator=True)
     try:
         url = f"{CHATBOT_BASE_URL}/metrics"
         
@@ -503,8 +570,12 @@ class ConversationDetailResponse(Schema):
 @router.get("/conversations", response=List[ConversationResponse])
 def get_conversations(request: HttpRequest):
     """모든 대화 세션 목록 조회"""
+    actor = _require_actor(request)
     try:
-        conversations = Conversation.objects.all()[:50]  # 최근 50개만
+        conversations_query = Conversation.objects.all()
+        if not actor.is_operator:
+            conversations_query = conversations_query.filter(owner_key=actor.owner_key)
+        conversations = conversations_query[:50]  # 최근 50개만
         result = []
         
         for conv in conversations:
@@ -527,8 +598,12 @@ def get_conversations(request: HttpRequest):
 @router.get("/conversations/{session_id}", response=ConversationDetailResponse)
 def get_conversation_detail(request: HttpRequest, session_id: str):
     """특정 대화 세션의 상세 정보 조회"""
+    actor = _require_actor(request)
     try:
-        conversation = Conversation.objects.get(session_id=session_id)
+        conversation_query = Conversation.objects.filter(session_id=session_id)
+        if not actor.is_operator:
+            conversation_query = conversation_query.filter(owner_key=actor.owner_key)
+        conversation = conversation_query.get()
         messages = conversation.messages.all()
         
         conversation_data = ConversationResponse(
@@ -566,16 +641,21 @@ def get_conversation_detail(request: HttpRequest, session_id: str):
 @router.delete("/conversations/{session_id}")
 def delete_conversation(request: HttpRequest, session_id: str):
     """특정 대화 세션 삭제"""
+    actor = _require_actor(request)
     try:
-        conversation = Conversation.objects.get(session_id=session_id)
+        conversation_query = Conversation.objects.filter(session_id=session_id)
+        if not actor.is_operator:
+            conversation_query = conversation_query.filter(owner_key=actor.owner_key)
+        conversation = conversation_query.get()
         conversation.delete()
         
-        save_chat_log(
+        _safe_save_chat_log(
             level='INFO',
             message=f"대화 세션 삭제: {session_id}",
             module='delete_conversation',
             user_ip=request.META.get('REMOTE_ADDR'),
-            session_id=session_id
+            session_id=session_id,
+            owner_key=actor.owner_key,
         )
         
         return {"success": True, "message": "대화 세션이 삭제되었습니다."}
@@ -589,6 +669,7 @@ def delete_conversation(request: HttpRequest, session_id: str):
 @router.get("/logs", response=List[Dict[str, Any]])
 def get_chat_logs(request: HttpRequest, level: str = None, limit: int = 100):
     """챗봇 로그 조회"""
+    _require_actor(request, operator=True)
     try:
         logs_query = ChatLog.objects.all()
         
@@ -618,6 +699,7 @@ def get_chat_logs(request: HttpRequest, level: str = None, limit: int = 100):
 @router.get("/metrics", response=List[Dict[str, Any]])
 def get_chat_metrics(request: HttpRequest):
     """챗봇 메트릭 조회"""
+    _require_actor(request, operator=True)
     try:
         metrics = ChatMetrics.objects.all()[:20]  # 최근 20개
         

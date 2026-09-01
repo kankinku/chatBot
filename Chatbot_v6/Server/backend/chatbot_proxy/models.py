@@ -6,6 +6,7 @@ import json
 class Conversation(models.Model):
     """챗봇 대화 세션"""
     session_id = models.CharField(max_length=100, unique=True, help_text="대화 세션 ID")
+    owner_key = models.CharField(max_length=255, null=True, blank=True, db_index=True, help_text="소유자 식별자")
     user_ip = models.GenericIPAddressField(null=True, blank=True, help_text="사용자 IP")
     created_at = models.DateTimeField(default=timezone.now, help_text="대화 시작 시간")
     updated_at = models.DateTimeField(auto_now=True, help_text="마지막 대화 시간")
@@ -58,6 +59,7 @@ class ChatLog(models.Model):
     module = models.CharField(max_length=100, null=True, blank=True, help_text="모듈명")
     user_ip = models.GenericIPAddressField(null=True, blank=True, help_text="사용자 IP")
     session_id = models.CharField(max_length=100, null=True, blank=True, help_text="세션 ID")
+    owner_key = models.CharField(max_length=255, null=True, blank=True, db_index=True, help_text="소유자 식별자")
     created_at = models.DateTimeField(default=timezone.now, help_text="로그 생성 시간")
     
     class Meta:
@@ -75,6 +77,7 @@ class ChatLog(models.Model):
 class ChatMetrics(models.Model):
     """챗봇 성능 메트릭"""
     session_id = models.CharField(max_length=100, null=True, blank=True, help_text="세션 ID")
+    owner_key = models.CharField(max_length=255, null=True, blank=True, db_index=True, help_text="소유자 식별자")
     total_requests = models.IntegerField(default=0, help_text="총 요청 수")
     successful_requests = models.IntegerField(default=0, help_text="성공한 요청 수")
     failed_requests = models.IntegerField(default=0, help_text="실패한 요청 수")
