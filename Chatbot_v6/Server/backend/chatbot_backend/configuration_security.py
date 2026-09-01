@@ -17,7 +17,14 @@ _INSECURE_SECRET_KEYS = {
     "replace-with-a-random-secret",
     "chatbot-secret-key-change-in-production",
 }
-_INSECURE_DATABASE_PASSWORDS = {"", "1234", "change-me", "password", "root"}
+_INSECURE_DATABASE_PASSWORDS = {
+    "",
+    "1234",
+    "change-me",
+    "password",
+    "root",
+    "<set_in_secret_manager>",
+}
 _MINIMUM_PRODUCTION_SECRET_LENGTH = 50
 _MINIMUM_PRODUCTION_DATABASE_PASSWORD_LENGTH = 20
 _MINIMUM_PRODUCTION_CREDENTIAL_UNIQUE_CHARS = 12
@@ -33,14 +40,10 @@ def _is_repeated_pattern(value: str) -> bool:
 
 def _has_repeated_motif(value: str) -> bool:
     for size in range(1, min(len(value) // 3, 32) + 1):
-        motif = value[:size]
-        position = 0
-        repetitions = 0
-        while value.startswith(motif, position):
-            repetitions += 1
-            position += size
-        if repetitions >= 3:
-            return True
+        for start in range(0, len(value) - size * 3 + 1):
+            motif = value[start : start + size]
+            if value.startswith(motif * 3, start):
+                return True
     return False
 
 

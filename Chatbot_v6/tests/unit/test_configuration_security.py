@@ -106,6 +106,31 @@ def test_production_rejects_sequential_and_motif_suffix_credentials():
     with pytest.raises(ConfigurationError):
         validate_settings(**values)
 
+
+def test_production_rejects_middle_repeated_motifs_for_all_credentials():
+    motif = "Ab12Cd34" * 3
+    values = _settings(
+        environment="production",
+        debug=False,
+        allowed_hosts=["chatbot.example.com"],
+        secret_key=VALID_SECRET,
+        mysql_password=VALID_SECRET,
+        mysql_root_password=VALID_SECRET,
+    )
+    for field in ("secret_key", "mysql_password", "mysql_root_password"):
+        values[field] = VALID_SECRET[:10] + motif + VALID_SECRET[-20:]
+        with pytest.raises(ConfigurationError):
+            validate_settings(**values)
+        values[field] = VALID_SECRET
+
+    values["mysql_password"] = "<SET_IN_SECRET_MANAGER>"
+    with pytest.raises(ConfigurationError):
+        validate_settings(**values)
+    values["mysql_password"] = VALID_SECRET
+    values["mysql_root_password"] = "<SET_IN_SECRET_MANAGER>"
+    with pytest.raises(ConfigurationError):
+        validate_settings(**values)
+
     values["secret_key"] = VALID_SECRET
     values["mysql_root_password"] = "Ab12Cd34Ef56" * 5
     with pytest.raises(ConfigurationError):
