@@ -1,3 +1,5 @@
+import secrets
+
 import pytest
 
 from Server.backend.chatbot_backend.configuration_security import (
@@ -6,7 +8,7 @@ from Server.backend.chatbot_backend.configuration_security import (
 )
 
 
-VALID_SECRET = "s" * 50
+VALID_SECRET = secrets.token_urlsafe(48)
 
 
 def _settings(**overrides):

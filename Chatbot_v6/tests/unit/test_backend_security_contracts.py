@@ -1,7 +1,9 @@
 import ast
 import os
+import secrets
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 
@@ -15,18 +17,23 @@ CONFIGURATION_SECURITY_PATH = (
 
 
 def _run_settings_import(values=None, unset=()):
-    environment = os.environ.copy()
+    environment = {
+        name: os.environ[name]
+        for name in ("PATH", "SystemRoot", "WINDIR", "TEMP", "TMP")
+        if name in os.environ
+    }
     environment.update(values or {})
     for name in unset:
         environment.pop(name, None)
     environment["PYTHONPATH"] = str(REPO_ROOT / "Server" / "backend")
-    return subprocess.run(
-        [sys.executable, "-c", "import chatbot_backend.settings"],
-        cwd=REPO_ROOT,
-        env=environment,
-        capture_output=True,
-        text=True,
-    )
+    with tempfile.TemporaryDirectory() as isolated_cwd:
+        return subprocess.run(
+            [sys.executable, "-c", "import chatbot_backend.settings"],
+            cwd=isolated_cwd,
+            env=environment,
+            capture_output=True,
+            text=True,
+        )
 
 
 def _assignment(tree, name):
@@ -93,14 +100,45 @@ def test_settings_import_fails_closed_when_environment_is_missing():
     result = _run_settings_import(
         unset=(
             "ENVIRONMENT",
-            "SECRET_KEY",
-            "DEBUG",
-            "MYSQL_PASSWORD",
         )
     )
 
     assert result.returncode != 0
     assert "ENVIRONMENT must be explicitly set" in result.stderr
+
+
+def test_settings_import_fails_closed_when_production_secret_is_missing():
+    result = _run_settings_import(
+        {
+            "ENVIRONMENT": "production",
+            "DEBUG": "False",
+            "ALLOWED_HOSTS": "chatbot.example.com",
+            "CORS_ALLOW_ALL_ORIGINS": "False",
+            "CHATBOT_ALLOW_ANONYMOUS_LOCAL": "False",
+            "MYSQL_PASSWORD": "a-real-production-password",
+        },
+        unset=("SECRET_KEY",),
+    )
+
+    assert result.returncode != 0
+    assert "SECRET_KEY" in result.stderr
+
+
+def test_settings_import_fails_closed_when_production_database_password_is_missing():
+    result = _run_settings_import(
+        {
+            "ENVIRONMENT": "production",
+            "SECRET_KEY": secrets.token_urlsafe(48),
+            "DEBUG": "False",
+            "ALLOWED_HOSTS": "chatbot.example.com",
+            "CORS_ALLOW_ALL_ORIGINS": "False",
+            "CHATBOT_ALLOW_ANONYMOUS_LOCAL": "False",
+        },
+        unset=("MYSQL_PASSWORD",),
+    )
+
+    assert result.returncode != 0
+    assert "MYSQL_PASSWORD" in result.stderr
 
 
 def test_settings_import_fails_closed_for_production_placeholders():
@@ -122,7 +160,7 @@ def test_settings_import_fails_closed_for_production_compose_password():
     result = _run_settings_import(
         {
             "ENVIRONMENT": "production",
-            "SECRET_KEY": "s" * 50,
+            "SECRET_KEY": secrets.token_urlsafe(48),
             "DEBUG": "False",
             "ALLOWED_HOSTS": "chatbot.example.com",
             "CORS_ALLOW_ALL_ORIGINS": "False",
@@ -139,7 +177,7 @@ def test_settings_import_succeeds_with_explicit_secure_production_values():
     result = _run_settings_import(
         {
             "ENVIRONMENT": "production",
-            "SECRET_KEY": "s" * 50,
+            "SECRET_KEY": secrets.token_urlsafe(48),
             "DEBUG": "False",
             "ALLOWED_HOSTS": "chatbot.example.com",
             "CORS_ALLOW_ALL_ORIGINS": "False",
