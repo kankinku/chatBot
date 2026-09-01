@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
-import os
 from decouple import config
 from django.core.exceptions import ImproperlyConfigured
 from .configuration_security import ConfigurationError, validate_settings

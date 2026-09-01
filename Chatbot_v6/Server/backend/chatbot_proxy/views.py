@@ -297,7 +297,7 @@ def proxy_ai_question(request: HttpRequest, data: AIQuestionRequest):
         
         # 로그 저장 및 출력
         logger.info(
-            f"[PROXY-QUESTION] Received from frontend",
+            "[PROXY-QUESTION] Received from frontend",
             extra={
                 "question": data.question,
                 "session_id": session_id,
@@ -350,7 +350,7 @@ def proxy_ai_question(request: HttpRequest, data: AIQuestionRequest):
         
         # 프록시 응답 로그
         logger.info(
-            f"[PROXY-ANSWER] Received from chatbot backend",
+            "[PROXY-ANSWER] Received from chatbot backend",
             extra={
                 "question": data.question,
                 "answer": answer[:200] + "..." if len(answer) > 200 else answer,

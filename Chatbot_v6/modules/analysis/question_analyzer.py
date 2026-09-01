@@ -14,7 +14,6 @@ from pathlib import Path
 from typing import Optional
 from functools import lru_cache
 
-from config.constants import QuestionType
 from modules.core.logger import get_logger
 
 logger = get_logger(__name__)
@@ -93,8 +92,6 @@ class QuestionAnalyzer:
         has_number = bool(re.search(r"\d", q_lower))
         has_unit = any(u.lower() in q_lower for u in units)
         has_domain_kw = any(kw.lower() in q_lower for kw in domain_kw if kw)
-        
-        numeric_like = has_number or has_unit or has_domain_kw
         
         # 질문 유형 분류
         qtype = self._classify_question_type(question, q_lower)

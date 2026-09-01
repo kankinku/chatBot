@@ -36,7 +36,7 @@ for i in range(30):
         conn.close()
         print('MySQL is ready!')
         sys.exit(0)
-    except Exception as e:
+    except Exception:
         print(f'MySQL is not ready yet. Waiting... ({i+1}/30)')
         time.sleep(2)
 
