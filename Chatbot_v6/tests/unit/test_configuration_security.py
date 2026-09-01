@@ -90,25 +90,7 @@ def test_production_rejects_periodic_credentials_and_weak_root_password():
         validate_settings(**values)
 
 
-def test_production_rejects_sequential_and_motif_suffix_credentials():
-    values = _settings(
-        environment="production",
-        debug=False,
-        allowed_hosts=["chatbot.example.com"],
-        secret_key="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
-        mysql_password=VALID_SECRET,
-        mysql_root_password=VALID_SECRET,
-    )
-    with pytest.raises(ConfigurationError):
-        validate_settings(**values)
-
-    values["secret_key"] = "Ab12Cd34Ef56" * 3 + "Z9x"
-    with pytest.raises(ConfigurationError):
-        validate_settings(**values)
-
-
-def test_production_rejects_middle_repeated_motifs_for_all_credentials():
-    motif = "Ab12Cd34" * 3
+def _production_values():
     values = _settings(
         environment="production",
         debug=False,
@@ -117,17 +99,30 @@ def test_production_rejects_middle_repeated_motifs_for_all_credentials():
         mysql_password=VALID_SECRET,
         mysql_root_password=VALID_SECRET,
     )
-    for field in ("secret_key", "mysql_password", "mysql_root_password"):
-        values[field] = VALID_SECRET[:10] + motif + VALID_SECRET[-20:]
-        with pytest.raises(ConfigurationError):
-            validate_settings(**values)
-        values[field] = VALID_SECRET
+    return values
 
-    values["mysql_password"] = "<SET_IN_SECRET_MANAGER>"
-    with pytest.raises(ConfigurationError):
-        validate_settings(**values)
-    values["mysql_password"] = VALID_SECRET
-    values["mysql_root_password"] = "<SET_IN_SECRET_MANAGER>"
+
+@pytest.mark.parametrize("field", ("secret_key", "mysql_password", "mysql_root_password"))
+def test_production_accepts_strong_value_for_each_credential(field):
+    values = _production_values()
+    values[field] = VALID_SECRET
+    validate_settings(**values)
+
+
+_PREDICTABLE_CREDENTIALS = (
+    "<SET_IN_SECRET_MANAGER>",
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
+    "Ab12Cd34Ef56" * 5,
+    VALID_SECRET[:10] + ("Ab12Cd34" * 3) + VALID_SECRET[-20:],
+    VALID_SECRET[:30] + ("Ab12Cd34" * 3),
+)
+
+
+@pytest.mark.parametrize("field", ("secret_key", "mysql_password", "mysql_root_password"))
+@pytest.mark.parametrize("credential", _PREDICTABLE_CREDENTIALS)
+def test_production_rejects_predictable_value_for_each_credential(field, credential):
+    values = _production_values()
+    values[field] = credential
     with pytest.raises(ConfigurationError):
         validate_settings(**values)
 
