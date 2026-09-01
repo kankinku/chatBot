@@ -2,6 +2,7 @@
 
 from collections import Counter
 from math import log2
+from string import ascii_lowercase, digits
 from typing import Iterable
 
 
@@ -30,11 +31,47 @@ def _is_repeated_pattern(value: str) -> bool:
     return False
 
 
+def _has_repeated_motif(value: str) -> bool:
+    for size in range(1, min(len(value) // 3, 32) + 1):
+        motif = value[:size]
+        position = 0
+        repetitions = 0
+        while value.startswith(motif, position):
+            repetitions += 1
+            position += size
+        if repetitions >= 3:
+            return True
+    return False
+
+
+def _has_sequential_run(value: str) -> bool:
+    normalized = value.lower()
+    alphabets = (
+        digits + ascii_lowercase,
+        ascii_lowercase + digits,
+    )
+    for alphabet in alphabets:
+        for size in range(8, len(alphabet) + 1):
+            if alphabet[:size] in normalized or alphabet[:size][::-1] in normalized:
+                return True
+    return any(
+        all(
+            ord(normalized[index + offset + 1])
+            - ord(normalized[index + offset])
+            in (1, -1)
+            for offset in range(7)
+        )
+        for index in range(len(normalized) - 7)
+    )
+
+
 def _has_sufficient_credential_entropy(value: str) -> bool:
     normalized = value.strip()
     if len(set(normalized)) < _MINIMUM_PRODUCTION_CREDENTIAL_UNIQUE_CHARS:
         return False
-    if _is_repeated_pattern(normalized):
+    if _is_repeated_pattern(normalized) or _has_repeated_motif(normalized):
+        return False
+    if _has_sequential_run(normalized):
         return False
     frequencies = Counter(normalized)
     length = len(normalized)

@@ -92,6 +92,7 @@ def test_known_deployment_placeholders_are_validated_centrally():
 def test_env_example_uses_safe_explicit_development_values():
     source = ENV_EXAMPLE_PATH.read_text(encoding="utf-8")
     assert "ENVIRONMENT=development" in source
+    assert "<SET_IN_SECRET_MANAGER>" in source
     assert "ALLOWED_HOSTS=localhost,127.0.0.1" in source
     assert "CORS_ALLOW_ALL_ORIGINS=False" in source
     assert "CHATBOT_ALLOW_ANONYMOUS_LOCAL=True" in source
@@ -100,7 +101,7 @@ def test_env_example_uses_safe_explicit_development_values():
 
 def test_docker_compose_declares_its_nonproduction_environment():
     source = COMPOSE_PATH.read_text(encoding="utf-8")
-    assert "- ENVIRONMENT=development" in source
+    assert "- ENVIRONMENT=${ENVIRONMENT:-development}" in source
 
 
 def test_mysql_wait_script_uses_required_runtime_credentials():

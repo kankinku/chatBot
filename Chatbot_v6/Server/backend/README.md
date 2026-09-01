@@ -75,7 +75,8 @@ chatbot_backend/
 
 ```env
 # Django 설정
-SECRET_KEY=your-secret-key
+# Inject a unique value from a secret manager; do not commit the real value.
+SECRET_KEY=<SET_IN_SECRET_MANAGER>
 DEBUG=True
 
 # 챗봇 서버 설정

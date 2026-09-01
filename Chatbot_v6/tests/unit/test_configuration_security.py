@@ -89,6 +89,23 @@ def test_production_rejects_periodic_credentials_and_weak_root_password():
     with pytest.raises(ConfigurationError):
         validate_settings(**values)
 
+
+def test_production_rejects_sequential_and_motif_suffix_credentials():
+    values = _settings(
+        environment="production",
+        debug=False,
+        allowed_hosts=["chatbot.example.com"],
+        secret_key="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
+        mysql_password=VALID_SECRET,
+        mysql_root_password=VALID_SECRET,
+    )
+    with pytest.raises(ConfigurationError):
+        validate_settings(**values)
+
+    values["secret_key"] = "Ab12Cd34Ef56" * 3 + "Z9x"
+    with pytest.raises(ConfigurationError):
+        validate_settings(**values)
+
     values["secret_key"] = VALID_SECRET
     values["mysql_root_password"] = "Ab12Cd34Ef56" * 5
     with pytest.raises(ConfigurationError):

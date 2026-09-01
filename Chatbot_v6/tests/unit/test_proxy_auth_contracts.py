@@ -109,6 +109,11 @@ def test_fastapi_backend_is_internal_only_behind_the_django_proxy():
     compose_text = COMPOSE_PATH.read_text(encoding="utf-8")
     assert "MYSQL_PASSWORD=1234" not in compose_text
     assert "SECRET_KEY=chatbot-secret-key-change-in-production" not in compose_text
+    proxy_environment = services["backend-proxy"]["environment"]
+    assert any(
+        item.startswith("MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:?")
+        for item in proxy_environment
+    )
 
 
 def test_route_boundary_translates_policy_failures_to_http_errors():
