@@ -98,6 +98,7 @@ services:
       - ./Server/backend:/app
       - ./logs:/app/logs
     environment:
+      - ENVIRONMENT=development
       - CHATBOT_URL=http://chatbot-backend:8000
       - MYSQL_HOST=mysql
       - MYSQL_PORT=3306

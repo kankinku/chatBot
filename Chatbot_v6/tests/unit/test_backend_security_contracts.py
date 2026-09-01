@@ -5,6 +5,10 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SETTINGS_PATH = REPO_ROOT / "Server" / "backend" / "chatbot_backend" / "settings.py"
 ENV_EXAMPLE_PATH = REPO_ROOT / "Server" / "backend" / "env.example"
+COMPOSE_PATH = REPO_ROOT / "docker-compose.yml"
+CONFIGURATION_SECURITY_PATH = (
+    REPO_ROOT / "Server" / "backend" / "chatbot_backend" / "configuration_security.py"
+)
 
 
 def _assignment(tree, name):
@@ -40,9 +44,17 @@ def test_security_defaults_do_not_enable_wildcard_or_anonymous_access():
     assert "CORS_ALLOW_ALL_ORIGINS = True" not in source
     assert "CHATBOT_ALLOW_ANONYMOUS_LOCAL = True" not in source
     assert "default='1234'" not in source
+    assert "default='development'" not in source
+    assert "validate_settings(" in source
+
+
+def test_known_deployment_placeholders_are_validated_centrally():
+    source = CONFIGURATION_SECURITY_PATH.read_text(encoding="utf-8")
     assert "replace-with-a-random-secret" in source
-    assert "ENVIRONMENT must be development or production" in source
-    assert "MYSQL_PASSWORD must be configured in production" in source
+    assert "chatbot-secret-key-change-in-production" in source
+    assert "1234" in source
+    assert "change-me" in source
+    assert "_MINIMUM_PRODUCTION_SECRET_LENGTH = 50" in source
 
 
 def test_env_example_uses_safe_explicit_development_values():
@@ -52,3 +64,8 @@ def test_env_example_uses_safe_explicit_development_values():
     assert "CORS_ALLOW_ALL_ORIGINS=False" in source
     assert "CHATBOT_ALLOW_ANONYMOUS_LOCAL=True" in source
     assert "MYSQL_PASSWORD=1234" not in source
+
+
+def test_docker_compose_declares_its_nonproduction_environment():
+    source = COMPOSE_PATH.read_text(encoding="utf-8")
+    assert "- ENVIRONMENT=development" in source

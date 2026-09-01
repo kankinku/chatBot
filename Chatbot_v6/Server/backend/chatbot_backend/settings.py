@@ -14,6 +14,7 @@ from pathlib import Path
 import os
 from decouple import config
 from django.core.exceptions import ImproperlyConfigured
+from .configuration_security import ConfigurationError, validate_settings
 
 # PyMySQL을 MySQLdb로 사용하도록 설정
 try:
@@ -30,42 +31,25 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-ENVIRONMENT = config('ENVIRONMENT', default='development').strip().lower()
-if ENVIRONMENT not in {'development', 'production'}:
-    raise ImproperlyConfigured('ENVIRONMENT must be development or production')
+ENVIRONMENT = config('ENVIRONMENT', default='').strip().lower()
 
 INSECURE_DEFAULT_SECRET_KEY = 'django-insecure-change-this-in-production'
-INSECURE_SECRET_KEYS = {
-    '',
-    INSECURE_DEFAULT_SECRET_KEY,
-    'replace-with-a-random-secret',
-}
 SECRET_KEY = config('SECRET_KEY', default=INSECURE_DEFAULT_SECRET_KEY).strip()
-if ENVIRONMENT == 'production' and SECRET_KEY in INSECURE_SECRET_KEYS:
-    raise ImproperlyConfigured('SECRET_KEY must be configured in production')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', default=(ENVIRONMENT != 'production'), cast=bool)
-if ENVIRONMENT == 'production' and DEBUG:
-    raise ImproperlyConfigured('DEBUG must be False in production')
+DEBUG = config('DEBUG', default=(ENVIRONMENT == 'development'), cast=bool)
 
 ALLOWED_HOSTS = [
     host.strip()
     for host in config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
     if host.strip()
 ]
-if ENVIRONMENT == 'production' and '*' in ALLOWED_HOSTS:
-    raise ImproperlyConfigured('ALLOWED_HOSTS must not contain * in production')
 
 CHATBOT_ALLOW_ANONYMOUS_LOCAL = config(
     'CHATBOT_ALLOW_ANONYMOUS_LOCAL',
     default=False,
     cast=bool,
 )
-if ENVIRONMENT == 'production' and CHATBOT_ALLOW_ANONYMOUS_LOCAL:
-    raise ImproperlyConfigured(
-        'CHATBOT_ALLOW_ANONYMOUS_LOCAL must be False in production'
-    )
 
 
 # Application definition
@@ -120,8 +104,6 @@ WSGI_APPLICATION = 'chatbot_backend.wsgi.application'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 MYSQL_PASSWORD = config('MYSQL_PASSWORD', default='').strip()
-if ENVIRONMENT == 'production' and MYSQL_PASSWORD in {'', 'change-me'}:
-    raise ImproperlyConfigured('MYSQL_PASSWORD must be configured in production')
 
 DATABASES = {
     'default': {
@@ -182,8 +164,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # CORS 설정
 CORS_ALLOW_ALL_ORIGINS = config('CORS_ALLOW_ALL_ORIGINS', default=False, cast=bool)
-if ENVIRONMENT == 'production' and CORS_ALLOW_ALL_ORIGINS:
-    raise ImproperlyConfigured('CORS_ALLOW_ALL_ORIGINS must be False in production')
 CORS_ALLOW_CREDENTIALS = config('CORS_ALLOW_CREDENTIALS', default=True, cast=bool)
 
 CORS_ALLOWED_ORIGINS = [
@@ -192,6 +172,19 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3001",
     "http://127.0.0.1:3001",
 ]
+
+try:
+    validate_settings(
+        environment=ENVIRONMENT,
+        secret_key=SECRET_KEY,
+        debug=DEBUG,
+        allowed_hosts=ALLOWED_HOSTS,
+        cors_allow_all_origins=CORS_ALLOW_ALL_ORIGINS,
+        allow_anonymous_local=CHATBOT_ALLOW_ANONYMOUS_LOCAL,
+        mysql_password=MYSQL_PASSWORD,
+    )
+except ConfigurationError as exc:
+    raise ImproperlyConfigured(str(exc)) from exc
 
 # Ninja JWT 설정 (현재 미사용)
 # NINJA_JWT = {
