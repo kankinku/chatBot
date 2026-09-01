@@ -1,6 +1,7 @@
 import ast
 import os
 import secrets
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -25,8 +26,13 @@ def _run_settings_import(values=None, unset=()):
     environment.update(values or {})
     for name in unset:
         environment.pop(name, None)
-    environment["PYTHONPATH"] = str(REPO_ROOT / "Server" / "backend")
     with tempfile.TemporaryDirectory() as isolated_cwd:
+        isolated_root = Path(isolated_cwd)
+        shutil.copytree(
+            REPO_ROOT / "Server" / "backend" / "chatbot_backend",
+            isolated_root / "chatbot_backend",
+        )
+        environment["PYTHONPATH"] = str(isolated_root)
         return subprocess.run(
             [sys.executable, "-c", "import chatbot_backend.settings"],
             cwd=isolated_cwd,
