@@ -1,4 +1,7 @@
 import ast
+import os
+import subprocess
+import sys
 from pathlib import Path
 
 
@@ -9,6 +12,21 @@ COMPOSE_PATH = REPO_ROOT / "docker-compose.yml"
 CONFIGURATION_SECURITY_PATH = (
     REPO_ROOT / "Server" / "backend" / "chatbot_backend" / "configuration_security.py"
 )
+
+
+def _run_settings_import(values=None, unset=()):
+    environment = os.environ.copy()
+    environment.update(values or {})
+    for name in unset:
+        environment.pop(name, None)
+    environment["PYTHONPATH"] = str(REPO_ROOT / "Server" / "backend")
+    return subprocess.run(
+        [sys.executable, "-c", "import chatbot_backend.settings"],
+        cwd=REPO_ROOT,
+        env=environment,
+        capture_output=True,
+        text=True,
+    )
 
 
 def _assignment(tree, name):
@@ -69,3 +87,65 @@ def test_env_example_uses_safe_explicit_development_values():
 def test_docker_compose_declares_its_nonproduction_environment():
     source = COMPOSE_PATH.read_text(encoding="utf-8")
     assert "- ENVIRONMENT=development" in source
+
+
+def test_settings_import_fails_closed_when_environment_is_missing():
+    result = _run_settings_import(
+        unset=(
+            "ENVIRONMENT",
+            "SECRET_KEY",
+            "DEBUG",
+            "MYSQL_PASSWORD",
+        )
+    )
+
+    assert result.returncode != 0
+    assert "ENVIRONMENT must be explicitly set" in result.stderr
+
+
+def test_settings_import_fails_closed_for_production_placeholders():
+    base = {
+        "ENVIRONMENT": "production",
+        "DEBUG": "False",
+        "ALLOWED_HOSTS": "chatbot.example.com",
+        "CORS_ALLOW_ALL_ORIGINS": "False",
+        "CHATBOT_ALLOW_ANONYMOUS_LOCAL": "False",
+        "MYSQL_PASSWORD": "a-real-production-password",
+    }
+    for secret_key in ("replace-with-a-random-secret", "chatbot-secret-key-change-in-production"):
+        result = _run_settings_import({**base, "SECRET_KEY": secret_key})
+        assert result.returncode != 0
+        assert "SECRET_KEY" in result.stderr
+
+
+def test_settings_import_fails_closed_for_production_compose_password():
+    result = _run_settings_import(
+        {
+            "ENVIRONMENT": "production",
+            "SECRET_KEY": "s" * 50,
+            "DEBUG": "False",
+            "ALLOWED_HOSTS": "chatbot.example.com",
+            "CORS_ALLOW_ALL_ORIGINS": "False",
+            "CHATBOT_ALLOW_ANONYMOUS_LOCAL": "False",
+            "MYSQL_PASSWORD": "1234",
+        }
+    )
+
+    assert result.returncode != 0
+    assert "MYSQL_PASSWORD" in result.stderr
+
+
+def test_settings_import_succeeds_with_explicit_secure_production_values():
+    result = _run_settings_import(
+        {
+            "ENVIRONMENT": "production",
+            "SECRET_KEY": "s" * 50,
+            "DEBUG": "False",
+            "ALLOWED_HOSTS": "chatbot.example.com",
+            "CORS_ALLOW_ALL_ORIGINS": "False",
+            "CHATBOT_ALLOW_ANONYMOUS_LOCAL": "False",
+            "MYSQL_PASSWORD": "a-real-production-password",
+        }
+    )
+
+    assert result.returncode == 0, result.stderr
