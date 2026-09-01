@@ -74,10 +74,20 @@ chatbot_backend/
 ### 필수 환경변수
 
 ```env
-# Django 설정
+# Django 설정: ENVIRONMENT는 반드시 명시하고 실제 값은 secret manager에서 주입
+ENVIRONMENT=development
 # Inject a unique value from a secret manager; do not commit the real value.
 SECRET_KEY=<SET_IN_SECRET_MANAGER>
 DEBUG=True
+CHATBOT_ALLOW_ANONYMOUS_LOCAL=False
+
+# MySQL 설정
+MYSQL_DATABASE=chatbot_db
+MYSQL_USER=chatbot_user
+MYSQL_PASSWORD=<SET_IN_SECRET_MANAGER>
+MYSQL_ROOT_PASSWORD=<SET_IN_SECRET_MANAGER>
+MYSQL_HOST=localhost
+MYSQL_PORT=3306
 
 # 챗봇 서버 설정
 CHATBOT_URL=http://localhost:8000
@@ -86,8 +96,8 @@ CHATBOT_URL=http://localhost:8000
 ### 선택적 환경변수
 
 ```env
-# CORS 설정
-CORS_ALLOW_ALL_ORIGINS=True
+# CORS 설정: wildcard origin은 사용하지 않음
+CORS_ALLOW_ALL_ORIGINS=False
 ```
 
 ## 🔧 기술 스택
@@ -104,24 +114,33 @@ CORS_ALLOW_ALL_ORIGINS=True
 
 1. 챗봇 서버가 실행 중인지 확인
 2. 백엔드 API 서버 실행
-3. 프론트엔드에서 API 호출
+3. 인증된 세션으로 프록시 API 호출
 
 ### 예시 요청
 
 ```bash
-# 간단한 챗봇 메시지
-curl -X POST http://localhost:8000/api/chatbot/chat \
+# 공개 liveness 확인
+curl http://localhost:8001/api/chatbot/health
+
+# 간단한 챗봇 메시지 (Django 인증 세션 필요)
+curl -X POST http://localhost:8001/api/chatbot/chat \
   -H "Content-Type: application/json" \
+  -b "sessionid=<DJANGO_SESSION_COOKIE>" \
   -d '{"message": "안녕하세요"}'
 
-# AI 질문 답변
-curl -X POST http://localhost:8000/api/chatbot/ask \
+# AI 질문 답변 (Django 인증 세션 필요)
+curl -X POST http://localhost:8001/api/chatbot/ask \
   -H "Content-Type: application/json" \
+  -b "sessionid=<DJANGO_SESSION_COOKIE>" \
   -d '{"question": "교통 상황은 어떤가요?", "mode": "accuracy", "k": "auto"}'
 
-# 서버 상태 확인
-curl http://localhost:8000/api/chatbot/status
+# 상세 상태 확인 (운영자 세션 필요)
+curl http://localhost:8001/api/chatbot/status \
+  -b "sessionid=<DJANGO_OPERATOR_SESSION_COOKIE>"
 ```
+
+FastAPI의 8000 포트와 MySQL의 3306 포트는 Compose에서 호스트에 공개하지
+않습니다. Ollama의 11434 포트도 `chatbot-backend` 내부 전용입니다.
 
 ## 🐛 문제 해결
 
@@ -131,7 +150,7 @@ curl http://localhost:8000/api/chatbot/status
 3. 네트워크 연결 상태 확인
 
 ### CORS 오류
-1. `CORS_ALLOW_ALL_ORIGINS=True` 설정 확인
+1. `CORS_ALLOW_ALL_ORIGINS=False`를 유지하는지 확인
 2. 프론트엔드 URL이 `CORS_ALLOWED_ORIGINS`에 포함되어 있는지 확인
 
 ### 의존성 오류

@@ -15,20 +15,22 @@
 **사용 가능한 엔드포인트**:
 - `POST /ask` 또는 `POST /api/ask` - 질문 답변
 - `GET /healthz` 또는 `GET /api/healthz` - 헬스 체크
-- `GET /status` 또는 `GET /api/status` - 서비스 상태
+- `GET /status` 또는 `GET /api/status` - 내부 서비스 상태(프록시에서 운영자 인증 후 사용)
 
 ### 2. ✅ Docker Compose 통합 설정
 
 **변경 파일**: `docker-compose.yml`
 
 **추가된 서비스**:
-1. **chatbot-backend** (포트 8000)
+1. **chatbot-backend** (내부 포트 8000)
    - FastAPI 챗봇 서버
    - RAG 파이프라인 실행
+   - 호스트에 publish하지 않으며 `backend-proxy`만 접근
 
-2. **mysql** (포트 3306)
+2. **mysql** (내부 포트 3306)
    - 프록시 서버용 데이터베이스
    - 대화 기록, 메트릭 저장
+   - 호스트에 publish하지 않으며 `backend-proxy`만 접근
 
 3. **backend-proxy** (포트 8001)
    - Django 프록시 서버
@@ -39,8 +41,9 @@
    - React 프론트엔드
    - Nginx로 서빙
 
-5. **ollama** (포트 11434)
+5. **ollama** (내부 포트 11434)
    - LLM 서버
+   - 호스트에 publish하지 않으며 `chatbot-backend`만 접근
 
 ### 3. ✅ Django 프록시 서버 설정 조정
 
@@ -85,10 +88,10 @@ docker-compose logs -f frontend
 ### 개별 서비스 실행
 
 ```bash
-# 챗봇 서버만 실행 (포트 8000)
+# 챗봇 서버만 실행 (내부 포트 8000, 호스트 비공개)
 docker-compose up chatbot-backend
 
-# 프록시 서버만 실행 (포트 8001)
+# 프록시 서버만 실행 (호스트 loopback 포트 8001)
 docker-compose up backend-proxy
 
 # 프론트엔드만 실행 (포트 3000)
@@ -97,19 +100,14 @@ docker-compose up frontend
 
 ## 📡 API 엔드포인트
 
-### 직접 챗봇 서버 호출 (포트 8000)
+### 챗봇 서버 내부 liveness 확인
+
+FastAPI의 8000 포트는 호스트에 공개하지 않습니다. 운영 상태·질문·PDF API는
+반드시 Django proxy의 인증 경계를 통해 호출해야 합니다. 컨테이너 내부
+liveness 확인만 다음처럼 수행합니다.
 
 ```bash
-# 질문 답변
-curl -X POST http://localhost:8000/api/ask \
-  -H "Content-Type: application/json" \
-  -d '{"question": "고산 정수장 URL은?", "top_k": 50}'
-
-# 헬스 체크
-curl http://localhost:8000/api/healthz
-
-# 상태 확인
-curl http://localhost:8000/api/status
+docker-compose exec chatbot-backend curl http://localhost:8000/healthz
 ```
 
 ### 프록시 서버를 통한 호출 (포트 8001)
@@ -118,14 +116,17 @@ curl http://localhost:8000/api/status
 # 질문 답변 (대화 기록 저장됨)
 curl -X POST http://localhost:8001/api/chatbot/ask \
   -H "Content-Type: application/json" \
+  -b "sessionid=<DJANGO_SESSION_COOKIE>" \
   -H "X-Session-ID: test-session-123" \
   -d '{"question": "고산 정수장 URL은?", "mode": "accuracy", "k": "auto"}'
 
 # 대화 기록 조회
-curl http://localhost:8001/api/chatbot/conversations/test-session-123
+curl http://localhost:8001/api/chatbot/conversations/test-session-123 \
+  -b "sessionid=<DJANGO_SESSION_COOKIE>"
 
-# 메트릭 조회
-curl http://localhost:8001/api/chatbot/metrics
+# 운영자 전용 메트릭 조회
+curl http://localhost:8001/api/chatbot/metrics \
+  -b "sessionid=<DJANGO_OPERATOR_SESSION_COOKIE>"
 ```
 
 ### 프론트엔드 접속 (포트 3000)
