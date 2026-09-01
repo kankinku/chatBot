@@ -1,5 +1,3 @@
-import secrets
-
 import pytest
 
 from Server.backend.chatbot_backend.configuration_security import (
@@ -8,7 +6,7 @@ from Server.backend.chatbot_backend.configuration_security import (
 )
 
 
-VALID_SECRET = secrets.token_urlsafe(48)
+VALID_SECRET = "V8mQ2rL7xN4pK9dT6wC3zH5sJ1fB0uY8eA6iO4nP2rS9vX7cD5qG6hM3"
 
 
 def _settings(**overrides):
@@ -55,7 +53,7 @@ def test_production_accepts_explicit_strong_secret_and_database_password():
             secret_key=VALID_SECRET,
             debug=False,
             allowed_hosts=["chatbot.example.com"],
-            mysql_password="a-real-production-password",
+            mysql_password="Q7mR2xV9kL4pN8dT6wC3zH5sJ1fB0uY8eA6iO4nP2rS9vX7cD5qG6hM3",
         )
     )
 
@@ -77,7 +75,7 @@ def test_production_rejects_insecure_settings(overrides):
         secret_key=VALID_SECRET,
         debug=False,
         allowed_hosts=["chatbot.example.com"],
-        mysql_password="a-real-production-password",
+        mysql_password="Q7mR2xV9kL4pN8dT6wC3zH5sJ1fB0uY8eA6iO4nP2rS9vX7cD5qG6hM3",
     )
     values.update(overrides)
     with pytest.raises(ConfigurationError):

@@ -1,6 +1,5 @@
 import ast
 import os
-import secrets
 import shutil
 import subprocess
 import sys
@@ -12,7 +11,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 SETTINGS_PATH = REPO_ROOT / "Server" / "backend" / "chatbot_backend" / "settings.py"
 ENV_EXAMPLE_PATH = REPO_ROOT / "Server" / "backend" / "env.example"
 COMPOSE_PATH = REPO_ROOT / "docker-compose.yml"
-VALID_DATABASE_PASSWORD = secrets.token_urlsafe(32)
+VALID_DATABASE_PASSWORD = "Q7mR2xV9kL4pN8dT6wC3zH5sJ1fB0uY8eA6iO4nP2rS9vX7cD5qG6hM3"
 CONFIGURATION_SECURITY_PATH = (
     REPO_ROOT / "Server" / "backend" / "chatbot_backend" / "configuration_security.py"
 )
@@ -135,7 +134,7 @@ def test_settings_import_fails_closed_when_production_database_password_is_missi
     result = _run_settings_import(
         {
             "ENVIRONMENT": "production",
-            "SECRET_KEY": secrets.token_urlsafe(48),
+            "SECRET_KEY": "V8mQ2rL7xN4pK9dT6wC3zH5sJ1fB0uY8eA6iO4nP2rS9vX7cD5qG6hM3",
             "DEBUG": "False",
             "ALLOWED_HOSTS": "chatbot.example.com",
             "CORS_ALLOW_ALL_ORIGINS": "False",
@@ -167,7 +166,7 @@ def test_settings_import_fails_closed_for_production_compose_password():
     result = _run_settings_import(
         {
             "ENVIRONMENT": "production",
-            "SECRET_KEY": secrets.token_urlsafe(48),
+            "SECRET_KEY": "V8mQ2rL7xN4pK9dT6wC3zH5sJ1fB0uY8eA6iO4nP2rS9vX7cD5qG6hM3",
             "DEBUG": "False",
             "ALLOWED_HOSTS": "chatbot.example.com",
             "CORS_ALLOW_ALL_ORIGINS": "False",
@@ -184,7 +183,7 @@ def test_settings_import_succeeds_with_explicit_secure_production_values():
     result = _run_settings_import(
         {
             "ENVIRONMENT": "production",
-            "SECRET_KEY": secrets.token_urlsafe(48),
+            "SECRET_KEY": "V8mQ2rL7xN4pK9dT6wC3zH5sJ1fB0uY8eA6iO4nP2rS9vX7cD5qG6hM3",
             "DEBUG": "False",
             "ALLOWED_HOSTS": "chatbot.example.com",
             "CORS_ALLOW_ALL_ORIGINS": "False",
