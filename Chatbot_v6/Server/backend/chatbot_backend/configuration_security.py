@@ -1,5 +1,7 @@
 """Framework-independent validation for deployment-sensitive settings."""
 
+from collections import Counter
+from math import log2
 from typing import Iterable
 
 
@@ -16,12 +18,31 @@ _INSECURE_SECRET_KEYS = {
 }
 _INSECURE_DATABASE_PASSWORDS = {"", "1234", "change-me", "password", "root"}
 _MINIMUM_PRODUCTION_SECRET_LENGTH = 50
+_MINIMUM_PRODUCTION_DATABASE_PASSWORD_LENGTH = 20
 _MINIMUM_PRODUCTION_CREDENTIAL_UNIQUE_CHARS = 12
+_MINIMUM_PRODUCTION_CREDENTIAL_ENTROPY = 3.5
+
+
+def _is_repeated_pattern(value: str) -> bool:
+    for size in range(1, len(value) // 2 + 1):
+        if len(value) % size == 0 and value == value[:size] * (len(value) // size):
+            return True
+    return False
 
 
 def _has_sufficient_credential_entropy(value: str) -> bool:
     normalized = value.strip()
-    return len(set(normalized)) >= _MINIMUM_PRODUCTION_CREDENTIAL_UNIQUE_CHARS
+    if len(set(normalized)) < _MINIMUM_PRODUCTION_CREDENTIAL_UNIQUE_CHARS:
+        return False
+    if _is_repeated_pattern(normalized):
+        return False
+    frequencies = Counter(normalized)
+    length = len(normalized)
+    entropy = -sum(
+        (count / length) * log2(count / length)
+        for count in frequencies.values()
+    )
+    return entropy >= _MINIMUM_PRODUCTION_CREDENTIAL_ENTROPY
 
 
 def validate_settings(
@@ -33,6 +54,7 @@ def validate_settings(
     cors_allow_all_origins: bool,
     allow_anonymous_local: bool,
     mysql_password: str,
+    mysql_root_password: str = "",
 ) -> None:
     """Validate deployment settings and raise on unsafe production values."""
 
@@ -65,7 +87,14 @@ def validate_settings(
             "CHATBOT_ALLOW_ANONYMOUS_LOCAL must be False in production"
         )
     if (
-        mysql_password.strip().lower() in _INSECURE_DATABASE_PASSWORDS
+        len(mysql_password.strip()) < _MINIMUM_PRODUCTION_DATABASE_PASSWORD_LENGTH
+        or mysql_password.strip().lower() in _INSECURE_DATABASE_PASSWORDS
         or not _has_sufficient_credential_entropy(mysql_password)
     ):
         raise ConfigurationError("A real MYSQL_PASSWORD is required in production")
+    if (
+        len(mysql_root_password.strip()) < _MINIMUM_PRODUCTION_DATABASE_PASSWORD_LENGTH
+        or mysql_root_password.strip().lower() in _INSECURE_DATABASE_PASSWORDS
+        or not _has_sufficient_credential_entropy(mysql_root_password)
+    ):
+        raise ConfigurationError("A real MYSQL_ROOT_PASSWORD is required in production")

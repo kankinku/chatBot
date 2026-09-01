@@ -150,7 +150,7 @@ environment:
   - MYSQL_HOST=mysql
   - MYSQL_DATABASE=chatbot_db
   - MYSQL_USER=chatbot_user
-  - MYSQL_PASSWORD=1234
+  - MYSQL_PASSWORD=${MYSQL_PASSWORD:?MYSQL_PASSWORD must be set}
 ```
 
 ### 프론트엔드 (frontend)
@@ -220,7 +220,7 @@ npm run build
 docker-compose logs mysql
 
 # MySQL 컨테이너 접속
-docker-compose exec mysql mysql -u chatbot_user -p1234 chatbot_db
+docker-compose exec mysql sh -c 'MYSQL_PWD="$MYSQL_PASSWORD" mysql -u chatbot_user chatbot_db'
 ```
 
 ## 📝 다음 단계

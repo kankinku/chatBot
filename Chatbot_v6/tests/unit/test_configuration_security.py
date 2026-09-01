@@ -18,6 +18,7 @@ def _settings(**overrides):
         "cors_allow_all_origins": False,
         "allow_anonymous_local": False,
         "mysql_password": "change-me",
+        "mysql_root_password": VALID_SECRET,
     }
     values.update(overrides)
     return values
@@ -54,6 +55,7 @@ def test_production_accepts_explicit_strong_secret_and_database_password():
             debug=False,
             allowed_hosts=["chatbot.example.com"],
             mysql_password="Q7mR2xV9kL4pN8dT6wC3zH5sJ1fB0uY8eA6iO4nP2rS9vX7cD5qG6hM3",
+            mysql_root_password="H3nK8vR2xQ6mT9pL4cW7zD5sF1aB0uY8eI6oG4jN2rS9vX7cM5hP3",
         )
     )
 
@@ -71,6 +73,24 @@ def test_production_rejects_repeated_credentials_even_when_long_enough():
 
     values["mysql_password"] = "Q7mR2xV9kL4pN8dT6wC3zH5sJ1fB0uY8eA6iO4nP2rS9vX7cD5qG6hM3"
     values["secret_key"] = "a" * 50
+    with pytest.raises(ConfigurationError):
+        validate_settings(**values)
+
+
+def test_production_rejects_periodic_credentials_and_weak_root_password():
+    values = _settings(
+        environment="production",
+        debug=False,
+        allowed_hosts=["chatbot.example.com"],
+        secret_key="Ab12Cd34Ef56" * 5,
+        mysql_password="Q7mR2xV9kL4pN8dT6wC3zH5sJ1fB0uY8eA6iO4nP2rS9vX7cD5qG6hM3",
+        mysql_root_password="H3nK8vR2xQ6mT9pL4cW7zD5sF1aB0uY8eI6oG4jN2rS9vX7cM5hP3",
+    )
+    with pytest.raises(ConfigurationError):
+        validate_settings(**values)
+
+    values["secret_key"] = VALID_SECRET
+    values["mysql_root_password"] = "Ab12Cd34Ef56" * 5
     with pytest.raises(ConfigurationError):
         validate_settings(**values)
 

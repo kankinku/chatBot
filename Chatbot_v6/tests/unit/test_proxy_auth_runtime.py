@@ -187,6 +187,7 @@ def test_proxy_auth_policy_works_through_django_client_and_orm():
             "CORS_ALLOW_ALL_ORIGINS": "False",
             "CHATBOT_ALLOW_ANONYMOUS_LOCAL": "False",
             "MYSQL_PASSWORD": "Q7mR2xV9kL4pN8dT6wC3zH5sJ1fB0uY8eA6iO4nP2rS9vX7cD5qG6hM3",
+            "MYSQL_ROOT_PASSWORD": "H3nK8vR2xQ6mT9pL4cW7zD5sF1aB0uY8eI6oG4jN2rS9vX7cM5hP3",
         }
     )
 

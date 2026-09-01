@@ -104,6 +104,7 @@ WSGI_APPLICATION = 'chatbot_backend.wsgi.application'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 MYSQL_PASSWORD = config('MYSQL_PASSWORD', default='').strip()
+MYSQL_ROOT_PASSWORD = config('MYSQL_ROOT_PASSWORD', default='').strip()
 
 DATABASES = {
     'default': {
@@ -182,6 +183,7 @@ try:
         cors_allow_all_origins=CORS_ALLOW_ALL_ORIGINS,
         allow_anonymous_local=CHATBOT_ALLOW_ANONYMOUS_LOCAL,
         mysql_password=MYSQL_PASSWORD,
+        mysql_root_password=MYSQL_ROOT_PASSWORD,
     )
 except ConfigurationError as exc:
     raise ImproperlyConfigured(str(exc)) from exc
