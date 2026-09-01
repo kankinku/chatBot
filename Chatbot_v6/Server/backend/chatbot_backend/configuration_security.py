@@ -16,6 +16,12 @@ _INSECURE_SECRET_KEYS = {
 }
 _INSECURE_DATABASE_PASSWORDS = {"", "1234", "change-me", "password", "root"}
 _MINIMUM_PRODUCTION_SECRET_LENGTH = 50
+_MINIMUM_PRODUCTION_CREDENTIAL_UNIQUE_CHARS = 12
+
+
+def _has_sufficient_credential_entropy(value: str) -> bool:
+    normalized = value.strip()
+    return len(set(normalized)) >= _MINIMUM_PRODUCTION_CREDENTIAL_UNIQUE_CHARS
 
 
 def validate_settings(
@@ -43,6 +49,7 @@ def validate_settings(
     if (
         normalized_secret in _INSECURE_SECRET_KEYS
         or len(secret_key.strip()) < _MINIMUM_PRODUCTION_SECRET_LENGTH
+        or not _has_sufficient_credential_entropy(secret_key)
     ):
         raise ConfigurationError(
             "A unique production SECRET_KEY of at least 50 characters is required"
@@ -57,5 +64,8 @@ def validate_settings(
         raise ConfigurationError(
             "CHATBOT_ALLOW_ANONYMOUS_LOCAL must be False in production"
         )
-    if mysql_password.strip().lower() in _INSECURE_DATABASE_PASSWORDS:
+    if (
+        mysql_password.strip().lower() in _INSECURE_DATABASE_PASSWORDS
+        or not _has_sufficient_credential_entropy(mysql_password)
+    ):
         raise ConfigurationError("A real MYSQL_PASSWORD is required in production")

@@ -58,6 +58,23 @@ def test_production_accepts_explicit_strong_secret_and_database_password():
     )
 
 
+def test_production_rejects_repeated_credentials_even_when_long_enough():
+    values = _settings(
+        environment="production",
+        debug=False,
+        allowed_hosts=["chatbot.example.com"],
+        secret_key=VALID_SECRET,
+        mysql_password="a" * 50,
+    )
+    with pytest.raises(ConfigurationError):
+        validate_settings(**values)
+
+    values["mysql_password"] = "Q7mR2xV9kL4pN8dT6wC3zH5sJ1fB0uY8eA6iO4nP2rS9vX7cD5qG6hM3"
+    values["secret_key"] = "a" * 50
+    with pytest.raises(ConfigurationError):
+        validate_settings(**values)
+
+
 @pytest.mark.parametrize(
     "overrides",
     [

@@ -3,6 +3,8 @@
 import ast
 from pathlib import Path
 
+import yaml
+
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 VIEWS_PATH = REPO_ROOT / "Server" / "backend" / "chatbot_proxy" / "views.py"
@@ -84,12 +86,29 @@ def test_detailed_status_requires_operator_but_health_remains_public():
 
 
 def test_fastapi_backend_is_internal_only_behind_the_django_proxy():
-    source = COMPOSE_PATH.read_text(encoding="utf-8")
-    service = source.split("  chatbot-backend:", 1)[1].split(
-        "  # MySQL 데이터베이스", 1
-    )[0]
-    assert "ports:" not in service
-    assert 'expose:\n      - "8000"' in service
+    compose = yaml.safe_load(COMPOSE_PATH.read_text(encoding="utf-8"))
+    services = compose["services"]
+    assert "ports" not in services["chatbot-backend"]
+    assert services["chatbot-backend"]["networks"] == [
+        "proxy_backend",
+        "chatbot_runtime",
+    ]
+    assert services["backend-proxy"]["networks"] == [
+        "proxy_backend",
+        "proxy_database",
+        "frontend_edge",
+    ]
+    assert services["ollama"]["networks"] == ["chatbot_runtime"]
+    assert services["mysql"]["networks"] == ["proxy_database"]
+    assert services["frontend"]["networks"] == ["frontend_edge"]
+    for name in ("ollama", "mysql"):
+        assert "ports" not in services[name]
+    assert compose["networks"]["proxy_backend"]["internal"] is True
+    assert compose["networks"]["proxy_database"]["internal"] is True
+    assert compose["networks"]["chatbot_runtime"]["internal"] is True
+    compose_text = COMPOSE_PATH.read_text(encoding="utf-8")
+    assert "MYSQL_PASSWORD=1234" not in compose_text
+    assert "SECRET_KEY=chatbot-secret-key-change-in-production" not in compose_text
 
 
 def test_route_boundary_translates_policy_failures_to_http_errors():

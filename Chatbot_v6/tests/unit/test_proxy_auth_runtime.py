@@ -119,6 +119,12 @@ list_request.META["REMOTE_ADDR"] = "127.0.0.1"
 conversations = views.get_conversations(list_request)
 assert [item.session_id for item in conversations] == ["owned"]
 
+client.force_login(regular_user)
+assert client.get("/api/chatbot/conversations/other").status_code == 404
+assert client.get("/api/chatbot/conversations/legacy").status_code == 404
+assert client.delete("/api/chatbot/conversations/other").status_code == 404
+assert client.delete("/api/chatbot/conversations/legacy").status_code == 404
+
 assert Conversation._meta.get_field("owner_key").null is True
 assert ChatLog._meta.get_field("owner_key").null is True
 assert ChatMetrics._meta.get_field("owner_key").null is True

@@ -3,8 +3,8 @@ services:
   ollama:
     image: ollama/ollama:latest
     container_name: chatbot-v6-ollama
-    ports:
-      - "11434:11434"
+    expose:
+      - "11434"
     volumes:
       - ollama_data:/root/.ollama
     environment:
@@ -23,6 +23,8 @@ services:
             - driver: nvidia
               count: all
               capabilities: [gpu]
+    networks:
+      - chatbot_runtime
 
   # FastAPI 백엔드 (챗봇 서버 - RAG 시스템)c
   chatbot-backend:
@@ -63,28 +65,33 @@ services:
       timeout: 10s
       retries: 3
       start_period: 120s
+    networks:
+      - proxy_backend
+      - chatbot_runtime
 
   # MySQL 데이터베이스 (프록시 서버용)
   mysql:
     image: mysql:8.0
     container_name: chatbot-v6-mysql
     environment:
-      - MYSQL_ROOT_PASSWORD=1234
-      - MYSQL_DATABASE=chatbot_db
-      - MYSQL_USER=chatbot_user
-      - MYSQL_PASSWORD=1234
-    ports:
-      - "3306:3306"
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD must be set}
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-chatbot_db}
+      - MYSQL_USER=${MYSQL_USER:-chatbot_user}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:?MYSQL_PASSWORD must be set}
+    expose:
+      - "3306"
     volumes:
       - mysql_data:/var/lib/mysql
     restart: unless-stopped
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p1234"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$${MYSQL_ROOT_PASSWORD}"]
       interval: 10s
       timeout: 5s
       retries: 10
       start_period: 20s
+    networks:
+      - proxy_database
 
   # Django 프록시 서버
   backend-proxy:
@@ -93,7 +100,7 @@ services:
       dockerfile: Dockerfile
     container_name: chatbot-v6-proxy
     ports:
-      - "8001:8000"
+      - "127.0.0.1:8001:8000"
     volumes:
       - ./Server/backend:/app
       - ./logs:/app/logs
@@ -102,11 +109,12 @@ services:
       - CHATBOT_URL=http://chatbot-backend:8000
       - MYSQL_HOST=mysql
       - MYSQL_PORT=3306
-      - MYSQL_DATABASE=chatbot_db
-      - MYSQL_USER=chatbot_user
-      - MYSQL_PASSWORD=1234
-      - SECRET_KEY=chatbot-secret-key-change-in-production
-      - DEBUG=True
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-chatbot_db}
+      - MYSQL_USER=${MYSQL_USER:-chatbot_user}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:?MYSQL_PASSWORD must be set}
+      - SECRET_KEY=${SECRET_KEY:?SECRET_KEY must be set}
+      - DEBUG=${DEBUG:-False}
+      - CHATBOT_ALLOW_ANONYMOUS_LOCAL=${CHATBOT_ALLOW_ANONYMOUS_LOCAL:-False}
     depends_on:
       chatbot-backend:
         condition: service_healthy
@@ -132,6 +140,10 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    networks:
+      - proxy_backend
+      - proxy_database
+      - frontend_edge
 
   # React 프론트엔드
   frontend:
@@ -148,10 +160,19 @@ services:
         condition: service_healthy
     restart: unless-stopped
     networks:
-      - default
+      - frontend_edge
 
 volumes:
   ollama_data:
     driver: local
   mysql_data:
     driver: local
+
+networks:
+  proxy_backend:
+    internal: true
+  proxy_database:
+    internal: true
+  chatbot_runtime:
+    internal: true
+  frontend_edge:
