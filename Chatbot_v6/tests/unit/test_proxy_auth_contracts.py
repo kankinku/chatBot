@@ -76,6 +76,12 @@ def test_operational_proxy_routes_require_operator():
         assert _has_actor_call(functions[name], operator=True), name
 
 
+def test_detailed_status_requires_operator_but_health_remains_public():
+    functions = _functions(VIEWS_PATH)
+    assert _has_actor_call(functions["proxy_chatbot_status"], operator=True)
+    assert not _calls(functions["proxy_health_check"], "_require_actor")
+
+
 def test_route_boundary_translates_policy_failures_to_http_errors():
     functions = _functions(VIEWS_PATH)
     helper = functions["_require_actor"]

@@ -474,6 +474,7 @@ def proxy_batch_questions(request, data: BatchQuestionRequest):
 @router.get("/status", response=ChatServerStatus)
 def proxy_chatbot_status(request):
     """챗봇 서버 상태 조회 프록시"""
+    _require_actor(request, operator=True)
     try:
         response_data = sync_make_chatbot_request(
             method='GET',
