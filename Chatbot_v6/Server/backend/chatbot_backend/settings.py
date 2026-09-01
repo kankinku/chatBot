@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 import os
 from decouple import config
+from django.core.exceptions import ImproperlyConfigured
 
 # PyMySQL을 MySQLdb로 사용하도록 설정
 try:
@@ -29,12 +30,42 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-this-in-production')
+ENVIRONMENT = config('ENVIRONMENT', default='development').strip().lower()
+if ENVIRONMENT not in {'development', 'production'}:
+    raise ImproperlyConfigured('ENVIRONMENT must be development or production')
+
+INSECURE_DEFAULT_SECRET_KEY = 'django-insecure-change-this-in-production'
+INSECURE_SECRET_KEYS = {
+    '',
+    INSECURE_DEFAULT_SECRET_KEY,
+    'replace-with-a-random-secret',
+}
+SECRET_KEY = config('SECRET_KEY', default=INSECURE_DEFAULT_SECRET_KEY).strip()
+if ENVIRONMENT == 'production' and SECRET_KEY in INSECURE_SECRET_KEYS:
+    raise ImproperlyConfigured('SECRET_KEY must be configured in production')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', default=True, cast=bool)
+DEBUG = config('DEBUG', default=(ENVIRONMENT != 'production'), cast=bool)
+if ENVIRONMENT == 'production' and DEBUG:
+    raise ImproperlyConfigured('DEBUG must be False in production')
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
+    if host.strip()
+]
+if ENVIRONMENT == 'production' and '*' in ALLOWED_HOSTS:
+    raise ImproperlyConfigured('ALLOWED_HOSTS must not contain * in production')
+
+CHATBOT_ALLOW_ANONYMOUS_LOCAL = config(
+    'CHATBOT_ALLOW_ANONYMOUS_LOCAL',
+    default=False,
+    cast=bool,
+)
+if ENVIRONMENT == 'production' and CHATBOT_ALLOW_ANONYMOUS_LOCAL:
+    raise ImproperlyConfigured(
+        'CHATBOT_ALLOW_ANONYMOUS_LOCAL must be False in production'
+    )
 
 
 # Application definition
@@ -88,12 +119,16 @@ WSGI_APPLICATION = 'chatbot_backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+MYSQL_PASSWORD = config('MYSQL_PASSWORD', default='').strip()
+if ENVIRONMENT == 'production' and MYSQL_PASSWORD in {'', 'change-me'}:
+    raise ImproperlyConfigured('MYSQL_PASSWORD must be configured in production')
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': config('MYSQL_DATABASE', default='chatbot_db'),
         'USER': config('MYSQL_USER', default='root'),
-        'PASSWORD': config('MYSQL_PASSWORD', default='1234'),
+        'PASSWORD': MYSQL_PASSWORD,
         'HOST': config('MYSQL_HOST', default='localhost'),
         'PORT': config('MYSQL_PORT', default='3306'),
         'OPTIONS': {
@@ -146,8 +181,10 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # CORS 설정
-CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_ALL_ORIGINS = config('CORS_ALLOW_ALL_ORIGINS', default=False, cast=bool)
+if ENVIRONMENT == 'production' and CORS_ALLOW_ALL_ORIGINS:
+    raise ImproperlyConfigured('CORS_ALLOW_ALL_ORIGINS must be False in production')
+CORS_ALLOW_CREDENTIALS = config('CORS_ALLOW_CREDENTIALS', default=True, cast=bool)
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
