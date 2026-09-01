@@ -12,6 +12,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 SETTINGS_PATH = REPO_ROOT / "Server" / "backend" / "chatbot_backend" / "settings.py"
 ENV_EXAMPLE_PATH = REPO_ROOT / "Server" / "backend" / "env.example"
 COMPOSE_PATH = REPO_ROOT / "docker-compose.yml"
+VALID_DATABASE_PASSWORD = secrets.token_urlsafe(32)
 CONFIGURATION_SECURITY_PATH = (
     REPO_ROOT / "Server" / "backend" / "chatbot_backend" / "configuration_security.py"
 )
@@ -121,7 +122,7 @@ def test_settings_import_fails_closed_when_production_secret_is_missing():
             "ALLOWED_HOSTS": "chatbot.example.com",
             "CORS_ALLOW_ALL_ORIGINS": "False",
             "CHATBOT_ALLOW_ANONYMOUS_LOCAL": "False",
-            "MYSQL_PASSWORD": "a-real-production-password",
+            "MYSQL_PASSWORD": VALID_DATABASE_PASSWORD,
         },
         unset=("SECRET_KEY",),
     )
@@ -154,7 +155,7 @@ def test_settings_import_fails_closed_for_production_placeholders():
         "ALLOWED_HOSTS": "chatbot.example.com",
         "CORS_ALLOW_ALL_ORIGINS": "False",
         "CHATBOT_ALLOW_ANONYMOUS_LOCAL": "False",
-        "MYSQL_PASSWORD": "a-real-production-password",
+        "MYSQL_PASSWORD": VALID_DATABASE_PASSWORD,
     }
     for secret_key in ("replace-with-a-random-secret", "chatbot-secret-key-change-in-production"):
         result = _run_settings_import({**base, "SECRET_KEY": secret_key})
@@ -188,7 +189,7 @@ def test_settings_import_succeeds_with_explicit_secure_production_values():
             "ALLOWED_HOSTS": "chatbot.example.com",
             "CORS_ALLOW_ALL_ORIGINS": "False",
             "CHATBOT_ALLOW_ANONYMOUS_LOCAL": "False",
-            "MYSQL_PASSWORD": "a-real-production-password",
+            "MYSQL_PASSWORD": VALID_DATABASE_PASSWORD,
         }
     )
 
