@@ -1,0 +1,48 @@
+name: validate
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - "feat/**"
+      - "integration/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  offline-unit-security:
+    name: offline-unit-security
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    defaults:
+      run:
+        working-directory: Chatbot_v6
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.10"
+          cache: pip
+          cache-dependency-path: Chatbot_v6/requirements-ci.txt
+
+      - name: Install lightweight test dependencies
+        run: python -m pip install --upgrade pip && python -m pip install -r requirements-ci.txt
+
+      - name: Compile Python sources
+        run: python -m compileall -q Server/backend tests/unit modules config scripts
+
+      - name: Run offline unit, security, and contract tests
+        env:
+          PYTHONPATH: .
+        run: python -m pytest tests/unit -q -o addopts= -p no:cacheprovider
