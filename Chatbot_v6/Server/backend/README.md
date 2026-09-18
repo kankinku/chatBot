@@ -64,7 +64,8 @@ chatbot_backend/
 - `POST /api/chatbot/batch` - 배치 질문 답변
 - `GET /api/chatbot/status` - 챗봇 서버 상태
 - `GET /api/chatbot/health` - 헬스 체크
-- `GET /api/chatbot/metrics` - 메트릭 조회
+- `GET /api/chatbot/metrics` - DB 기반 사용 메트릭 조회
+- `GET /api/chatbot/upstream-metrics` - 내부 inference 메트릭 프록시
 - `GET /api/chatbot/pdfs` - PDF 목록 조회
 - `GET /api/chatbot/conversation_history` - 대화 기록 조회
 - `DELETE /api/chatbot/conversation_history` - 대화 기록 초기화
@@ -85,7 +86,6 @@ CHATBOT_ALLOW_ANONYMOUS_LOCAL=False
 MYSQL_DATABASE=chatbot_db
 MYSQL_USER=chatbot_user
 MYSQL_PASSWORD=<SET_IN_SECRET_MANAGER>
-MYSQL_ROOT_PASSWORD=<SET_IN_SECRET_MANAGER>
 MYSQL_HOST=localhost
 MYSQL_PORT=3306
 

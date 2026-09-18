@@ -517,7 +517,7 @@ def proxy_health_check(request):
         logger.debug(f"헬스 체크 프록시 오류: {str(e)}")
         raise HttpError(500, "헬스 체크 중 오류가 발생했습니다.")
 
-@router.get("/metrics")
+@router.get("/upstream-metrics")
 def proxy_metrics(request):
     """챗봇 서버 메트릭 조회 프록시"""
     _require_actor(request, operator=True)

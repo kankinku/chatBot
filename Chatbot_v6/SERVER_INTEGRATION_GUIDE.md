@@ -124,8 +124,12 @@ curl -X POST http://localhost:8001/api/chatbot/ask \
 curl http://localhost:8001/api/chatbot/conversations/test-session-123 \
   -b "sessionid=<DJANGO_SESSION_COOKIE>"
 
-# 운영자 전용 메트릭 조회
+# 운영자 전용 DB 사용 메트릭 조회
 curl http://localhost:8001/api/chatbot/metrics \
+  -b "sessionid=<DJANGO_OPERATOR_SESSION_COOKIE>"
+
+# 운영자 전용 inference 메트릭 조회
+curl http://localhost:8001/api/chatbot/upstream-metrics \
   -b "sessionid=<DJANGO_OPERATOR_SESSION_COOKIE>"
 ```
 

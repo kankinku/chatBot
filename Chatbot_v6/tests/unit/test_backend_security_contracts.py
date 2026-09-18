@@ -112,6 +112,22 @@ def test_mysql_wait_script_uses_required_runtime_credentials():
     assert "user='chatbot_user'" not in source
 
 
+def test_gateway_does_not_depend_on_mysql_root_credentials():
+    settings_source = SETTINGS_PATH.read_text(encoding="utf-8")
+    compose_source = COMPOSE_PATH.read_text(encoding="utf-8")
+    assert "MYSQL_ROOT_PASSWORD = config(" not in settings_source
+    assert "mysql_root_password=" not in settings_source
+
+    import yaml
+    services = yaml.safe_load(compose_source)["services"]
+    proxy_environment = services["backend-proxy"]["environment"]
+    assert not any(item.startswith("MYSQL_ROOT_PASSWORD=") for item in proxy_environment)
+    assert any(
+        item.startswith("MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:?")
+        for item in services["mysql"]["environment"]
+    )
+
+
 def test_settings_import_fails_closed_when_environment_is_missing():
     result = _run_settings_import(
         unset=(
@@ -132,7 +148,6 @@ def test_settings_import_fails_closed_when_production_secret_is_missing():
             "CORS_ALLOW_ALL_ORIGINS": "False",
             "CHATBOT_ALLOW_ANONYMOUS_LOCAL": "False",
             "MYSQL_PASSWORD": VALID_DATABASE_PASSWORD,
-            "MYSQL_ROOT_PASSWORD": VALID_DATABASE_PASSWORD,
         },
         unset=("SECRET_KEY",),
     )
@@ -150,31 +165,12 @@ def test_settings_import_fails_closed_when_production_database_password_is_missi
             "ALLOWED_HOSTS": "chatbot.example.com",
             "CORS_ALLOW_ALL_ORIGINS": "False",
             "CHATBOT_ALLOW_ANONYMOUS_LOCAL": "False",
-            "MYSQL_ROOT_PASSWORD": VALID_DATABASE_PASSWORD,
         },
         unset=("MYSQL_PASSWORD",),
     )
 
     assert result.returncode != 0
     assert "MYSQL_PASSWORD" in result.stderr
-
-
-def test_settings_import_fails_closed_when_production_root_password_is_missing():
-    result = _run_settings_import(
-        {
-            "ENVIRONMENT": "production",
-            "SECRET_KEY": "V8mQ2rL7xN4pK9dT6wC3zH5sJ1fB0uY8eA6iO4nP2rS9vX7cD5qG6hM3",
-            "DEBUG": "False",
-            "ALLOWED_HOSTS": "chatbot.example.com",
-            "CORS_ALLOW_ALL_ORIGINS": "False",
-            "CHATBOT_ALLOW_ANONYMOUS_LOCAL": "False",
-            "MYSQL_PASSWORD": VALID_DATABASE_PASSWORD,
-        },
-        unset=("MYSQL_ROOT_PASSWORD",),
-    )
-
-    assert result.returncode != 0
-    assert "MYSQL_ROOT_PASSWORD" in result.stderr
 
 
 def test_settings_import_fails_closed_for_production_placeholders():
@@ -185,7 +181,6 @@ def test_settings_import_fails_closed_for_production_placeholders():
         "CORS_ALLOW_ALL_ORIGINS": "False",
         "CHATBOT_ALLOW_ANONYMOUS_LOCAL": "False",
         "MYSQL_PASSWORD": VALID_DATABASE_PASSWORD,
-        "MYSQL_ROOT_PASSWORD": VALID_DATABASE_PASSWORD,
     }
     for secret_key in ("replace-with-a-random-secret", "chatbot-secret-key-change-in-production"):
         result = _run_settings_import({**base, "SECRET_KEY": secret_key})
@@ -203,7 +198,6 @@ def test_settings_import_fails_closed_for_production_compose_password():
             "CORS_ALLOW_ALL_ORIGINS": "False",
             "CHATBOT_ALLOW_ANONYMOUS_LOCAL": "False",
             "MYSQL_PASSWORD": "1234",
-            "MYSQL_ROOT_PASSWORD": VALID_DATABASE_PASSWORD,
         }
     )
 
@@ -221,7 +215,6 @@ def test_settings_import_succeeds_with_explicit_secure_production_values():
             "CORS_ALLOW_ALL_ORIGINS": "False",
             "CHATBOT_ALLOW_ANONYMOUS_LOCAL": "False",
             "MYSQL_PASSWORD": VALID_DATABASE_PASSWORD,
-            "MYSQL_ROOT_PASSWORD": VALID_DATABASE_PASSWORD,
         }
     )
 

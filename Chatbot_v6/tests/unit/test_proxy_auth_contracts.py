@@ -110,11 +110,18 @@ def test_fastapi_backend_is_internal_only_behind_the_django_proxy():
     assert "MYSQL_PASSWORD=1234" not in compose_text
     assert "SECRET_KEY=chatbot-secret-key-change-in-production" not in compose_text
     proxy_environment = services["backend-proxy"]["environment"]
+    assert not any(item.startswith("MYSQL_ROOT_PASSWORD=") for item in proxy_environment)
     assert any(
         item.startswith("MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:?")
-        for item in proxy_environment
+        for item in services["mysql"]["environment"]
     )
 
+
+
+def test_metrics_routes_have_distinct_contracts():
+    source = VIEWS_PATH.read_text(encoding="utf-8")
+    assert source.count('@router.get("/metrics"') == 1
+    assert source.count('@router.get("/upstream-metrics"') == 1
 
 def test_route_boundary_translates_policy_failures_to_http_errors():
     functions = _functions(VIEWS_PATH)

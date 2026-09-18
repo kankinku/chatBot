@@ -7,6 +7,7 @@ from Server.backend.chatbot_backend.configuration_security import (
 
 
 VALID_SECRET = "V8mQ2rL7xN4pK9dT6wC3zH5sJ1fB0uY8eA6iO4nP2rS9vX7cD5qG6hM3"
+VALID_DATABASE_PASSWORD = "Q7mR2xV9kL4pN8dT6wC3zH5sJ1fB0uY8eA6iO4nP2rS9vX7cD5qG6hM3"
 
 
 def _settings(**overrides):
@@ -18,7 +19,6 @@ def _settings(**overrides):
         "cors_allow_all_origins": False,
         "allow_anonymous_local": False,
         "mysql_password": "change-me",
-        "mysql_root_password": VALID_SECRET,
     }
     values.update(overrides)
     return values
@@ -54,8 +54,7 @@ def test_production_accepts_explicit_strong_secret_and_database_password():
             secret_key=VALID_SECRET,
             debug=False,
             allowed_hosts=["chatbot.example.com"],
-            mysql_password="Q7mR2xV9kL4pN8dT6wC3zH5sJ1fB0uY8eA6iO4nP2rS9vX7cD5qG6hM3",
-            mysql_root_password="H3nK8vR2xQ6mT9pL4cW7zD5sF1aB0uY8eI6oG4jN2rS9vX7cM5hP3",
+            mysql_password=VALID_DATABASE_PASSWORD,
         )
     )
 
@@ -71,39 +70,36 @@ def test_production_rejects_repeated_credentials_even_when_long_enough():
     with pytest.raises(ConfigurationError):
         validate_settings(**values)
 
-    values["mysql_password"] = "Q7mR2xV9kL4pN8dT6wC3zH5sJ1fB0uY8eA6iO4nP2rS9vX7cD5qG6hM3"
+    values["mysql_password"] = VALID_DATABASE_PASSWORD
     values["secret_key"] = "a" * 50
     with pytest.raises(ConfigurationError):
         validate_settings(**values)
 
 
-def test_production_rejects_periodic_credentials_and_weak_root_password():
+def test_production_rejects_periodic_secret():
     values = _settings(
         environment="production",
         debug=False,
         allowed_hosts=["chatbot.example.com"],
         secret_key="Ab12Cd34Ef56" * 5,
-        mysql_password="Q7mR2xV9kL4pN8dT6wC3zH5sJ1fB0uY8eA6iO4nP2rS9vX7cD5qG6hM3",
-        mysql_root_password="H3nK8vR2xQ6mT9pL4cW7zD5sF1aB0uY8eI6oG4jN2rS9vX7cM5hP3",
+        mysql_password=VALID_DATABASE_PASSWORD,
     )
     with pytest.raises(ConfigurationError):
         validate_settings(**values)
 
 
 def _production_values():
-    values = _settings(
+    return _settings(
         environment="production",
         debug=False,
         allowed_hosts=["chatbot.example.com"],
         secret_key=VALID_SECRET,
-        mysql_password=VALID_SECRET,
-        mysql_root_password=VALID_SECRET,
+        mysql_password=VALID_DATABASE_PASSWORD,
     )
-    return values
 
 
-@pytest.mark.parametrize("field", ("secret_key", "mysql_password", "mysql_root_password"))
-def test_production_accepts_strong_value_for_each_credential(field):
+@pytest.mark.parametrize("field", ("secret_key", "mysql_password"))
+def test_production_accepts_strong_value_for_each_application_credential(field):
     values = _production_values()
     values[field] = VALID_SECRET
     validate_settings(**values)
@@ -118,16 +114,11 @@ _PREDICTABLE_CREDENTIALS = (
 )
 
 
-@pytest.mark.parametrize("field", ("secret_key", "mysql_password", "mysql_root_password"))
+@pytest.mark.parametrize("field", ("secret_key", "mysql_password"))
 @pytest.mark.parametrize("credential", _PREDICTABLE_CREDENTIALS)
-def test_production_rejects_predictable_value_for_each_credential(field, credential):
+def test_production_rejects_predictable_value_for_each_application_credential(field, credential):
     values = _production_values()
     values[field] = credential
-    with pytest.raises(ConfigurationError):
-        validate_settings(**values)
-
-    values["secret_key"] = VALID_SECRET
-    values["mysql_root_password"] = "Ab12Cd34Ef56" * 5
     with pytest.raises(ConfigurationError):
         validate_settings(**values)
 
@@ -144,13 +135,7 @@ def test_production_rejects_predictable_value_for_each_credential(field, credent
     ],
 )
 def test_production_rejects_insecure_settings(overrides):
-    values = _settings(
-        environment="production",
-        secret_key=VALID_SECRET,
-        debug=False,
-        allowed_hosts=["chatbot.example.com"],
-        mysql_password="Q7mR2xV9kL4pN8dT6wC3zH5sJ1fB0uY8eA6iO4nP2rS9vX7cD5qG6hM3",
-    )
+    values = _production_values()
     values.update(overrides)
     with pytest.raises(ConfigurationError):
         validate_settings(**values)

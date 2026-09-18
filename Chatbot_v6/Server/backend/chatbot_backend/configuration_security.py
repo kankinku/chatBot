@@ -94,7 +94,6 @@ def validate_settings(
     cors_allow_all_origins: bool,
     allow_anonymous_local: bool,
     mysql_password: str,
-    mysql_root_password: str = "",
 ) -> None:
     """Validate deployment settings and raise on unsafe production values."""
 
@@ -132,9 +131,3 @@ def validate_settings(
         or not _has_sufficient_credential_entropy(mysql_password)
     ):
         raise ConfigurationError("A real MYSQL_PASSWORD is required in production")
-    if (
-        len(mysql_root_password.strip()) < _MINIMUM_PRODUCTION_DATABASE_PASSWORD_LENGTH
-        or mysql_root_password.strip().lower() in _INSECURE_DATABASE_PASSWORDS
-        or not _has_sufficient_credential_entropy(mysql_root_password)
-    ):
-        raise ConfigurationError("A real MYSQL_ROOT_PASSWORD is required in production")
