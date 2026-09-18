@@ -17,7 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from ninja_extra import NinjaExtraAPI
-from chatbot_proxy.views import router as chatbot_router
+from chatbot_proxy.views import router as chatbot_router, _require_actor
 
 api = NinjaExtraAPI()
 api.add_router("/chatbot/", chatbot_router)
@@ -31,6 +31,7 @@ def proxy_process_pdfs(request):
     import logging
     
     logger = logging.getLogger(__name__)
+    _require_actor(request, operator=True)
     
     try:
         response_data = sync_make_chatbot_request(
@@ -55,6 +56,7 @@ def proxy_process_pdfs_status(request):
     import logging
     
     logger = logging.getLogger(__name__)
+    _require_actor(request, operator=True)
     
     try:
         response_data = sync_make_chatbot_request(

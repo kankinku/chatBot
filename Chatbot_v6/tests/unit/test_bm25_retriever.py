@@ -64,12 +64,13 @@ class TestBM25Retriever:
     
     def test_char_ngrams(self, retriever):
         """문자 n-gram 생성"""
-        ngrams = retriever._char_ngrams("테스트")
+        short_ngrams = retriever._char_ngrams("테스트")
+        long_ngrams = retriever._char_ngrams("테스트문장")
         
-        assert len(ngrams) > 0
-        # 3-5 char n-grams
-        assert any(len(ng) == 3 for ng in ngrams)
-        assert any(len(ng) == 5 for ng in ngrams)
+        assert len(short_ngrams) > 0
+        assert any(len(ng) == 3 for ng in short_ngrams)
+        assert all(len(ng) <= len("테스트") for ng in short_ngrams)
+        assert any(len(ng) == 5 for ng in long_ngrams)
     
     def test_korean_search(self, retriever):
         """한글 검색"""

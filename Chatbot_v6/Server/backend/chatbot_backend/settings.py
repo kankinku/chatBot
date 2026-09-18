@@ -11,8 +11,9 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
-import os
 from decouple import config
+from django.core.exceptions import ImproperlyConfigured
+from .configuration_security import ConfigurationError, validate_settings
 
 # PyMySQL을 MySQLdb로 사용하도록 설정
 try:
@@ -29,12 +30,25 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-this-in-production')
+ENVIRONMENT = config('ENVIRONMENT', default='').strip().lower()
+
+INSECURE_DEFAULT_SECRET_KEY = 'django-insecure-change-this-in-production'
+SECRET_KEY = config('SECRET_KEY', default=INSECURE_DEFAULT_SECRET_KEY).strip()
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', default=True, cast=bool)
+DEBUG = config('DEBUG', default=(ENVIRONMENT == 'development'), cast=bool)
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
+    if host.strip()
+]
+
+CHATBOT_ALLOW_ANONYMOUS_LOCAL = config(
+    'CHATBOT_ALLOW_ANONYMOUS_LOCAL',
+    default=False,
+    cast=bool,
+)
 
 
 # Application definition
@@ -88,12 +102,14 @@ WSGI_APPLICATION = 'chatbot_backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+MYSQL_PASSWORD = config('MYSQL_PASSWORD', default='').strip()
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': config('MYSQL_DATABASE', default='chatbot_db'),
         'USER': config('MYSQL_USER', default='root'),
-        'PASSWORD': config('MYSQL_PASSWORD', default='1234'),
+        'PASSWORD': MYSQL_PASSWORD,
         'HOST': config('MYSQL_HOST', default='localhost'),
         'PORT': config('MYSQL_PORT', default='3306'),
         'OPTIONS': {
@@ -146,8 +162,8 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # CORS 설정
-CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_ALL_ORIGINS = config('CORS_ALLOW_ALL_ORIGINS', default=False, cast=bool)
+CORS_ALLOW_CREDENTIALS = config('CORS_ALLOW_CREDENTIALS', default=True, cast=bool)
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
@@ -155,6 +171,19 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3001",
     "http://127.0.0.1:3001",
 ]
+
+try:
+    validate_settings(
+        environment=ENVIRONMENT,
+        secret_key=SECRET_KEY,
+        debug=DEBUG,
+        allowed_hosts=ALLOWED_HOSTS,
+        cors_allow_all_origins=CORS_ALLOW_ALL_ORIGINS,
+        allow_anonymous_local=CHATBOT_ALLOW_ANONYMOUS_LOCAL,
+        mysql_password=MYSQL_PASSWORD,
+    )
+except ConfigurationError as exc:
+    raise ImproperlyConfigured(str(exc)) from exc
 
 # Ninja JWT 설정 (현재 미사용)
 # NINJA_JWT = {

@@ -87,6 +87,14 @@ class TestQuestionAnalyzer:
         
         # system_info는 임계값이 더 낮아야 함
         assert system_result.threshold_adj < general_result.threshold_adj
+
+    def test_operational_status_precedes_procedural_keyword(self, analyzer):
+        """운영 현황은 절차 키워드가 아니라 상태 조회로 분류한다."""
+        assert analyzer.analyze("운영 현황은?").qtype == "operational"
+        assert analyzer.analyze("운영 방법은?").qtype == "procedural"
+        assert analyzer.analyze("현재 운영 방법은?").qtype == "procedural"
+        assert analyzer.analyze("현재 운영 상태는?").qtype == "operational"
+        assert analyzer.analyze("현재 상태는 25℃인가?").qtype == "numeric"
     
     @pytest.mark.parametrize("question,expected_type", [
         ("고산 정수장이란?", "definition"),
