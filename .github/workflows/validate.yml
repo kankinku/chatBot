@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - "feat/**"
+      - "fix/**"
       - "integration/**"
 
 permissions:
@@ -20,10 +21,6 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
 
-    defaults:
-      run:
-        working-directory: Chatbot_v6
-
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -36,17 +33,10 @@ jobs:
           cache-dependency-path: Chatbot_v6/requirements-ci.lock
 
       - name: Install locked test dependencies
-        run: python -m pip install pip==26.2.1 && python -m pip install -r requirements-ci.lock && python -m pip check
+        run: cd Chatbot_v6 && python3 -m pip install pip==26.2.1 && python3 -m pip install -r requirements-ci.lock && python3 -m pip check
 
       - name: Compile Python sources
-        run: python -m compileall -q Server/backend tests/unit modules config scripts
-
-      # One-time trust bootstrap. PR numbers are immutable and never reused.
-      # main@e05aca3 has exactly two known legacy failures fixed by PR #3.
-      - name: Validate legacy baseline for trust bootstrap
-        if: github.event_name == 'pull_request' && github.event.pull_request.number == 4
-        run: python -m pytest tests/unit -q -o addopts= -p no:cacheprovider -k "not test_char_ngrams and not test_various_question_types"
+        run: cd Chatbot_v6 && python3 -m compileall -q Server/backend tests/unit modules config scripts
 
       - name: Run strict offline unit, security, and contract tests
-        if: github.event_name != 'pull_request' || github.event.pull_request.number != 4
-        run: python -m pytest tests/unit -q -o addopts= -p no:cacheprovider
+        run: cd Chatbot_v6 && python3 -m pytest tests/unit -q -o addopts= -p no:cacheprovider
