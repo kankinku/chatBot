@@ -4,15 +4,15 @@
     "profileOrder": ["fast", "normal", "release"],
     "profiles": {
       "fast": [
-        "cd Chatbot_v6 && python -m compileall -q Server/backend tests/unit modules config scripts"
+        "cd Chatbot_v6 && python3 -m compileall -q Server/backend tests/unit modules config scripts"
       ],
       "normal": [
-        "cd Chatbot_v6 && python -m compileall -q Server/backend tests/unit modules config scripts",
-        "cd Chatbot_v6 && python -m pytest tests/unit -q -o addopts= -p no:cacheprovider"
+        "cd Chatbot_v6 && python3 -m compileall -q Server/backend tests/unit modules config scripts",
+        "cd Chatbot_v6 && python3 -m pytest tests/unit -q -o addopts= -p no:cacheprovider"
       ],
       "release": [
-        "cd Chatbot_v6 && python -m compileall -q Server/backend tests/unit modules config scripts",
-        "cd Chatbot_v6 && python -m pytest tests/unit -q -o addopts= -p no:cacheprovider"
+        "cd Chatbot_v6 && python3 -m compileall -q Server/backend tests/unit modules config scripts",
+        "cd Chatbot_v6 && python3 -m pytest tests/unit -q -o addopts= -p no:cacheprovider"
       ]
     },
     "riskProfiles": {
