@@ -201,6 +201,9 @@ temp_block.txt
 
 # Historical snapshot sources are preserved in Git archive refs, not active-tree ignores.
 
+# Regenerable relationship/provenance workspace cache.
+/knowledge-workspace/
+
 # ============================================================================
 # 유지할 파일 (예외)
 # ============================================================================

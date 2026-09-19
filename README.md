@@ -12,6 +12,7 @@ services/gateway/         Django public gateway
 services/inference/       FastAPI internal inference API
 src/chatbot/              framework-independent RAG core
 src/chatbot/knowledge/    graph knowledge extraction/validation/reasoning core
+src/chatbot/knowledge/workspace/ derived relationship/provenance graph tooling
 config/                   runtime/model/pipeline configuration
 config/ontology/          knowledge schema and backend configuration
 data/                     small tracked fixtures and domain data
@@ -23,7 +24,7 @@ deploy/compose/           multi-service runtime
 docs/                     architecture, evidence, history, modernization
 ```
 
-활성 코드는 더 이상 `Chatbot_vN/` 또는 `ontology_system_vN/` snapshot 폴더를 사용하지 않습니다. retired source는 Git archive branch/tag와 `docs/history/`에서 추적하며, v13 Knowledge Core도 `src/chatbot/knowledge/`로 통합했습니다.
+활성 코드는 더 이상 `Chatbot_vN/` 또는 `ontology_system_vN/` snapshot 폴더를 사용하지 않습니다. retired source는 Git archive branch/tag와 `docs/history/`에서 추적하며, v13 Knowledge Core도 `src/chatbot/knowledge/`로 통합했습니다. 관계/provenance 탐색용 `knowledge-workspace/`는 canonical source에서 재생성되는 로컬 cache이며 Git source-of-truth가 아닙니다.
 
 ## Validation
 
@@ -43,6 +44,7 @@ python3 scripts/build_corpus.py --help
 python3 scripts/evaluate_qa_unified.py --help
 python3 scripts/test_chatbot_interactive.py --help
 python3 scripts/knowledge_core_demo.py --help
+python3 scripts/knowledge_workspace.py --help
 ```
 
 ## Local services

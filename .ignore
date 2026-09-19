@@ -1,0 +1,5 @@
+# Generated knowledge cards are gitignored but should remain searchable.
+!knowledge-workspace/
+knowledge-workspace/.cache/
+knowledge-workspace/graph.json
+knowledge-workspace/manifest.json
