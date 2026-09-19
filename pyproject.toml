@@ -9,6 +9,28 @@ description = "Water-treatment RAG chatbot canonical runtime"
 requires-python = ">=3.10"
 readme = "README.md"
 
-[tool.setuptools.packages.find]
-where = ["src"]
-include = ["chatbot*"]
+[tool.setuptools]
+packages = [
+  "config",
+  "chatbot",
+  "chatbot.analysis",
+  "chatbot.chunking",
+  "chatbot.core",
+  "chatbot.document",
+  "chatbot.embedding",
+  "chatbot.filtering",
+  "chatbot.generation",
+  "chatbot.monitoring",
+  "chatbot.pipeline",
+  "chatbot.preprocessing",
+  "chatbot.quality",
+  "chatbot.reranking",
+  "chatbot.retrieval"
+]
+
+[tool.setuptools.package-dir]
+config = "config"
+chatbot = "src/chatbot"
+
+[tool.setuptools.package-data]
+config = ["default.yaml"]
