@@ -1,0 +1,8 @@
+workspace:
+  # Canonical source-of-truth inputs. The generated workspace is never authoritative.
+  source_roots:
+    - config/ontology
+    - data/ontology
+
+  # Local derived cache. This directory is gitignored but re-admitted to text search.
+  output_dir: knowledge-workspace

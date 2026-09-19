@@ -33,7 +33,8 @@ packages = [
   "chatbot.knowledge.reasoning",
   "chatbot.knowledge.shared",
   "chatbot.knowledge.storage",
-  "chatbot.knowledge.validation"
+  "chatbot.knowledge.validation",
+  "chatbot.knowledge.workspace"
 ]
 
 [tool.setuptools.package-dir]
@@ -41,4 +42,4 @@ config = "config"
 chatbot = "src/chatbot"
 
 [tool.setuptools.package-data]
-config = ["default.yaml", "ontology/*.yaml"]
+config = ["default.yaml", "knowledge_workspace.yaml", "ontology/*.yaml"]
