@@ -2,7 +2,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from Server.backend.chatbot_proxy.security import (
+from services.gateway.chatbot_proxy.security import (
     AuthenticationRequired,
     PermissionDenied,
     require_owner,

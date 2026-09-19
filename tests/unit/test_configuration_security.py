@@ -1,6 +1,6 @@
 import pytest
 
-from Server.backend.chatbot_backend.configuration_security import (
+from services.gateway.chatbot_backend.configuration_security import (
     ConfigurationError,
     validate_settings,
 )
