@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "water-treatment-chatbot"
+version = "6.0.0"
+description = "Water-treatment RAG chatbot canonical runtime"
+requires-python = ">=3.10"
+readme = "README.md"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["chatbot*"]

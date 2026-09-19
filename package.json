@@ -1,0 +1,14 @@
+{
+  "name": "water-treatment-chatbot",
+  "private": true,
+  "version": "6.0.0",
+  "workspaces": [
+    "apps/web"
+  ],
+  "scripts": {
+    "web:start": "npm --workspace apps/web start",
+    "web:build": "npm --workspace apps/web run build",
+    "web:test": "npm --workspace apps/web test",
+    "web:type-check": "npm --workspace apps/web run type-check"
+  }
+}

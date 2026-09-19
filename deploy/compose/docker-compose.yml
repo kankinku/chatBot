@@ -1,0 +1,174 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: chatbot-v6-ollama
+    expose:
+      - "11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 5s bash -c ': > /dev/tcp/127.0.0.1/11434' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    networks:
+      - chatbot_runtime
+
+  chatbot-backend:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/inference.Dockerfile
+    container_name: chatbot-v6-backend
+    expose:
+      - "8000"
+    volumes:
+      - ../../config:/app/config
+      - ../../data:/app/data
+      - ../../src:/app/src
+      - ../../services/inference:/app/services/inference
+      - ../../logs:/app/logs
+      - ../../vector_store:/app/vector_store
+    environment:
+      - OLLAMA_HOST=ollama
+      - OLLAMA_PORT=11434
+      - PYTHONUNBUFFERED=1
+      - PYTHONPATH=/app/src:/app
+    depends_on:
+      ollama:
+        condition: service_healthy
+    restart: unless-stopped
+    command: >
+      sh -c "
+        echo 'Waiting for Ollama to be ready...' &&
+        until curl -f http://ollama:11434/api/tags > /dev/null 2>&1; do
+          echo 'Ollama is not ready yet. Waiting...'
+          sleep 2
+        done &&
+        echo 'Ollama is ready!' &&
+        uvicorn services.inference.api.app:app --host 0.0.0.0 --port 8000
+      "
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    networks:
+      - proxy_backend
+      - chatbot_runtime
+
+  mysql:
+    image: mysql:8.0
+    container_name: chatbot-v6-mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD must be set}
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-chatbot_db}
+      - MYSQL_USER=${MYSQL_USER:-chatbot_user}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:?MYSQL_PASSWORD must be set}
+    expose:
+      - "3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    restart: unless-stopped
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks:
+      - proxy_database
+
+  backend-proxy:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/gateway.Dockerfile
+    container_name: chatbot-v6-proxy
+    ports:
+      - "127.0.0.1:8001:8000"
+    volumes:
+      - ../../services/gateway:/app
+      - ../../logs:/app/logs
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - CHATBOT_URL=http://chatbot-backend:8000
+      - MYSQL_HOST=mysql
+      - MYSQL_PORT=3306
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-chatbot_db}
+      - MYSQL_USER=${MYSQL_USER:-chatbot_user}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:?MYSQL_PASSWORD must be set}
+      - SECRET_KEY=${SECRET_KEY:?SECRET_KEY must be set}
+      - DEBUG=${DEBUG:-False}
+      - CHATBOT_ALLOW_ANONYMOUS_LOCAL=${CHATBOT_ALLOW_ANONYMOUS_LOCAL:-False}
+    depends_on:
+      chatbot-backend:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
+    command: >
+      sh -c "
+        echo 'Waiting for MySQL to be ready...' &&
+        python wait-for-mysql.py &&
+        echo 'Waiting for backend to be ready...' &&
+        until curl -f http://chatbot-backend:8000/healthz > /dev/null 2>&1; do
+          echo 'Backend is not ready yet. Waiting...'
+          sleep 2
+        done &&
+        echo 'Backend is ready!' &&
+        python manage.py migrate &&
+        python manage.py runserver 0.0.0.0:8000
+      "
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/chatbot/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - proxy_backend
+      - proxy_database
+      - frontend_edge
+
+  frontend:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/web.Dockerfile
+      args:
+        REACT_APP_API_URL: http://localhost:8001
+    container_name: chatbot-v6-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      backend-proxy:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - frontend_edge
+
+volumes:
+  ollama_data:
+    driver: local
+  mysql_data:
+    driver: local
+
+networks:
+  proxy_backend:
+    internal: true
+  proxy_database:
+    internal: true
+  chatbot_runtime:
+    internal: true
+  frontend_edge:
