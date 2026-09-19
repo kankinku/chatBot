@@ -118,6 +118,8 @@ class RawEdge(BaseModel):
 class ExtractionResult(BaseModel):
     """Full extraction result for a document."""
     doc_id: str
+    source_uri: Optional[str] = Field(default=None)
+    source_hash: Optional[str] = Field(default=None)
     fragments: List[Fragment]
     entity_candidates: List[EntityCandidate]
     resolved_entities: List[ResolvedEntity]

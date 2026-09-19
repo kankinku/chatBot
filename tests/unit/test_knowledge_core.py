@@ -68,6 +68,9 @@ def test_rule_based_extraction_pipeline_runs_without_llm():
     )
 
     assert result.doc_id == "knowledge-smoke"
+    assert result.source_uri == "document:knowledge-smoke"
+    assert result.source_hash is not None
+    assert len(result.source_hash) == 64
     assert result.error_count >= 0
     assert isinstance(result.warning_messages, list)
 

@@ -1,6 +1,7 @@
 """
 Extraction pipeline: fragments -> entities -> relations.
 """
+import hashlib
 import logging
 import time
 from typing import List, Optional
@@ -34,9 +35,16 @@ class ExtractionPipeline:
         self.entity_resolver = EntityResolver()
         self.relation_extractor = RelationExtractor(llm_client=llm_client)
 
-    def process(self, raw_text: str, doc_id: str) -> ExtractionResult:
-        """Process a single document."""
+    def process(
+        self,
+        raw_text: str,
+        doc_id: str,
+        source_uri: Optional[str] = None,
+    ) -> ExtractionResult:
+        """Process a single document and preserve source provenance."""
         start_time = time.time()
+        source_uri = source_uri or f"document:{doc_id}"
+        source_hash = hashlib.sha256(raw_text.encode("utf-8")).hexdigest()
         warnings = []
         error_count = 0
 
@@ -93,6 +101,8 @@ class ExtractionPipeline:
 
         result = ExtractionResult(
             doc_id=doc_id,
+            source_uri=source_uri,
+            source_hash=source_hash,
             fragments=all_fragments,
             entity_candidates=all_entity_candidates,
             resolved_entities=all_resolved,
@@ -119,8 +129,13 @@ class ExtractionPipeline:
         for doc in documents:
             doc_id = doc.get("doc_id", f"doc_{len(results)}")
             text = doc.get("text", "")
+            source_uri = doc.get("source_uri")
 
-            result = self.process(raw_text=text, doc_id=doc_id)
+            result = self.process(
+                raw_text=text,
+                doc_id=doc_id,
+                source_uri=source_uri,
+            )
             results.append(result)
 
         return results

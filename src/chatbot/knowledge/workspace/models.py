@@ -19,6 +19,8 @@ class NodeKind(str, Enum):
     ENTITY_REF = "entity_ref"
     DOCUMENT = "document"
     ASSERTION = "assertion"
+    DOMAIN_RELATION = "domain_relation"
+    FRAGMENT = "fragment"
     SYSTEM = "system"
 
 
