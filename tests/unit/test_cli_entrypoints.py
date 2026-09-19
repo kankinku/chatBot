@@ -46,6 +46,13 @@ def test_build_corpus_help_is_available_offline():
     assert "usage:" in (result.stdout or "")
 
 
+def test_knowledge_core_help_is_available_offline():
+    result = _run_help("knowledge_core_demo.py")
+
+    assert result.returncode == 0, result.stderr
+    assert "usage:" in (result.stdout or "")
+
+
 def test_local_scripts_package_is_resolved_before_installed_package():
     env = os.environ.copy()
     env.pop("PYTHONPATH", None)

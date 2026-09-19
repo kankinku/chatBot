@@ -18,7 +18,7 @@ active tree에는 historical snapshot을 복제해 두지 않는다. 상세 메�
 | onTology_system_v9 | 초기 ontology/graph 실험 | active tree 제거, archive-only |
 | ontology_system_v11 | extraction/validation/domain/reasoning lifecycle | active tree 제거, v13 계보로 보존 |
 | ontology_system_v12 | evidence/incremental/dependency/replay/scenario 최대 실험 | active tree 제거, mechanism source는 archive + inventory로 보존 |
-| ontology_system_v13 | 축소된 extraction/validation/reasoning knowledge core | **임시 migration source**. 다음 Knowledge Core PR에서 canonical `src/chatbot/knowledge`로 이동 예정 |
+| ontology_system_v13 | 축소된 extraction/validation/reasoning knowledge core | `src/chatbot/knowledge` + `config/ontology` + `data/ontology`로 canonical migration 완료 |
 | test_chatbot | 단순 RAG/benchmark 비교용 prototype | active tree 제거, 평가 개념은 canonical scripts에 이미 계승 |
 
 ## Canonical mapping
@@ -32,5 +32,9 @@ active tree에는 historical snapshot을 복제해 두지 않는다. 상세 메�
 - `Chatbot_v6/tests` → `tests`
 - `Chatbot_v6/scripts` → `scripts`
 - Docker/Compose → `deploy/docker`, `deploy/compose`
+- `ontology_system_v13/src` → `src/chatbot/knowledge`
+- `ontology_system_v13/config` → `config/ontology`
+- `ontology_system_v13/data` → `data/ontology`
+- `ontology_system_v13/main.py` → `scripts/knowledge_core_demo.py`
 
-앞으로 버전은 directory snapshot이 아니라 Git commit/branch/tag/release로 표현한다. `ontology_system_v13`은 버전 관리 방식의 예외가 아니라 아직 완료되지 않은 migration source이며, 통합 후 제거한다.
+앞으로 버전은 directory snapshot이 아니라 Git commit/branch/tag/release로 표현한다. active tree에는 더 이상 versioned source snapshot을 두지 않는다.

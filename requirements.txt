@@ -18,6 +18,7 @@ chromadb>=0.4.0  # Chroma vector database - simple and efficient
 # Search & Retrieval
 rank-bm25>=0.2.2  # BM25 search
 elasticsearch>=8.0.0  # Elasticsearch (optional)
+neo4j>=5.0.0  # Optional Knowledge Core graph backend
 
 # Web framework
 fastapi>=0.100.0  # API framework
@@ -28,6 +29,7 @@ pydantic>=2.0.0  # Data validation
 requests>=2.31.0  # HTTP client
 urllib3>=2.0.0  # HTTP client (for Ollama)
 aiohttp>=3.9.0  # Async HTTP client
+httpx>=0.24.0  # Knowledge-core Ollama/LLM adapter
 
 # Data processing
 pyyaml>=6.0  # YAML config files
