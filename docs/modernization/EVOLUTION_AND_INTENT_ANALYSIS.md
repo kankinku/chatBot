@@ -4,6 +4,8 @@
 분석 기준: `kankinku/chatBot` main `e05aca37b091bc79afa949e6d85b597d9eb89ad0` 및 원격 `codex/r1-reproducibility` 브랜치
 목적: 버전 폴더를 통합하기 전에 각 시도의 의미와 살아남아야 할 설계 의도를 복원한다.
 
+> 상태 메모: 이 문서는 통합 전 `e05aca3` 시점의 역사 분석이다. 문서에서 “현재 저장소/active tree”라고 부르는 snapshot 중 retired source는 canonicalization 이후 active tree에서 제거되었으며, 원본은 archive ref와 `docs/history/retired-snapshot-inventory.md`에서 추적한다.
+
 ## 1. 결론
 
 이 저장소는 단순히 "챗봇 v1 → v6"로 기능이 누적된 프로젝트가 아니다.

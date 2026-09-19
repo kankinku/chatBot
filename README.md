@@ -20,7 +20,7 @@ deploy/compose/           multi-service runtime
 docs/                     architecture, evidence, history, modernization
 ```
 
-이제 활성 코드에는 `Chatbot_v6/` 같은 버전 폴더를 사용하지 않습니다. 구 snapshot은 정리 완료 전까지 비교용으로 남아 있으며, 장기 보존본은 Git archive branch/tag에 있습니다.
+활성 RAG 코드는 더 이상 `Chatbot_vN/` snapshot 폴더를 사용하지 않습니다. retired Chatbot/ontology prototype은 active tree에서 제거하고 Git archive branch/tag와 `docs/history/`에서 추적합니다. `ontology_system_v13`만 다음 Knowledge Core 통합을 위한 임시 migration source로 남아 있습니다.
 
 ## Validation
 

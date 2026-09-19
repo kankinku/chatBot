@@ -1,8 +1,0 @@
-Django>=4.2,<5.0
-django-cors-headers>=4.0.0
-django-ninja>=1.0.0
-django-ninja-extra>=0.20.0
-httpx>=0.24.0
-mysqlclient>=2.1.0
-requests>=2.31.0
-python-dotenv>=1.0.0
