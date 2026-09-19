@@ -1,0 +1,97 @@
+# Evidence Provenance Chain
+
+Phase 6는 Knowledge Core의 extraction/validation/domain 결과를 관계 그래프의 근거 계층으로 투영한다.
+
+## 목표
+
+관계 하나만 저장하는 대신 다음 계보를 유지한다.
+
+    Document
+      -> Fragment
+      -> Assertion
+      -> Domain Relation
+
+실제 graph edge 방향은 recomputation impact를 계산하기 쉽게 구성한다.
+
+- Document --produces--> Fragment
+- Fragment --produces--> Assertion
+- DomainRelation --supported_by--> Assertion
+- DomainRelation --contradicted_by--> Assertion
+- Assertion --depends_on--> Entity
+- DomainRelation --depends_on--> Entity
+- Entity --domain_relation/semantic_type--> Entity
+
+## Source provenance
+
+ExtractionPipeline은 모든 문서에 다음 값을 남긴다.
+
+- source_uri: logical source identity
+- source_hash: raw input UTF-8 bytes의 SHA-256
+
+source_uri가 지정되지 않으면 document:<doc_id>를 사용한다.
+
+Fragment/Assertion ID는 runtime UUID를 직접 사용하지 않는다. 원문 hash, fragment 위치/내용, canonical entity identity, relation semantics를 기반으로 결정적으로 계산한다. 따라서 동일한 원문이 재처리되어 runtime fragment/raw-edge UUID가 달라져도 같은 provenance projection을 만들 수 있다.
+
+## Assertion과 Domain Relation의 분리
+
+Assertion은 한 source가 주장한 개별 관계 레코드다. validation 결과와 domain 판정은 assertion 속성에 보존한다.
+
+Domain Relation은 여러 assertion이 공유할 수 있는 semantic relation identity다. 동일 관계를 여러 문서가 지지하면 하나의 Domain Relation node에 여러 supported_by edge와 SourceRef가 합쳐진다.
+
+상충 evidence는 semantic relation을 즉시 승격하지 않고 contradicted_by로 보존한다.
+
+## Invalidation
+
+EvidenceLedger는 source_uri당 현재 projection 하나를 가진다.
+
+source hash 또는 projection이 바뀌면 이전 document node에서 blast-radius를 계산한다.
+
+- 이전 Document / Fragment / Assertion은 invalidation 대상
+- 관련 Domain Relation은 affected/recompute 대상
+- Entity 및 다른 source의 Document/Fragment/Assertion은 건드리지 않음
+
+동일 Domain Relation을 다른 source도 지지하는 경우 한 source를 제거해도 relation은 merged graph에 남는다.
+
+## Persistence
+
+EvidenceLedger는 derived cache로 JSON 저장/복구할 수 있다.
+
+예시 위치:
+
+    knowledge-workspace/evidence-ledger.json
+
+이 파일은 authoritative knowledge가 아니다. canonical source와 pipeline 결과에서 다시 생성할 수 있어야 한다.
+
+## End-to-end API
+
+EvidenceProvenancePipeline은 기존 Knowledge Core를 그대로 조합한다.
+
+    extraction
+      -> validation
+      -> domain update
+      -> evidence projection
+
+기존 ExtractionPipeline, ValidationPipeline, DomainPipeline의 책임을 합치거나 재작성하지 않는다.
+
+## Determinism boundary
+
+provenance identity에는 다음과 같은 runtime/aggregate 상태를 넣지 않는다.
+
+- generated fragment/raw edge/candidate UUID
+- created_at timestamp
+- dynamic relation runtime ID
+- 누적 evidence_count
+- 누적 domain_conf
+- CREATE_NEW / UPDATE_EXISTING 같은 저장소 현재 상태
+
+이 값들은 semantic evidence identity가 아니므로 동일 원문 재처리의 결정성을 깨뜨린다.
+
+## 다음 단계
+
+Phase 7에서는 이 evidence substrate 위에서 다음을 연결할 수 있다.
+
+1. 실제 ingestion storage와 EvidenceLedger persistence
+2. source 변경에 따른 selective re-extraction/re-validation
+3. supporting/contradicting evidence score aggregation
+4. as-of snapshot / replay
+5. scenario / regime projection

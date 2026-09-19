@@ -71,12 +71,22 @@ Graft의 구현에서 다음 원칙만 차용한다.
 
 코드 AST graph 자체를 복제하지 않는다. chatBot에서는 domain knowledge와 evidence provenance에 맞는 schema로 재구성한다.
 
+## 현재 확장 상태
+
+Phase 6에서 다음 기반을 추가했다.
+
+1. extraction 결과의 source_uri/source_hash 보존
+2. Document -> Fragment -> Assertion provenance projection
+3. supported_by / contradicted_by evidence 연결
+4. source-scoped EvidenceLedger와 relation recompute 대상 계산
+5. ledger derived-cache persistence
+
+세부 구조는 docs/architecture/evidence-provenance.md를 참고한다.
+
 ## 다음 단계
 
-이 기반 위에 v12에서 가치가 있었던 기능을 순서대로 다시 올린다.
-
-1. extraction fragment/document -> assertion의 supported_by 연결
-2. evidence score 및 supporting/contradicting evidence
-3. dependency invalidation을 실제 ingestion pipeline에 연결
+1. 실제 ingestion storage와 EvidenceLedger persistence 연결
+2. source 변경에 따른 selective re-extraction/re-validation
+3. evidence score aggregation
 4. as-of snapshot / replay
 5. scenario / regime projection

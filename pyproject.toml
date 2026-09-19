@@ -28,6 +28,7 @@ packages = [
   "chatbot.retrieval",
   "chatbot.knowledge",
   "chatbot.knowledge.domain",
+  "chatbot.knowledge.evidence",
   "chatbot.knowledge.extraction",
   "chatbot.knowledge.llm",
   "chatbot.knowledge.reasoning",
