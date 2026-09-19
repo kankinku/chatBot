@@ -199,18 +199,7 @@ temp_block.txt
 *.bak
 *.backup
 
-# ============================================================================
-# 특정 프로젝트 제외
-# ============================================================================
-
-# test_chatbot의 vectordb (대용량)
-test_chatbot/vectordb/
-
-# 각 버전별 vector_store
-정수처리\ 챗봇_v2/vector_store/
-정수처리\ 챗봇_v3/vector_store/
-정수처리\ 챗봇_v4/vector_store/
-정수처리\ 챗봇_v5.final/vector_store/
+# Historical snapshot sources are preserved in Git archive refs, not active-tree ignores.
 
 # ============================================================================
 # 유지할 파일 (예외)

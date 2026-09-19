@@ -30,6 +30,27 @@ def test_active_chatbot_version_wrapper_is_removed():
     assert not (REPO_ROOT / "Chatbot_v6").exists()
 
 
+def test_retired_snapshot_directories_are_removed_from_active_tree():
+    retired = (
+        "Chatbot_v1",
+        "Chatbot_v2",
+        "Chatbot_v3",
+        "Chatbot_v4",
+        "Chatbot_v5.final",
+        "onTology_system_v9",
+        "ontology_system_v11",
+        "ontology_system_v12",
+        "test_chatbot",
+    )
+    assert [name for name in retired if (REPO_ROOT / name).exists()] == []
+
+
+def test_v13_remains_only_as_explicit_knowledge_core_migration_source():
+    assert (REPO_ROOT / "ontology_system_v13").is_dir()
+    lineage = (REPO_ROOT / "docs/history/version-lineage.md").read_text(encoding="utf-8")
+    assert "임시 migration source" in lineage
+
+
 def test_moon_release_commands_are_exact_workflow_commands():
     config = json.loads((REPO_ROOT / "moon.config.json").read_text(encoding="utf-8"))
     workflow = (REPO_ROOT / ".github/workflows/validate.yml").read_text(encoding="utf-8")
