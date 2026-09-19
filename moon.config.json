@@ -4,15 +4,15 @@
     "profileOrder": ["fast", "normal", "release"],
     "profiles": {
       "fast": [
-        "cd Chatbot_v6 && python3 -m compileall -q Server/backend tests/unit modules config scripts"
+        "python3 tools/validate.py compile"
       ],
       "normal": [
-        "cd Chatbot_v6 && python3 -m compileall -q Server/backend tests/unit modules config scripts",
-        "cd Chatbot_v6 && python3 -m pytest tests/unit -q -o addopts= -p no:cacheprovider"
+        "python3 tools/validate.py compile",
+        "python3 tools/validate.py test"
       ],
       "release": [
-        "cd Chatbot_v6 && python3 -m compileall -q Server/backend tests/unit modules config scripts",
-        "cd Chatbot_v6 && python3 -m pytest tests/unit -q -o addopts= -p no:cacheprovider"
+        "python3 tools/validate.py compile",
+        "python3 tools/validate.py test"
       ]
     },
     "riskProfiles": {
@@ -25,13 +25,25 @@
     "highPathPatterns": [
       "^\\.github/workflows/",
       "^moon\\.config\\.json$",
+      "^tools/validate\\.py$",
       "^Chatbot_v6/Server/backend/.*/(auth|security|settings|urls|models|migrations?)(/|\\.|$)",
-      "^Chatbot_v6/docker-compose\\.ya?ml$"
+      "^services/gateway/.*/(auth|security|settings|urls|models|migrations?)(/|\\.|$)",
+      "^(Chatbot_v6/)?docker-compose\\.ya?ml$",
+      "^deploy/compose/docker-compose\\.ya?ml$"
     ],
     "mediumPathPatterns": [
       "^Chatbot_v6/modules/",
+      "^Chatbot_v6/api/",
       "^Chatbot_v6/tests/",
       "^Chatbot_v6/requirements",
+      "^src/chatbot/",
+      "^services/inference/",
+      "^apps/web/",
+      "^config/",
+      "^tests/",
+      "^requirements",
+      "^pyproject\\.toml$",
+      "^package\\.json$",
       "^docs/"
     ]
   },
