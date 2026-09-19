@@ -11,8 +11,11 @@ apps/web/                 React UI
 services/gateway/         Django public gateway
 services/inference/       FastAPI internal inference API
 src/chatbot/              framework-independent RAG core
+src/chatbot/knowledge/    graph knowledge extraction/validation/reasoning core
 config/                   runtime/model/pipeline configuration
+config/ontology/          knowledge schema and backend configuration
 data/                     small tracked fixtures and domain data
+data/ontology/            knowledge domain seeds and samples
 tests/                    unit/integration/contracts
 scripts/                  corpus/evaluation/interactive tools
 deploy/docker/            container images
@@ -20,7 +23,7 @@ deploy/compose/           multi-service runtime
 docs/                     architecture, evidence, history, modernization
 ```
 
-활성 RAG 코드는 더 이상 `Chatbot_vN/` snapshot 폴더를 사용하지 않습니다. retired Chatbot/ontology prototype은 active tree에서 제거하고 Git archive branch/tag와 `docs/history/`에서 추적합니다. `ontology_system_v13`만 다음 Knowledge Core 통합을 위한 임시 migration source로 남아 있습니다.
+활성 코드는 더 이상 `Chatbot_vN/` 또는 `ontology_system_vN/` snapshot 폴더를 사용하지 않습니다. retired source는 Git archive branch/tag와 `docs/history/`에서 추적하며, v13 Knowledge Core도 `src/chatbot/knowledge/`로 통합했습니다.
 
 ## Validation
 
@@ -39,6 +42,7 @@ python3 -m pytest tests/unit -q -o addopts= -p no:cacheprovider
 python3 scripts/build_corpus.py --help
 python3 scripts/evaluate_qa_unified.py --help
 python3 scripts/test_chatbot_interactive.py --help
+python3 scripts/knowledge_core_demo.py --help
 ```
 
 ## Local services

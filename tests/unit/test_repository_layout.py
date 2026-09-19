@@ -45,10 +45,35 @@ def test_retired_snapshot_directories_are_removed_from_active_tree():
     assert [name for name in retired if (REPO_ROOT / name).exists()] == []
 
 
-def test_v13_remains_only_as_explicit_knowledge_core_migration_source():
-    assert (REPO_ROOT / "ontology_system_v13").is_dir()
+def test_no_versioned_source_directories_remain():
+    offenders = []
+    for path in REPO_ROOT.iterdir():
+        if not path.is_dir():
+            continue
+        if (
+            path.name.startswith("Chatbot_v")
+            or path.name.startswith("ontology_system_v")
+            or path.name.startswith("onTology_system_v")
+            or path.name == "test_chatbot"
+        ):
+            offenders.append(path.name)
+    assert offenders == []
+
+
+def test_knowledge_core_uses_canonical_locations():
+    expected = (
+        "src/chatbot/knowledge",
+        "config/ontology",
+        "data/ontology/domain",
+        "data/ontology/samples",
+        "scripts/knowledge_core_demo.py",
+        "docs/architecture/knowledge-core.md",
+    )
+    for relative in expected:
+        assert (REPO_ROOT / relative).exists(), relative
+
     lineage = (REPO_ROOT / "docs/history/version-lineage.md").read_text(encoding="utf-8")
-    assert "임시 migration source" in lineage
+    assert "canonical migration 완료" in lineage
 
 
 def test_moon_release_commands_are_exact_workflow_commands():

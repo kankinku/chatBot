@@ -25,7 +25,15 @@ packages = [
   "chatbot.preprocessing",
   "chatbot.quality",
   "chatbot.reranking",
-  "chatbot.retrieval"
+  "chatbot.retrieval",
+  "chatbot.knowledge",
+  "chatbot.knowledge.domain",
+  "chatbot.knowledge.extraction",
+  "chatbot.knowledge.llm",
+  "chatbot.knowledge.reasoning",
+  "chatbot.knowledge.shared",
+  "chatbot.knowledge.storage",
+  "chatbot.knowledge.validation"
 ]
 
 [tool.setuptools.package-dir]
@@ -33,4 +41,4 @@ config = "config"
 chatbot = "src/chatbot"
 
 [tool.setuptools.package-data]
-config = ["default.yaml"]
+config = ["default.yaml", "ontology/*.yaml"]
