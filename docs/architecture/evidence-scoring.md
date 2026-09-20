@@ -101,9 +101,12 @@ v12 EvidenceAccumulator의 EMA/변동성 개념은 그대로 복구하지 않는
 
 향후 time-series feature evidence가 들어오면 as-of/replay 계층 위에서 temporal aggregation을 별도 추가한다.
 
+## 현재 확장 상태
+
+Phase 9에서 raw-file byte inventory와 extracted-text cache를 추가했다. 변경되지 않은 PDF/TXT/MD는 text extraction 이전에 skip하며, 세부 구조는 docs/architecture/raw-file-inventory.md를 참고한다.
+
 ## 다음 단계
 
-1. PDF/file byte inventory에서 text extraction 이전 skip
-2. embedding/vector index selective refresh
-3. as-of snapshot / replay
-4. scenario/regime projection
+1. embedding/vector index selective refresh
+2. as-of snapshot / replay
+3. scenario / regime projection

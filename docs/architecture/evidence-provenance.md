@@ -111,9 +111,12 @@ Phase 8에서 supporting/contradicting evidence score aggregation을 고도화�
 
 세부 정책은 docs/architecture/evidence-scoring.md를 참고한다.
 
+## 현재 확장 상태
+
+Phase 9에서 원시 PDF/TXT/MD byte hash inventory와 extracted-text cache를 연결했다. 변경되지 않은 source는 text extraction 자체를 건너뛴다. 세부 구조는 docs/architecture/raw-file-inventory.md를 참고한다.
+
 ## 다음 단계
 
-1. 원시 PDF/file byte hash 단계에서 text extraction 자체 skip
-2. embedding/vector index selective refresh
-3. as-of snapshot / replay
-4. scenario / regime projection
+1. embedding/vector index selective refresh
+2. as-of snapshot / replay
+3. scenario / regime projection

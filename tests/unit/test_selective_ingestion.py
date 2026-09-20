@@ -476,3 +476,30 @@ def test_processor_stamp_includes_top_level_knowledge_modules(tmp_path: Path):
     assert first != second
     assert len(first) == 64
     assert len(second) == 64
+
+
+def test_prune_scope_preserves_sources_owned_by_other_ingestion_modes(
+    tmp_path: Path,
+):
+    manager, _, store, _, _ = _manager(tmp_path)
+    managed = _doc(
+        "file:managed.txt",
+        "deployment increased error rate",
+    )
+    unrelated = _doc(
+        "connector:external-source",
+        "deployment also increased error rate",
+    )
+
+    manager.sync([managed, unrelated])
+    manager.sync(
+        [managed],
+        prune_missing=True,
+        prune_scope={"file:managed.txt"},
+    )
+
+    state = store.load()
+    assert set(state.records) == {
+        "file:managed.txt",
+        "connector:external-source",
+    }
