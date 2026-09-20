@@ -401,7 +401,7 @@ class EvidenceProjector:
         if canonical_id:
             node_id = f"entity:{canonical_id}"
             stable_key = canonical_id
-            label = canonical_id
+            label = canonical_name or canonical_id
         else:
             stable_key = (
                 canonical_name
@@ -418,6 +418,7 @@ class EvidenceProjector:
 
         props = {
             "canonical_id": canonical_id,
+            "canonical_name": canonical_name,
             "canonical_type": canonical_type,
             "stable_key": stable_key,
         }

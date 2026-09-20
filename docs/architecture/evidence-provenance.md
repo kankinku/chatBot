@@ -86,12 +86,23 @@ provenance identity에는 다음과 같은 runtime/aggregate 상태를 넣지 �
 
 이 값들은 semantic evidence identity가 아니므로 동일 원문 재처리의 결정성을 깨뜨린다.
 
+## 현재 확장 상태
+
+Phase 7에서 selective ingestion이 연결됐다.
+
+- source hash + processor stamp 기반 skip/reprocess
+- non-mutating domain evaluation
+- source-scoped evidence replacement
+- affected Domain Relation deterministic reconciliation
+- ingestion-state derived persistence
+- transaction rollback/compensation
+
+세부 구조는 docs/architecture/selective-ingestion.md를 참고한다.
+
 ## 다음 단계
 
-Phase 7에서는 이 evidence substrate 위에서 다음을 연결할 수 있다.
-
-1. 실제 ingestion storage와 EvidenceLedger persistence
-2. source 변경에 따른 selective re-extraction/re-validation
-3. supporting/contradicting evidence score aggregation
+1. 원시 PDF/file byte hash 단계에서 text extraction 자체 skip
+2. embedding/vector index selective refresh
+3. supporting/contradicting evidence score aggregation 정책 고도화
 4. as-of snapshot / replay
 5. scenario / regime projection

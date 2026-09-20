@@ -60,6 +60,13 @@ def test_knowledge_workspace_help_is_available_offline():
     assert "usage:" in (result.stdout or "")
 
 
+def test_knowledge_ingest_help_is_available_offline():
+    result = _run_help("knowledge_ingest.py")
+
+    assert result.returncode == 0, result.stderr
+    assert "usage:" in (result.stdout or "")
+
+
 def test_local_scripts_package_is_resolved_before_installed_package():
     env = os.environ.copy()
     env.pop("PYTHONPATH", None)

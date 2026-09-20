@@ -30,6 +30,7 @@ packages = [
   "chatbot.knowledge.domain",
   "chatbot.knowledge.evidence",
   "chatbot.knowledge.extraction",
+  "chatbot.knowledge.ingestion",
   "chatbot.knowledge.llm",
   "chatbot.knowledge.reasoning",
   "chatbot.knowledge.shared",

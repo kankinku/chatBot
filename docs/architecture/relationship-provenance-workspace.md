@@ -83,10 +83,16 @@ Phase 6에서 다음 기반을 추가했다.
 
 세부 구조는 docs/architecture/evidence-provenance.md를 참고한다.
 
+## Phase 7 확장
+
+Selective ingestion 계층이 추가되어 source hash와 processor stamp를 기준으로 변경 source만 extraction/validation/evidence replacement하고 affected relation만 재계산한다.
+
+세부 구조는 docs/architecture/selective-ingestion.md를 참고한다.
+
 ## 다음 단계
 
-1. 실제 ingestion storage와 EvidenceLedger persistence 연결
-2. source 변경에 따른 selective re-extraction/re-validation
-3. evidence score aggregation
+1. raw file inventory 단계 selective extraction
+2. vector/embedding index selective refresh
+3. evidence score aggregation 고도화
 4. as-of snapshot / replay
 5. scenario / regime projection

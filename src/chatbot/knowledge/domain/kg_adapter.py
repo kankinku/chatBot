@@ -114,16 +114,44 @@ class DomainKGAdapter:
         scoped_type = f"{self.RELATION_NS}:{relation.relation_type}"
 
         if tx:
-            self._tx_manager.create_entity(
-                tx, relation.head_id, [self.ENTITY_LABEL], head_props
-            )
-            self._tx_manager.create_entity(
-                tx, relation.tail_id, [self.ENTITY_LABEL], tail_props
-            )
-            self._tx_manager.create_relation(
-                tx, relation.head_id, scoped_type,
-                relation.tail_id, rel_props
-            )
+            if self._repo.get_entity(relation.head_id):
+                self._tx_manager.update_entity(
+                    tx, relation.head_id, [self.ENTITY_LABEL], head_props
+                )
+            else:
+                self._tx_manager.create_entity(
+                    tx, relation.head_id, [self.ENTITY_LABEL], head_props
+                )
+
+            if self._repo.get_entity(relation.tail_id):
+                self._tx_manager.update_entity(
+                    tx, relation.tail_id, [self.ENTITY_LABEL], tail_props
+                )
+            else:
+                self._tx_manager.create_entity(
+                    tx, relation.tail_id, [self.ENTITY_LABEL], tail_props
+                )
+
+            if self._repo.get_relation(
+                relation.head_id,
+                scoped_type,
+                relation.tail_id,
+            ):
+                self._tx_manager.update_relation(
+                    tx,
+                    relation.head_id,
+                    scoped_type,
+                    relation.tail_id,
+                    rel_props,
+                )
+            else:
+                self._tx_manager.create_relation(
+                    tx,
+                    relation.head_id,
+                    scoped_type,
+                    relation.tail_id,
+                    rel_props,
+                )
         else:
             self._repo.upsert_entity(relation.head_id, [self.ENTITY_LABEL], head_props)
             self._repo.upsert_entity(relation.tail_id, [self.ENTITY_LABEL], tail_props)
