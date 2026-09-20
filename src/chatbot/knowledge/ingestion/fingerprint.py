@@ -49,9 +49,6 @@ def processor_stamp(project_root: str | Path | None = None) -> str:
             if path.is_file()
         )
 
-    shared_models = knowledge_root / "shared/models.py"
-    paths.add(shared_models)
-
     ontology_root = root / "config/ontology"
     if not ontology_root.is_dir():
         raise FileNotFoundError(
