@@ -99,10 +99,21 @@ Phase 7에서 selective ingestion이 연결됐다.
 
 세부 구조는 docs/architecture/selective-ingestion.md를 참고한다.
 
+## 현재 확장 상태
+
+Phase 8에서 supporting/contradicting evidence score aggregation을 고도화했다.
+
+- source별 최대 assertion quality 사용
+- independent source diversity 반영
+- strong conflict penalty
+- deterministic current-ledger recomputation
+- persisted scoring trace/version
+
+세부 정책은 docs/architecture/evidence-scoring.md를 참고한다.
+
 ## 다음 단계
 
 1. 원시 PDF/file byte hash 단계에서 text extraction 자체 skip
 2. embedding/vector index selective refresh
-3. supporting/contradicting evidence score aggregation 정책 고도화
-4. as-of snapshot / replay
-5. scenario / regime projection
+3. as-of snapshot / replay
+4. scenario / regime projection

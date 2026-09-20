@@ -251,6 +251,11 @@ def test_domain_adapter_round_trip_preserves_temporal_and_drift_metadata():
         domain_conf=0.7,
         evidence_count=3,
         conflict_count=1,
+        support_score=0.81,
+        conflict_score=0.22,
+        support_source_count=3,
+        conflict_source_count=1,
+        evidence_score_version="evidence-score-v1",
         created_at=created_at,
         last_update=last_update,
         origin="evidence_reconciled",
@@ -267,3 +272,8 @@ def test_domain_adapter_round_trip_preserves_temporal_and_drift_metadata():
     assert restored.last_update == last_update
     assert restored.decay_applied is True
     assert restored.drift_flag is True
+    assert restored.support_score == 0.81
+    assert restored.conflict_score == 0.22
+    assert restored.support_source_count == 3
+    assert restored.conflict_source_count == 1
+    assert restored.evidence_score_version == "evidence-score-v1"

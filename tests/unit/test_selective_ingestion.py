@@ -202,6 +202,12 @@ def test_selective_ingestion_skips_unchanged_and_recomputes_without_double_count
     assert relation is not None
     assert relation.origin == "evidence_reconciled"
     assert relation.evidence_count == 2
+    assert relation.support_source_count == 2
+    assert relation.conflict_source_count == 0
+    assert relation.support_score > 0.0
+    assert relation.conflict_score == 0.0
+    assert relation.evidence_score_version == "evidence-score-v1"
+    assert relation.domain_conf > 0.5
     first_conf = relation.domain_conf
 
     second = manager.sync([one, two])
