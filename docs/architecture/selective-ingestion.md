@@ -45,7 +45,7 @@ Selective ingestion은 먼저 source별 EvidenceLedger를 교체한 뒤 현재 �
 
 skip 조건은 source hash만 보지 않는다.
 
-다음 범주의 Python 코드와 config/ontology YAML 전체를 hash하여 processor stamp를 만든다.
+Knowledge Core 최상위 Python 모듈(settings/bootstrap 등), 다음 하위 패키지 전체, config/ontology YAML 전체를 hash하여 processor stamp를 만든다.
 
 - shared
 - extraction
@@ -78,7 +78,9 @@ relation recomputation은 KG transaction 하나에서 적용한다.
 
 기존 KG adapter도 transaction 중 기존 entity/relation을 CREATE로 기록하던 문제를 수정해 실제 existing record는 UPDATE로 기록한다. TransactionManager는 before_state를 deep copy하여 in-memory mutation 이후에도 rollback snapshot을 보존한다.
 
-state persistence가 relation commit 이후 실패하면 이전 EvidenceLedger를 deterministic하게 replay해 compensating reconciliation을 시도한다.
+InMemoryGraphRepository는 relation/entity 삭제 시 adjacency index도 함께 정리하고, Domain relation의 created_at/last_update/decay/drift metadata는 storage round-trip에서 보존한다.
+
+state persistence가 relation commit 이후 실패하면 이전 EvidenceLedger를 deterministic하게 replay해 compensating reconciliation을 시도한다. 보상 복구까지 실패하면 이중 실패로 명시적으로 보고한다.
 
 ## Derived state
 

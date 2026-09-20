@@ -431,3 +431,42 @@ def test_external_relation_is_not_overwritten_or_deleted(tmp_path: Path):
     )
     assert relation is not None
     assert relation.origin == "manual"
+
+
+def test_processor_stamp_includes_top_level_knowledge_modules(tmp_path: Path):
+    from chatbot.knowledge.ingestion.fingerprint import (
+        PROCESSOR_PACKAGES,
+        processor_stamp,
+    )
+
+    knowledge_root = tmp_path / "src/chatbot/knowledge"
+    knowledge_root.mkdir(parents=True)
+    (knowledge_root / "settings.py").write_text(
+        "VALUE = 1\n",
+        encoding="utf-8",
+    )
+    for package in PROCESSOR_PACKAGES:
+        package_root = knowledge_root / package
+        package_root.mkdir(parents=True)
+        (package_root / "module.py").write_text(
+            f"PACKAGE = {package!r}\n",
+            encoding="utf-8",
+        )
+
+    ontology = tmp_path / "config/ontology"
+    ontology.mkdir(parents=True)
+    (ontology / "policy.yaml").write_text(
+        "policy: one\n",
+        encoding="utf-8",
+    )
+
+    first = processor_stamp(tmp_path)
+    (knowledge_root / "settings.py").write_text(
+        "VALUE = 2\n",
+        encoding="utf-8",
+    )
+    second = processor_stamp(tmp_path)
+
+    assert first != second
+    assert len(first) == 64
+    assert len(second) == 64

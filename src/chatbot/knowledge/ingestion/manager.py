@@ -187,7 +187,7 @@ class SelectiveIngestionManager:
                 affected_specs,
             )
             self.state_store.save(state)
-        except Exception:
+        except Exception as primary_error:
             # Relation reconciliation is transactional. If persistence fails
             # after a successful relation commit, replay the previous state
             # through the same deterministic reconciler as compensation.
@@ -196,8 +196,11 @@ class SelectiveIngestionManager:
                     backup.ledger,
                     affected_specs,
                 )
-            except Exception:
-                pass
+            except Exception as compensation_error:
+                raise RuntimeError(
+                    "selective ingestion failed and compensating "
+                    f"reconciliation also failed: {primary_error}"
+                ) from compensation_error
             raise
 
         return report

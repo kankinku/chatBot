@@ -211,3 +211,59 @@ def test_evidence_pipeline_can_use_non_mutating_domain_evaluation():
 
     assert domain.evaluated is True
     assert result.projection == "projection"
+
+
+def test_inmemory_relation_delete_cleans_neighbor_indexes():
+    repository = InMemoryGraphRepository()
+    repository.upsert_entity("a", ["Entity"], {"name": "A"})
+    repository.upsert_entity("b", ["Entity"], {"name": "B"})
+    repository.upsert_relation("a", "domain:Cause", "b", {"value": 1})
+
+    assert repository.get_neighbors("a", direction="out")
+    assert repository.get_neighbors("b", direction="in")
+
+    assert repository.delete_relation("a", "domain:Cause", "b") is True
+
+    assert repository.get_neighbors("a", direction="out") == []
+    assert repository.get_neighbors("b", direction="in") == []
+
+
+def test_domain_adapter_round_trip_preserves_temporal_and_drift_metadata():
+    from datetime import datetime
+
+    repository = InMemoryGraphRepository()
+    adapter = DomainKGAdapter(
+        repository=repository,
+        tx_manager=KGTransactionManager(repository),
+        read_only=False,
+    )
+    created_at = datetime(2026, 1, 2, 3, 4, 5)
+    last_update = datetime(2026, 2, 3, 4, 5, 6)
+
+    relation = DynamicRelation(
+        relation_id="EVD_roundtrip",
+        head_id="head",
+        head_name="Head",
+        tail_id="tail",
+        tail_name="Tail",
+        relation_type="Cause",
+        sign="+",
+        domain_conf=0.7,
+        evidence_count=3,
+        conflict_count=1,
+        created_at=created_at,
+        last_update=last_update,
+        origin="evidence_reconciled",
+        semantic_tags=["sem_confident"],
+        decay_applied=True,
+        drift_flag=True,
+    )
+    adapter.upsert_relation(relation)
+
+    restored = adapter.get_relation("head", "tail", "Cause")
+
+    assert restored is not None
+    assert restored.created_at == created_at
+    assert restored.last_update == last_update
+    assert restored.decay_applied is True
+    assert restored.drift_flag is True

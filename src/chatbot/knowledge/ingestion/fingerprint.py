@@ -32,7 +32,11 @@ def processor_stamp(project_root: str | Path | None = None) -> str:
     )
     knowledge_root = root / "src/chatbot/knowledge"
 
-    paths: set[Path] = set()
+    paths: set[Path] = {
+        path
+        for path in knowledge_root.glob("*.py")
+        if path.is_file()
+    }
     for package in PROCESSOR_PACKAGES:
         package_root = knowledge_root / package
         if not package_root.is_dir():

@@ -108,6 +108,7 @@ class DomainKGAdapter:
             "created_at": relation.created_at.isoformat(),
             "last_update": relation.last_update.isoformat(),
             "drift_flag": relation.drift_flag,
+            "decay_applied": relation.decay_applied,
             "semantic_tags": ",".join(relation.semantic_tags),
         }
 
@@ -260,6 +261,19 @@ class DomainKGAdapter:
         if isinstance(semantic_tags, str):
             semantic_tags = semantic_tags.split(",") if semantic_tags else []
 
+        created_at = props.get("created_at")
+        if isinstance(created_at, str):
+            try:
+                created_at = datetime.fromisoformat(created_at)
+            except ValueError:
+                created_at = None
+        last_update = props.get("last_update")
+        if isinstance(last_update, str):
+            try:
+                last_update = datetime.fromisoformat(last_update)
+            except ValueError:
+                last_update = None
+
         return DynamicRelation(
             relation_id=props.get("relation_id", ""),
             head_id=head_id,
@@ -272,8 +286,11 @@ class DomainKGAdapter:
             evidence_count=int(props.get("evidence_count", 1)),
             conflict_count=int(props.get("conflict_count", 0)),
             origin=props.get("origin", "unknown"),
+            created_at=created_at or datetime.now(),
+            last_update=last_update or datetime.now(),
             drift_flag=bool(props.get("drift_flag", False)),
             semantic_tags=semantic_tags,
+            decay_applied=bool(props.get("decay_applied", False)),
         )
 
     def with_transaction(self):
