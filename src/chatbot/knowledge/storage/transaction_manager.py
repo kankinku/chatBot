@@ -8,6 +8,7 @@ KG Transaction Manager
 - 롤백 지원
 - 동시성 제어 (lock)
 """
+import copy
 import logging
 import threading
 import uuid
@@ -218,7 +219,7 @@ class KGTransactionManager:
         self._check_tx_active(tx)
         
         # 이전 상태 저장
-        before = self._repo.get_entity(entity_id)
+        before = copy.deepcopy(self._repo.get_entity(entity_id))
         
         # 실행
         self._repo.upsert_entity(entity_id, labels, props)
@@ -287,7 +288,9 @@ class KGTransactionManager:
         self._check_tx_active(tx)
         
         # 이전 상태
-        before = self._repo.get_relation(src_id, rel_type, dst_id)
+        before = copy.deepcopy(
+            self._repo.get_relation(src_id, rel_type, dst_id)
+        )
         
         # 실행
         self._repo.upsert_relation(src_id, rel_type, dst_id, props)

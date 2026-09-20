@@ -13,6 +13,7 @@ services/inference/       FastAPI internal inference API
 src/chatbot/              framework-independent RAG core
 src/chatbot/knowledge/    graph knowledge extraction/validation/reasoning core
 src/chatbot/knowledge/evidence/ extraction-to-relation evidence provenance chain
+src/chatbot/knowledge/ingestion/ source-hash selective ingestion and relation reconciliation
 src/chatbot/knowledge/workspace/ derived relationship/provenance graph tooling
 config/                   runtime/model/pipeline configuration
 config/ontology/          knowledge schema and backend configuration
@@ -46,6 +47,7 @@ python3 scripts/evaluate_qa_unified.py --help
 python3 scripts/test_chatbot_interactive.py --help
 python3 scripts/knowledge_core_demo.py --help
 python3 scripts/knowledge_workspace.py --help
+python3 scripts/knowledge_ingest.py --help
 ```
 
 ## Local services

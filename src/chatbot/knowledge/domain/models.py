@@ -78,6 +78,7 @@ class DynamicRelation(BaseModel):
     origin: str = Field(default="student")
     semantic_tags: List[str] = Field(default_factory=list)
     decay_applied: bool = Field(default=False)
+    drift_flag: bool = Field(default=False)
 
 
 class DynamicUpdateResult(BaseModel):

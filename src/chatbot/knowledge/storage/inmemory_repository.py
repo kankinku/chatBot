@@ -83,17 +83,42 @@ class InMemoryGraphRepository(GraphRepository):
         ]
 
     def delete_entity(self, entity_id: str) -> bool:
-        if entity_id in self._entities:
-            del self._entities[entity_id]
-            return True
-        return False
+        if entity_id not in self._entities:
+            return False
+
+        incident = [
+            (src_id, rel_type, dst_id)
+            for (src_id, rel_type, dst_id) in list(self._relations)
+            if src_id == entity_id or dst_id == entity_id
+        ]
+        for src_id, rel_type, dst_id in incident:
+            self.delete_relation(src_id, rel_type, dst_id)
+
+        del self._entities[entity_id]
+        self._edges_out.pop(entity_id, None)
+        self._edges_in.pop(entity_id, None)
+        return True
 
     def delete_relation(self, src_id: str, rel_type: str, dst_id: str) -> bool:
         key = (src_id, rel_type, dst_id)
-        if key in self._relations:
-            del self._relations[key]
-            return True
-        return False
+        if key not in self._relations:
+            return False
+
+        del self._relations[key]
+
+        out_edge = (rel_type, dst_id)
+        if out_edge in self._edges_out.get(src_id, []):
+            self._edges_out[src_id].remove(out_edge)
+        if not self._edges_out.get(src_id):
+            self._edges_out.pop(src_id, None)
+
+        in_edge = (rel_type, src_id)
+        if in_edge in self._edges_in.get(dst_id, []):
+            self._edges_in[dst_id].remove(in_edge)
+        if not self._edges_in.get(dst_id):
+            self._edges_in.pop(dst_id, None)
+
+        return True
 
     def clear(self) -> None:
         self._entities.clear()

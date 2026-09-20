@@ -21,6 +21,7 @@ class EvidenceProvenancePipeline:
         validation_pipeline: ValidationPipeline | None = None,
         domain_pipeline: DomainPipeline | None = None,
         projector: EvidenceProjector | None = None,
+        apply_domain_updates: bool = True,
     ):
         self.extraction = extraction_pipeline or ExtractionPipeline(
             use_llm=use_llm
@@ -30,6 +31,7 @@ class EvidenceProvenancePipeline:
         )
         self.domain = domain_pipeline or DomainPipeline()
         self.projector = projector or EvidenceProjector()
+        self.apply_domain_updates = apply_domain_updates
 
     def process(
         self,
@@ -56,11 +58,18 @@ class EvidenceProvenancePipeline:
             result.edge_id: result
             for result in validation_results
         }
-        domain_results = self.domain.process_batch(
-            extraction.raw_edges,
-            validation_by_edge,
-            extraction.resolved_entities,
-        )
+        if self.apply_domain_updates:
+            domain_results = self.domain.process_batch(
+                extraction.raw_edges,
+                validation_by_edge,
+                extraction.resolved_entities,
+            )
+        else:
+            domain_results = self.domain.evaluate_batch(
+                extraction.raw_edges,
+                validation_by_edge,
+                extraction.resolved_entities,
+            )
         projection = self.projector.project(
             extraction,
             validation_results=validation_results,
