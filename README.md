@@ -13,7 +13,7 @@ services/inference/       FastAPI internal inference API
 src/chatbot/              framework-independent RAG core
 src/chatbot/knowledge/    graph knowledge extraction/validation/reasoning core
 src/chatbot/knowledge/evidence/ extraction-to-relation provenance + evidence scoring
-src/chatbot/knowledge/ingestion/ source-hash selective ingestion and relation reconciliation
+src/chatbot/knowledge/ingestion/ raw-file inventory + source-hash selective ingestion
 src/chatbot/knowledge/workspace/ derived relationship/provenance graph tooling
 config/                   runtime/model/pipeline configuration
 config/ontology/          knowledge schema and backend configuration
@@ -49,6 +49,15 @@ python3 scripts/knowledge_core_demo.py --help
 python3 scripts/knowledge_workspace.py --help
 python3 scripts/knowledge_ingest.py --help
 ```
+
+Knowledge ingestion은 기존 JSONL 입력과 raw file directory 입력을 모두 지원합니다.
+
+```bash
+python3 scripts/knowledge_ingest.py --input documents.jsonl
+python3 scripts/knowledge_ingest.py --source-dir ./data/pdfs
+```
+
+raw file 모드는 SHA-256 byte inventory를 먼저 확인하므로 변경되지 않은 PDF/TXT/MD의 text extraction 자체를 건너뜁니다.
 
 ## Local services
 

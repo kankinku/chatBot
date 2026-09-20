@@ -13,6 +13,8 @@ sys.path.insert(0, str(src_root))
 sys.path.insert(0, str(project_root))
 
 from chatbot.knowledge.ingestion import (
+    FileInventoryStateStore,
+    SelectiveFileIngestionManager,
     IngestionStateStore,
     SelectiveIngestionManager,
     SourceDocument,
@@ -41,21 +43,50 @@ def _load_documents(path: Path) -> list[SourceDocument]:
     return documents
 
 
+def _resolve_project_path(value: str) -> Path:
+    path = Path(value).expanduser()
+    if path.is_absolute():
+        return path
+    return project_root / path
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description=(
-            "Selectively ingest changed text sources into the Knowledge Core."
+            "Selectively ingest changed text or local source files "
+            "into the Knowledge Core."
         )
     )
-    parser.add_argument(
+    source_group = parser.add_mutually_exclusive_group(required=True)
+    source_group.add_argument(
         "--input",
-        required=True,
         help="JSONL with doc_id, source_uri and text fields.",
+    )
+    source_group.add_argument(
+        "--source-dir",
+        help=(
+            "Directory containing PDF/TXT/MD sources. Raw bytes are "
+            "hashed before text extraction."
+        ),
+    )
+    parser.add_argument(
+        "--pattern",
+        action="append",
+        default=None,
+        help=(
+            "Glob pattern used with --source-dir. Repeat for multiple "
+            "patterns. Defaults to **/*.pdf, **/*.txt, **/*.md."
+        ),
     )
     parser.add_argument(
         "--state",
         default="knowledge-workspace/ingestion-state.json",
-        help="Derived ingestion state path.",
+        help="Derived Knowledge Core ingestion state path.",
+    )
+    parser.add_argument(
+        "--file-inventory-state",
+        default="knowledge-workspace/file-inventory.json",
+        help="Derived raw-file inventory state path.",
     )
     parser.add_argument(
         "--no-prune",
@@ -69,30 +100,50 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    input_path = Path(args.input).expanduser().resolve()
-    state_path = Path(args.state).expanduser()
-    if not state_path.is_absolute():
-        state_path = project_root / state_path
-
-    documents = _load_documents(input_path)
-    manager = SelectiveIngestionManager(
+    state_path = _resolve_project_path(args.state)
+    ingestion_manager = SelectiveIngestionManager(
         project_root=project_root,
         state_store=IngestionStateStore(state_path),
         use_llm=args.use_llm,
     )
-    report = manager.sync(
-        documents,
-        prune_missing=not args.no_prune,
-    )
+
+    if args.input:
+        input_path = Path(args.input).expanduser().resolve()
+        documents = _load_documents(input_path)
+        report = ingestion_manager.sync(
+            documents,
+            prune_missing=not args.no_prune,
+        )
+        payload = report.to_dict()
+        failed = report.failed
+    else:
+        source_root = Path(args.source_dir).expanduser().resolve()
+        inventory_path = _resolve_project_path(args.file_inventory_state)
+        file_manager = SelectiveFileIngestionManager(
+            project_root=project_root,
+            ingestion_manager=ingestion_manager,
+            inventory_store=FileInventoryStateStore(inventory_path),
+        )
+        kwargs = {}
+        if args.pattern:
+            kwargs["patterns"] = tuple(args.pattern)
+        report = file_manager.sync(
+            source_root,
+            prune_missing=not args.no_prune,
+            **kwargs,
+        )
+        payload = report.to_dict()
+        failed = report.failed
+
     print(
         json.dumps(
-            report.to_dict(),
+            payload,
             ensure_ascii=False,
             indent=2,
             sort_keys=True,
         )
     )
-    return 1 if report.failed else 0
+    return 1 if failed else 0
 
 
 if __name__ == "__main__":

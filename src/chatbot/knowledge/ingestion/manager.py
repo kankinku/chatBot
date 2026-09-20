@@ -57,6 +57,7 @@ class SelectiveIngestionManager:
         documents: Iterable[SourceDocument],
         *,
         prune_missing: bool = True,
+        prune_scope: set[str] | None = None,
     ) -> SelectiveIngestionReport:
         docs = sorted(documents, key=lambda item: item.source_uri)
         by_uri: dict[str, SourceDocument] = {}
@@ -162,7 +163,12 @@ class SelectiveIngestionManager:
 
         if prune_missing:
             incoming = set(by_uri)
-            for source_uri in sorted(set(state.records) - incoming):
+            stored = set(state.records)
+            if prune_scope is None:
+                missing = stored - incoming
+            else:
+                missing = (stored & set(prune_scope)) - incoming
+            for source_uri in sorted(missing):
                 previous = state.ledger.get(source_uri)
                 if previous is not None:
                     affected_specs.update(

@@ -4,7 +4,7 @@ Phase 7은 Knowledge Core 전체 재처리를 피하고 source별 변경만 재�
 
 ## 입력 경계
 
-이 계층은 PDF/OCR 같은 원시 파일 parsing 자체를 담당하지 않는다. upstream에서 텍스트 추출이 끝난 다음 다음 단위로 입력한다.
+핵심 SelectiveIngestionManager는 PDF/OCR 같은 원시 파일 parsing을 직접 담당하지 않고, 텍스트 추출이 끝난 다음 단위로 입력한다. Phase 9의 SelectiveFileIngestionManager가 그 앞단에 raw-file byte inventory와 extracted-text cache를 추가한다.
 
 - doc_id
 - source_uri
@@ -126,9 +126,10 @@ relation transaction 실패 시 새 ingestion state를 저장하지 않는다. s
 
 Phase 8에서 source-diversity-aware evidence score aggregation을 추가했다. 동일 source의 반복 assertion은 score를 중복 증가시키지 않고, validation 품질·독립 source 수·상충 evidence를 반영해 domain_conf를 현재 ledger에서 결정적으로 재계산한다. 세부 정책은 docs/architecture/evidence-scoring.md를 참고한다.
 
+Phase 9에서 raw-file byte inventory를 추가해 변경되지 않은 PDF/TXT/MD의 text extraction 자체도 skip한다. source-root scoped pruning과 extracted-text cache의 무결성 검증도 함께 적용한다. 세부 구조는 docs/architecture/raw-file-inventory.md를 참고한다.
+
 다음 후보:
 
-1. PDF/file inventory에서 source byte hash를 먼저 비교하여 text extraction 자체도 skip
-2. embedding/vector index selective refresh
-3. as-of snapshot/replay
-4. scenario/regime projection
+1. embedding/vector index selective refresh
+2. as-of snapshot/replay
+3. scenario/regime projection
