@@ -146,6 +146,11 @@ class RelationReconcileResult:
     evidence_count: int = 0
     conflict_count: int = 0
     domain_conf: float | None = None
+    support_score: float = 0.0
+    conflict_score: float = 0.0
+    support_source_count: int = 0
+    conflict_source_count: int = 0
+    evidence_score_version: str = "legacy"
 
 
 @dataclass
@@ -208,6 +213,11 @@ class SelectiveIngestionReport:
                     "evidence_count": result.evidence_count,
                     "conflict_count": result.conflict_count,
                     "domain_conf": result.domain_conf,
+                    "support_score": result.support_score,
+                    "conflict_score": result.conflict_score,
+                    "support_source_count": result.support_source_count,
+                    "conflict_source_count": result.conflict_source_count,
+                    "evidence_score_version": result.evidence_score_version,
                 }
                 for result in self.relation_results
             ],

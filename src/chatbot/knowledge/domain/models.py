@@ -71,6 +71,11 @@ class DynamicRelation(BaseModel):
     domain_conf: float = Field(default=0.5)
     evidence_count: int = Field(default=1)
     conflict_count: int = Field(default=0)
+    support_score: float = Field(default=0.0, ge=0.0, le=1.0)
+    conflict_score: float = Field(default=0.0, ge=0.0, le=1.0)
+    support_source_count: int = Field(default=0, ge=0)
+    conflict_source_count: int = Field(default=0, ge=0)
+    evidence_score_version: str = Field(default="legacy")
 
     created_at: datetime = Field(default_factory=datetime.now)
     last_update: datetime = Field(default_factory=datetime.now)

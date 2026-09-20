@@ -8,6 +8,12 @@ from .models import (
 )
 from .pipeline import EvidenceProvenancePipeline
 from .projector import EvidenceProjector
+from .scoring import (
+    SCORE_VERSION,
+    EvidenceScoreAggregator,
+    EvidenceScorePolicy,
+    EvidenceScoreSummary,
+)
 
 __all__ = [
     "EvidenceLedger",
@@ -15,5 +21,9 @@ __all__ = [
     "EvidenceProjection",
     "EvidenceProjector",
     "EvidenceProvenancePipeline",
+    "EvidenceScoreAggregator",
+    "EvidenceScorePolicy",
+    "EvidenceScoreSummary",
     "InvalidationPlan",
+    "SCORE_VERSION",
 ]

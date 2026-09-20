@@ -124,10 +124,11 @@ relation transaction 실패 시 새 ingestion state를 저장하지 않는다. s
 
 ## 다음 단계
 
-Phase 8 후보:
+Phase 8에서 source-diversity-aware evidence score aggregation을 추가했다. 동일 source의 반복 assertion은 score를 중복 증가시키지 않고, validation 품질·독립 source 수·상충 evidence를 반영해 domain_conf를 현재 ledger에서 결정적으로 재계산한다. 세부 정책은 docs/architecture/evidence-scoring.md를 참고한다.
+
+다음 후보:
 
 1. PDF/file inventory에서 source byte hash를 먼저 비교하여 text extraction 자체도 skip
 2. embedding/vector index selective refresh
-3. evidence score aggregation 정책
-4. as-of snapshot/replay
-5. scenario/regime projection
+3. as-of snapshot/replay
+4. scenario/regime projection

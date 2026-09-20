@@ -2,14 +2,17 @@
 
 from __future__ import annotations
 
-import math
 from collections import Counter
 from datetime import datetime
 
 from chatbot.knowledge.bootstrap import get_domain_kg_adapter
 from chatbot.knowledge.domain.kg_adapter import DomainKGAdapter
 from chatbot.knowledge.domain.models import DynamicRelation
-from chatbot.knowledge.evidence import EvidenceLedger
+from chatbot.knowledge.evidence import (
+    EvidenceLedger,
+    EvidenceScoreAggregator,
+    EvidenceScorePolicy,
+)
 from chatbot.knowledge.workspace.hashing import hash_value
 from chatbot.knowledge.workspace.models import (
     MetaRelation,
@@ -52,14 +55,25 @@ class EvidenceRelationReconciler:
         self,
         adapter: DomainKGAdapter | None = None,
         *,
+        scorer: EvidenceScoreAggregator | None = None,
         initial_conf: float = 0.5,
-        support_rate: float = 0.05,
-        conflict_rate: float = 0.08,
+        support_gain: float = 0.4,
+        conflict_penalty: float = 0.45,
+        support_rate: float | None = None,
+        conflict_rate: float | None = None,
     ):
         self.adapter = adapter or get_domain_kg_adapter()
-        self.initial_conf = initial_conf
-        self.support_rate = support_rate
-        self.conflict_rate = conflict_rate
+        if support_rate is not None:
+            support_gain = support_rate
+        if conflict_rate is not None:
+            conflict_penalty = conflict_rate
+        self.scorer = scorer or EvidenceScoreAggregator(
+            EvidenceScorePolicy(
+                baseline=initial_conf,
+                support_gain=support_gain,
+                conflict_penalty=conflict_penalty,
+            )
+        )
 
     def reconcile(
         self,
@@ -103,6 +117,11 @@ class EvidenceRelationReconciler:
                 elif edge.relation == MetaRelation.CONTRADICTED_BY:
                     conflict_assertions.append(assertion)
 
+            score = self.scorer.score(
+                support_assertions,
+                conflict_assertions,
+            )
+
             existing = self.adapter.get_relation(
                 spec.head_id,
                 spec.tail_id,
@@ -118,6 +137,12 @@ class EvidenceRelationReconciler:
                             action="deleted",
                             evidence_count=0,
                             conflict_count=len(conflict_assertions),
+                            domain_conf=None,
+                            support_score=score.support_score,
+                            conflict_score=score.conflict_score,
+                            support_source_count=score.support_source_count,
+                            conflict_source_count=score.conflict_source_count,
+                            evidence_score_version=score.version,
                         )
                     )
                 else:
@@ -131,6 +156,16 @@ class EvidenceRelationReconciler:
                             ),
                             evidence_count=0,
                             conflict_count=len(conflict_assertions),
+                            domain_conf=(
+                                existing.domain_conf
+                                if existing is not None
+                                else None
+                            ),
+                            support_score=score.support_score,
+                            conflict_score=score.conflict_score,
+                            support_source_count=score.support_source_count,
+                            conflict_source_count=score.conflict_source_count,
+                            evidence_score_version=score.version,
                         )
                     )
                 continue
@@ -143,16 +178,18 @@ class EvidenceRelationReconciler:
                         evidence_count=len(support_assertions),
                         conflict_count=len(conflict_assertions),
                         domain_conf=existing.domain_conf,
+                        support_score=score.support_score,
+                        conflict_score=score.conflict_score,
+                        support_source_count=score.support_source_count,
+                        conflict_source_count=score.conflict_source_count,
+                        evidence_score_version=score.version,
                     )
                 )
                 continue
 
             support_count = len(support_assertions)
             conflict_count = len(conflict_assertions)
-            confidence = self._confidence(
-                support_count,
-                conflict_count,
-            )
+            confidence = score.score
             sign = self._majority_sign(support_assertions)
             semantic_tags = sorted(
                 {
@@ -187,6 +224,11 @@ class EvidenceRelationReconciler:
                 domain_conf=confidence,
                 evidence_count=support_count,
                 conflict_count=conflict_count,
+                support_score=score.support_score,
+                conflict_score=score.conflict_score,
+                support_source_count=score.support_source_count,
+                conflict_source_count=score.conflict_source_count,
+                evidence_score_version=score.version,
                 created_at=(
                     existing.created_at
                     if existing is not None
@@ -209,6 +251,11 @@ class EvidenceRelationReconciler:
                     evidence_count=support_count,
                     conflict_count=conflict_count,
                     domain_conf=confidence,
+                    support_score=score.support_score,
+                    conflict_score=score.conflict_score,
+                    support_source_count=score.support_source_count,
+                    conflict_source_count=score.conflict_source_count,
+                    evidence_score_version=score.version,
                 )
             )
 
@@ -229,20 +276,6 @@ class EvidenceRelationReconciler:
                         )
 
         return results
-
-    def _confidence(
-        self,
-        support_count: int,
-        conflict_count: int,
-    ) -> float:
-        confidence = self.initial_conf
-        for count in range(2, support_count + 1):
-            confidence = min(
-                0.95,
-                confidence + self.support_rate / math.sqrt(count),
-            )
-        confidence -= self.conflict_rate * conflict_count
-        return max(0.1, min(0.95, confidence))
 
     @staticmethod
     def _majority_sign(assertions) -> str:
