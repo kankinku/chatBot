@@ -115,8 +115,9 @@ Phase 8에서 supporting/contradicting evidence score aggregation을 고도화�
 
 Phase 9에서 원시 PDF/TXT/MD byte hash inventory와 extracted-text cache를 연결했다. 변경되지 않은 source는 text extraction 자체를 건너뛴다. 세부 구조는 docs/architecture/raw-file-inventory.md를 참고한다.
 
+Phase 10에서 deterministic chunk ID, content hash, embedder stamp를 기반으로 embedding/vector index selective refresh를 추가했다. 변경되지 않은 chunk는 embedding을 다시 계산하지 않고, metadata/order 변경만 있을 때는 vector를 재사용한다. 세부 구조는 docs/architecture/selective-vector-refresh.md를 참고한다.
+
 ## 다음 단계
 
-1. embedding/vector index selective refresh
-2. as-of snapshot / replay
-3. scenario / regime projection
+1. as-of snapshot / replay
+2. scenario / regime projection

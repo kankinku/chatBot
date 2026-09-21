@@ -89,10 +89,11 @@ Selective ingestion 계층이 추가되어 source hash와 processor stamp를 기
 
 세부 구조는 docs/architecture/selective-ingestion.md를 참고한다.
 
+## 현재 확장 상태
+
+Phase 8에서 source-diversity-aware evidence score aggregation을 추가했고, Phase 9에서 raw-file inventory selective extraction을 추가했다. Phase 10에서는 deterministic chunk ID와 derived manifest를 이용한 vector/embedding index selective refresh까지 연결했다.
+
 ## 다음 단계
 
-1. raw file inventory 단계 selective extraction
-2. vector/embedding index selective refresh
-3. evidence score aggregation 고도화
-4. as-of snapshot / replay
-5. scenario / regime projection
+1. as-of snapshot / replay
+2. scenario / regime projection

@@ -14,6 +14,7 @@ src/chatbot/              framework-independent RAG core
 src/chatbot/knowledge/    graph knowledge extraction/validation/reasoning core
 src/chatbot/knowledge/evidence/ extraction-to-relation provenance + evidence scoring
 src/chatbot/knowledge/ingestion/ raw-file inventory + source-hash selective ingestion
+src/chatbot/retrieval/         hybrid retrieval + selective derived vector refresh
 src/chatbot/knowledge/workspace/ derived relationship/provenance graph tooling
 config/                   runtime/model/pipeline configuration
 config/ontology/          knowledge schema and backend configuration
@@ -57,7 +58,7 @@ python3 scripts/knowledge_ingest.py --input documents.jsonl
 python3 scripts/knowledge_ingest.py --source-dir ./data/pdfs
 ```
 
-raw file 모드는 SHA-256 byte inventory를 먼저 확인하므로 변경되지 않은 PDF/TXT/MD의 text extraction 자체를 건너뜁니다.
+raw file 모드는 SHA-256 byte inventory를 먼저 확인하므로 변경되지 않은 PDF/TXT/MD의 text extraction 자체를 건너뜁니다. Retrieval vector index도 deterministic chunk ID와 derived manifest를 사용해 새로 생기거나 내용이 바뀐 chunk만 embedding하고, 순서/metadata 변경은 재embedding 없이 갱신합니다.
 
 ## Local services
 
