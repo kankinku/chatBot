@@ -157,6 +157,8 @@ class RelationReconcileResult:
 class SelectiveIngestionReport:
     source_results: list[SourceSyncResult] = field(default_factory=list)
     relation_results: list[RelationReconcileResult] = field(default_factory=list)
+    snapshot_id: str | None = None
+    snapshot_recorded: bool = False
 
     @property
     def processed(self) -> int:
@@ -197,6 +199,8 @@ class SelectiveIngestionReport:
             "skipped": self.skipped,
             "removed": self.removed,
             "failed": self.failed,
+            "snapshot_id": self.snapshot_id,
+            "snapshot_recorded": self.snapshot_recorded,
             "sources": [
                 {
                     "source_uri": result.source_uri,

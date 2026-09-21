@@ -19,6 +19,7 @@ from chatbot.knowledge.ingestion import (
     SelectiveIngestionManager,
     SourceDocument,
 )
+from chatbot.knowledge.replay import KnowledgeReplayStore
 
 
 def _load_documents(path: Path) -> list[SourceDocument]:
@@ -89,6 +90,11 @@ def main() -> int:
         help="Derived raw-file inventory state path.",
     )
     parser.add_argument(
+        "--replay-dir",
+        default="knowledge-workspace/replay",
+        help="Immutable Knowledge Core replay history directory.",
+    )
+    parser.add_argument(
         "--no-prune",
         action="store_true",
         help="Do not remove stored sources absent from this input batch.",
@@ -101,9 +107,11 @@ def main() -> int:
     args = parser.parse_args()
 
     state_path = _resolve_project_path(args.state)
+    replay_dir = _resolve_project_path(args.replay_dir)
     ingestion_manager = SelectiveIngestionManager(
         project_root=project_root,
         state_store=IngestionStateStore(state_path),
+        replay_store=KnowledgeReplayStore(replay_dir),
         use_llm=args.use_llm,
     )
 

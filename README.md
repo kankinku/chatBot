@@ -49,6 +49,7 @@ python3 scripts/test_chatbot_interactive.py --help
 python3 scripts/knowledge_core_demo.py --help
 python3 scripts/knowledge_workspace.py --help
 python3 scripts/knowledge_ingest.py --help
+python3 scripts/knowledge_replay.py --help
 ```
 
 Knowledge ingestion은 기존 JSONL 입력과 raw file directory 입력을 모두 지원합니다.
@@ -58,7 +59,7 @@ python3 scripts/knowledge_ingest.py --input documents.jsonl
 python3 scripts/knowledge_ingest.py --source-dir ./data/pdfs
 ```
 
-raw file 모드는 SHA-256 byte inventory를 먼저 확인하므로 변경되지 않은 PDF/TXT/MD의 text extraction 자체를 건너뜁니다. Retrieval vector index도 deterministic chunk ID와 derived manifest를 사용해 새로 생기거나 내용이 바뀐 chunk만 embedding하고, 순서/metadata 변경은 재embedding 없이 갱신합니다.
+raw file 모드는 SHA-256 byte inventory를 먼저 확인하므로 변경되지 않은 PDF/TXT/MD의 text extraction 자체를 건너뜁니다. Retrieval vector index도 deterministic chunk ID와 derived manifest를 사용해 새로 생기거나 내용이 바뀐 chunk만 embedding하고, 순서/metadata 변경은 재embedding 없이 갱신합니다. 성공적으로 커밋된 Knowledge Core 상태는 immutable replay chain에도 기록되므로 `knowledge_replay.py as-of`로 특정 commit time 기준의 evidence/provenance 상태를 다시 열 수 있습니다.
 
 ## Local services
 
