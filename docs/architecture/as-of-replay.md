@@ -203,9 +203,10 @@ python3 scripts/knowledge_replay.py bootstrap \
   --state knowledge-workspace/ingestion-state.json
 ```
 
-bootstrap은 replay history가 비어 있을 때만 허용된다. 현재 상태 이전의 과거를
-추정하거나 생성하지 않는다. 따라서 첫 snapshot보다 이른 `as_of`는
-"history unavailable"로 처리된다.
+bootstrap은 replay history가 비어 있을 때만 허용되며, 지정한 current-state
+파일이 실제로 존재해야 한다. 누락된 경로를 빈 state로 간주해 baseline을
+생성하지 않는다. 현재 상태 이전의 과거를 추정하거나 생성하지 않으므로 첫
+snapshot보다 이른 `as_of`는 "history unavailable"로 처리된다.
 
 ## Derived 관계와 vector
 

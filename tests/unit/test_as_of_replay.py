@@ -414,3 +414,47 @@ def test_valid_orphan_blob_is_reused_after_index_write_interruption(
     assert recovered.snapshot_id == snapshot_id
     assert recovered.committed_at == at
     assert len(store.list()) == 1
+
+
+def test_snapshot_origin_position_is_enforced(tmp_path: Path):
+    store = KnowledgeReplayStore(tmp_path / "replay")
+    at = datetime(2026, 9, 21, 10, 0, tzinfo=UTC)
+
+    with pytest.raises(ValueError, match="first replay snapshot must use origin=bootstrap"):
+        _record(store, _state(text="alpha"), at, origin="ingestion_commit")
+
+    first = _record(store, _state(text="alpha"), at, origin="bootstrap")
+    assert first.origin == "bootstrap"
+
+    with pytest.raises(
+        ValueError,
+        match="non-first replay snapshots must use origin=ingestion_commit",
+    ):
+        _record(
+            store,
+            _state(text="beta"),
+            at + timedelta(hours=1),
+            origin="bootstrap",
+        )
+
+
+def test_corrupt_snapshot_origin_position_is_rejected(tmp_path: Path):
+    store = KnowledgeReplayStore(tmp_path / "replay")
+    at = datetime(2026, 9, 21, 10, 0, tzinfo=UTC)
+    _record(store, _state(text="alpha"), at, origin="bootstrap")
+    _record(store, _state(text="beta"), at + timedelta(hours=1))
+
+    index = json.loads(store.index_path.read_text(encoding="utf-8"))
+    index["snapshots"][1]["origin"] = "bootstrap"
+    store.index_path.write_text(json.dumps(index), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="invalid replay snapshot origin position"):
+        store.verify()
+
+
+def test_explicit_bootstrap_requires_existing_state_file(tmp_path: Path):
+    from scripts.knowledge_replay import _load_bootstrap_state
+
+    missing = tmp_path / "missing-ingestion-state.json"
+    with pytest.raises(FileNotFoundError, match="bootstrap state file not found"):
+        _load_bootstrap_state(str(missing))

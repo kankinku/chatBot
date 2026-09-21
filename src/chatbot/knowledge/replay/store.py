@@ -41,6 +41,13 @@ class KnowledgeReplayStore:
         digest = state_digest(state_copy)
         entries = self._load_verified_entries()
         latest = self._load_snapshot(entries[-1]) if entries else None
+        expected_origin = "bootstrap" if latest is None else "ingestion_commit"
+        if origin != expected_origin:
+            raise ValueError(
+                "first replay snapshot must use origin=bootstrap"
+                if latest is None
+                else "non-first replay snapshots must use origin=ingestion_commit"
+            )
 
         if latest is not None and latest.state_digest == digest:
             return latest
@@ -168,6 +175,9 @@ class KnowledgeReplayStore:
             expected_parent = previous.snapshot_id if previous is not None else None
             if entry.parent_snapshot_id != expected_parent:
                 raise ValueError("broken replay snapshot parent chain")
+            expected_origin = "bootstrap" if previous is None else "ingestion_commit"
+            if entry.origin != expected_origin:
+                raise ValueError("invalid replay snapshot origin position")
             if previous is not None and entry.committed_at < previous.committed_at:
                 raise ValueError("replay committed_at order regressed")
 
@@ -197,7 +207,11 @@ class KnowledgeReplayStore:
         entry: SnapshotIndexEntry,
     ) -> None:
         if not entries:
-            if entry.sequence != 1 or entry.parent_snapshot_id is not None:
+            if (
+                entry.sequence != 1
+                or entry.parent_snapshot_id is not None
+                or entry.origin != "bootstrap"
+            ):
                 raise ValueError("invalid first replay snapshot")
             return
 
@@ -206,6 +220,8 @@ class KnowledgeReplayStore:
             raise ValueError("invalid replay snapshot sequence")
         if entry.parent_snapshot_id != latest.snapshot_id:
             raise ValueError("invalid replay snapshot parent")
+        if entry.origin != "ingestion_commit":
+            raise ValueError("invalid non-first replay snapshot origin")
         if entry.committed_at < latest.committed_at:
             raise ValueError("snapshot committed_at order regressed")
 

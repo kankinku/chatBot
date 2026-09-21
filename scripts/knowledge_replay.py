@@ -26,6 +26,13 @@ def _resolve(value: str) -> Path:
     return path if path.is_absolute() else project_root / path
 
 
+def _load_bootstrap_state(value: str):
+    path = _resolve(value)
+    if not path.is_file():
+        raise FileNotFoundError(f"bootstrap state file not found: {path}")
+    return IngestionStateStore(path).load()
+
+
 def _snapshot_payload(snapshot) -> dict:
     return {
         "snapshot_id": snapshot.snapshot_id,
@@ -88,7 +95,7 @@ def main() -> int:
     else:
         if store.latest() is not None:
             raise ValueError("bootstrap requires an empty replay history")
-        state = IngestionStateStore(_resolve(args.state)).load()
+        state = _load_bootstrap_state(args.state)
         snapshot = store.record(
             state,
             committed_at=datetime.now(timezone.utc),
