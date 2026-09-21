@@ -128,8 +128,9 @@ Phase 8에서 source-diversity-aware evidence score aggregation을 추가했다.
 
 Phase 9에서 raw-file byte inventory를 추가해 변경되지 않은 PDF/TXT/MD의 text extraction 자체도 skip한다. source-root scoped pruning과 extracted-text cache의 무결성 검증도 함께 적용한다. 세부 구조는 docs/architecture/raw-file-inventory.md를 참고한다.
 
+Phase 10에서 deterministic chunk ID, content hash, embedder stamp를 기반으로 retrieval vector index selective refresh를 추가했다. source text가 바뀐 chunk만 embedding하고, list reorder나 metadata 변경은 vector를 재사용한다. 세부 구조는 docs/architecture/selective-vector-refresh.md를 참고한다.
+
 다음 후보:
 
-1. embedding/vector index selective refresh
-2. as-of snapshot/replay
-3. scenario/regime projection
+1. as-of snapshot/replay
+2. scenario/regime projection

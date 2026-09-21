@@ -105,8 +105,9 @@ v12 EvidenceAccumulator의 EMA/변동성 개념은 그대로 복구하지 않는
 
 Phase 9에서 raw-file byte inventory와 extracted-text cache를 추가했다. 변경되지 않은 PDF/TXT/MD는 text extraction 이전에 skip하며, 세부 구조는 docs/architecture/raw-file-inventory.md를 참고한다.
 
+Phase 10에서 retrieval vector index를 derived manifest와 deterministic chunk ID로 관리해 changed/new chunk만 재embedding한다. 세부 구조는 docs/architecture/selective-vector-refresh.md를 참고한다.
+
 ## 다음 단계
 
-1. embedding/vector index selective refresh
-2. as-of snapshot / replay
-3. scenario / regime projection
+1. as-of snapshot / replay
+2. scenario / regime projection

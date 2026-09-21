@@ -149,8 +149,11 @@ scan된 path는 resolve 후 source root 내부인지 확인한다.
 
 source root 밖을 가리키는 symlink는 거부한다. 동일 실제 파일이 여러 경로로 resolve되는 alias도 거부해 source identity 중복을 방지한다.
 
+## 현재 확장 상태
+
+Phase 10에서 raw-file/text selective refresh 이후의 retrieval vector index도 selective refresh로 연결했다. deterministic chunk ID와 content hash를 사용하므로 원본 파일 일부 변경이 전체 corpus re-embedding으로 이어지지 않는다. 세부 구조는 docs/architecture/selective-vector-refresh.md를 참고한다.
+
 ## 다음 단계
 
-1. embedding/vector index selective refresh
-2. as-of snapshot / replay
-3. scenario / regime projection
+1. as-of snapshot / replay
+2. scenario / regime projection
