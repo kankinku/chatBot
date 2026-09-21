@@ -15,6 +15,7 @@ from chatbot.embedding.base_embedder import BaseEmbedder
 
 
 VECTOR_INDEX_SCHEMA_VERSION = 1
+VECTOR_INDEX_BATCH_SIZE = 100
 
 
 def _sha256_json(value: Any) -> str:
@@ -191,12 +192,16 @@ class SelectiveVectorIndexSynchronizer:
         embedder: BaseEmbedder,
         manifest_store: VectorIndexManifestStore,
         reset_collection: Callable[[], Any] | None = None,
+        batch_size: int = VECTOR_INDEX_BATCH_SIZE,
     ):
+        if batch_size <= 0:
+            raise ValueError("vector index batch_size must be positive")
         self.collection = collection
         self.collection_name = collection_name
         self.embedder = embedder
         self.manifest_store = manifest_store
         self.reset_collection = reset_collection
+        self.batch_size = batch_size
 
     def sync(self, chunks: Iterable[Chunk]) -> VectorIndexSyncReport:
         chunk_list = list(chunks)
@@ -284,14 +289,17 @@ class SelectiveVectorIndexSynchronizer:
             else:
                 unchanged += 1
 
-        embeddings: list[list[float]] = []
-        if embed_ids:
-            texts = [current[chunk_id][0].text for chunk_id in embed_ids]
+        # Persist the manifest only after every collection mutation succeeds.
+        # A partial mutation therefore remains recoverable on the next run:
+        # the previous manifest will cause the affected operations to replay.
+        for start in range(0, len(embed_ids), self.batch_size):
+            batch_ids = embed_ids[start:start + self.batch_size]
+            texts = [current[chunk_id][0].text for chunk_id in batch_ids]
             embedded = self.embedder.embed_texts(texts)
             embedded_array = np.asarray(embedded)
             if embedded_array.ndim != 2:
                 raise ValueError("embedder must return a 2D embedding array")
-            if embedded_array.shape[0] != len(embed_ids):
+            if embedded_array.shape[0] != len(batch_ids):
                 raise ValueError("embedding count does not match changed chunks")
             if embedded_array.shape[1] != int(self.embedder.dim):
                 raise ValueError("embedding dimension mismatch")
@@ -299,16 +307,11 @@ class SelectiveVectorIndexSynchronizer:
                 [float(value) for value in row]
                 for row in embedded_array
             ]
-
-        # Persist the manifest only after every collection mutation succeeds.
-        # A partial mutation therefore remains recoverable on the next run:
-        # the previous manifest will cause the affected operations to replay.
-        if embed_ids:
             self.collection.upsert(
-                ids=embed_ids,
+                ids=batch_ids,
                 embeddings=embeddings,
-                documents=[current[chunk_id][0].text for chunk_id in embed_ids],
-                metadatas=[current[chunk_id][1] for chunk_id in embed_ids],
+                documents=[current[chunk_id][0].text for chunk_id in batch_ids],
+                metadatas=[current[chunk_id][1] for chunk_id in batch_ids],
             )
 
         if metadata_ids:

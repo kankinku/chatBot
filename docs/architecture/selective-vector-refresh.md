@@ -92,17 +92,19 @@ list reorder는 `chunk_index` metadata만 바뀌므로 embedding 호출 없이 m
 
 ## failure semantics
 
-embedding은 collection mutation 전에 계산한다.
+각 embedding batch는 해당 collection mutation 직전에 계산한다.
 
 mutation 순서는 다음과 같다.
 
-1. changed/new chunk upsert
+1. changed/new chunk를 bounded batch로 embedding + upsert
 2. metadata-only update
 3. stale vector removal
 4. manifest atomic save
 
 manifest는 모든 collection mutation이 성공한 뒤에만 저장한다. 중간 단계에서
 실패하면 이전 manifest가 남고 다음 실행에서 필요한 작업을 다시 계산한다.
+embedding/upsert는 기본 100개 단위로 제한해 초기 구축이나 model refresh에서도
+전체 corpus embedding을 한 번에 메모리에 올리지 않는다.
 
 Chroma와 JSON manifest를 하나의 트랜잭션으로 묶을 수는 없으므로 완전한
 원자성 대신 **replay 가능한 derived-state reconciliation**을 사용한다.

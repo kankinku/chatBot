@@ -56,12 +56,15 @@ class _FakeCollection:
         self.update_calls: list[list[str]] = []
         self.delete_calls: list[list[str]] = []
         self.fail_after_partial_upsert = False
+        self.fail_on_upsert_call: int | None = None
 
     def get(self):
         return {"ids": sorted(self.records)}
 
     def upsert(self, *, ids, embeddings, documents, metadatas):
         self.upsert_calls.append(list(ids))
+        if self.fail_on_upsert_call == len(self.upsert_calls):
+            raise RuntimeError("synthetic batched upsert failure")
         for index, chunk_id in enumerate(ids):
             self.records[chunk_id] = {
                 "embedding": embeddings[index],
@@ -107,6 +110,7 @@ def _syncer(
     embedder: _FakeEmbedder,
     *,
     reset_collection=None,
+    batch_size: int = 100,
 ):
     return SelectiveVectorIndexSynchronizer(
         collection=collection,
@@ -116,6 +120,7 @@ def _syncer(
             tmp_path / "chunks.manifest.json"
         ),
         reset_collection=reset_collection,
+        batch_size=batch_size,
     )
 
 
@@ -304,6 +309,65 @@ def test_partial_mutation_failure_does_not_advance_manifest(tmp_path: Path):
     assert collection.records[chunk_vector_id(changed)]["document"] == (
         "alpha changed"
     )
+
+
+def test_embedding_upserts_are_bounded_batches(tmp_path: Path):
+    collection = _FakeCollection()
+    embedder = _FakeEmbedder()
+    syncer = _syncer(tmp_path, collection, embedder, batch_size=2)
+    chunks = [
+        _chunk(f"doc-{index}", f"text-{index}")
+        for index in range(5)
+    ]
+
+    report = syncer.sync(chunks)
+
+    assert report.embedded == 5
+    assert [len(call) for call in embedder.calls] == [2, 2, 1]
+    assert [len(call) for call in collection.upsert_calls] == [2, 2, 1]
+
+
+def test_later_batch_failure_replays_without_advancing_manifest(
+    tmp_path: Path,
+):
+    collection = _FakeCollection()
+    original_embedder = _FakeEmbedder("fake-v1")
+    chunks = [
+        _chunk(f"doc-{index}", f"text-{index}")
+        for index in range(5)
+    ]
+    _syncer(
+        tmp_path,
+        collection,
+        original_embedder,
+        batch_size=2,
+    ).sync(chunks)
+
+    manifest_path = tmp_path / "chunks.manifest.json"
+    before = manifest_path.read_text(encoding="utf-8")
+    collection.upsert_calls.clear()
+    collection.fail_on_upsert_call = 2
+    changed_embedder = _FakeEmbedder("fake-v2")
+    syncer = _syncer(
+        tmp_path,
+        collection,
+        changed_embedder,
+        batch_size=2,
+    )
+
+    with pytest.raises(RuntimeError, match="batched upsert"):
+        syncer.sync(chunks)
+
+    assert manifest_path.read_text(encoding="utf-8") == before
+    assert [len(call) for call in collection.upsert_calls] == [2, 2]
+
+    collection.fail_on_upsert_call = None
+    collection.upsert_calls.clear()
+    report = syncer.sync(chunks)
+
+    assert report.rebuilt is True
+    assert report.embedded == 5
+    assert [len(call) for call in collection.upsert_calls] == [2, 2, 1]
 
 
 def test_duplicate_deterministic_chunk_identity_is_rejected(tmp_path: Path):
