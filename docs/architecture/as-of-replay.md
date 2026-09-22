@@ -235,6 +235,10 @@ state가 특정 Chroma 버전이나 embedding model에 묶이지 않는다.
 - parent chain 없는 snapshot 집합
 - naive datetime과 replay time 혼용
 
-## 다음 단계
+## 현재 확장 상태
 
-1. scenario / regime projection
+Phase 12에서 replay snapshot 또는 current state를 base로 사용하는 deterministic scenario/regime projection을 추가했다. Projection은 evidence score를 수정하지 않고 별도의 applicability/projected weight를 계산하며 live graph, replay history, Chroma를 변경하지 않는다. 세부 구조는 docs/architecture/scenario-regime-projection.md를 참고한다.
+
+## 로드맵 상태
+
+계획된 modernization 핵심 architecture phase는 Phase 12까지 완료 대상이다. 이후 작업은 optional hardening으로 관리한다.

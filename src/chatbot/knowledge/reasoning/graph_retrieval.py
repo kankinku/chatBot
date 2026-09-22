@@ -5,6 +5,7 @@ from collections import deque
 
 from chatbot.knowledge.reasoning.models import ParsedQuery, RetrievedPath, RetrievalResult
 from chatbot.knowledge.domain.dynamic_update import DynamicDomainUpdate
+from chatbot.knowledge.projection.relation_provider import RelationProvider
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +15,7 @@ class GraphRetrieval:
 
     def __init__(
         self,
-        domain: Optional[DynamicDomainUpdate] = None,
+        domain: Optional[DynamicDomainUpdate | RelationProvider] = None,
         max_path_length: int = 4,
         max_paths: int = 10,
     ):
