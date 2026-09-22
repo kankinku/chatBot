@@ -270,6 +270,62 @@ def test_regime_and_scenario_modify_projected_weight_not_evidence_score():
     assert after.regime_multiplier == 0.5
 
 
+def test_projection_records_applied_assumption_regime_and_hypothesis_provenance():
+    selector = RelationSelector(
+        head_id="A",
+        tail_id="B",
+        relation_type="Affect",
+    )
+    scale = RelationScaleAssumption(selector, 0.5)
+    rule = RegimeRule(selector, 0.75)
+    injected_assumption = InjectRelationAssumption(
+        "B",
+        "D",
+        "Cause",
+        "+",
+        0.4,
+    )
+    projection = ScenarioProjectionEngine().project(
+        _base(),
+        ScenarioSpec(assumptions=(scale, injected_assumption)),
+        RegimeSpec(rules=(rule,)),
+    )
+
+    evidence_relation = _relation(projection, "A", "B")
+    injected = _relation(projection, "B", "D", "Cause")
+
+    assert evidence_relation.applied_assumption_ids == (scale.assumption_id,)
+    assert evidence_relation.applied_regime_rule_ids == (rule.rule_id,)
+    assert injected.applied_assumption_ids == (
+        injected_assumption.assumption_id,
+    )
+    assert injected.applied_regime_rule_ids == ()
+    assert injected.evidence_score is None
+    assert injected.support_assertion_ids == ()
+    assert injected.conflict_assertion_ids == ()
+    assert injected.source_refs == ()
+
+    dependency_keys = {
+        (item.kind, item.relation_id, item.input_id)
+        for item in projection.trace.dependencies
+    }
+    assert (
+        "scenario_multiplier",
+        evidence_relation.relation_id,
+        scale.assumption_id,
+    ) in dependency_keys
+    assert (
+        "regime_applicability",
+        evidence_relation.relation_id,
+        rule.rule_id,
+    ) in dependency_keys
+    assert (
+        "hypothetical_relation_injected",
+        injected.relation_id,
+        injected_assumption.assumption_id,
+    ) in dependency_keys
+
+
 def test_multiplier_product_is_bounded_and_disable_is_explainable():
     selector = RelationSelector(relation_type="Affect")
     scenario = ScenarioSpec(
