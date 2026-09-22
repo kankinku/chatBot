@@ -17,6 +17,7 @@ from chatbot.knowledge.projection import (
     ProjectionBase,
     ProjectionBaseResolver,
     ProjectionBaseState,
+    ProjectionBaseState,
     ProjectionService,
     ProjectionStore,
     RegimeRule,
@@ -691,3 +692,61 @@ def test_projected_relation_provider_does_not_double_count_evidence_bonus():
     assert fused.fused_edges[0].final_weight == pytest.approx(
         expected.projected_weight
     )
+
+
+def test_projection_base_state_rejects_mismatched_digest():
+    state = _state()
+    with pytest.raises(ValueError, match="projection base state digest mismatch"):
+        ProjectionBaseState(
+            metadata=ProjectionBase(
+                state_digest="0" * 64,
+                origin="current_state",
+            ),
+            _state=state,
+        )
+
+
+def test_projection_base_state_freezes_defensive_state_copy():
+    state = _state()
+    base = ProjectionBaseState(
+        metadata=ProjectionBase(
+            state_digest=state_digest(state),
+            origin="current_state",
+        ),
+        _state=state,
+    )
+    state.records.clear()
+
+    assert base.state.records
+    projection = ScenarioProjectionEngine().project(base, ScenarioSpec())
+    assert projection.relations
+
+
+def test_projection_store_detects_evidence_version_trace_tampering(tmp_path: Path):
+    state = _state()
+    replay_store = KnowledgeReplayStore(tmp_path / "replay")
+    snapshot = replay_store.record(
+        state,
+        committed_at=datetime(2026, 9, 22, 1, 0, tzinfo=UTC),
+        origin="bootstrap",
+    )
+    resolver = ProjectionBaseResolver(
+        replay_service=KnowledgeReplayService(replay_store),
+        current_state_store=IngestionStateStore(tmp_path / "state.json"),
+    )
+    projection = ScenarioProjectionEngine().project(
+        resolver.snapshot(snapshot.snapshot_id),
+        ScenarioSpec(),
+    )
+    store = ProjectionStore(tmp_path / "projections")
+    path = store.save(projection)
+
+    value = json.loads(path.read_text(encoding="utf-8"))
+    value["trace"]["evidence_score_versions"] = ["tampered-version"]
+    path.write_text(json.dumps(value), encoding="utf-8")
+
+    with pytest.raises(
+        ValueError,
+        match="projection evidence score versions mismatch",
+    ):
+        store.load(projection.projection_id)

@@ -374,6 +374,15 @@ class ScenarioProjectionEngine:
                 key=lambda item: (item.threshold_id, item.relation_id),
             )
         )
+        evidence_versions = tuple(
+            sorted(
+                {
+                    relation.evidence_score.version
+                    for relation in relations_tuple
+                    if relation.evidence_score is not None
+                }
+            )
+        )
         core = {
             "projection_id": projection_id,
             "engine_version": self.engine_version,
@@ -386,19 +395,11 @@ class ScenarioProjectionEngine:
             "impacts": [item.to_dict() for item in impacts_tuple],
             "node_summaries": [item.to_dict() for item in summaries_tuple],
             "sensitivity": [item.to_dict() for item in sensitivity_tuple],
+            "evidence_score_versions": list(evidence_versions),
             "dependencies": [item.to_dict() for item in dependencies_tuple],
             "warnings": list(warnings_tuple),
         }
         output_digest = hash_value(core)
-        evidence_versions = tuple(
-            sorted(
-                {
-                    relation.evidence_score.version
-                    for relation in relations_tuple
-                    if relation.evidence_score is not None
-                }
-            )
-        )
         trace = ProjectionTrace(
             projection_id=projection_id,
             engine_version=self.engine_version,

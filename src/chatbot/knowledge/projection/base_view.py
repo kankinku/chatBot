@@ -19,6 +19,15 @@ class ProjectionBaseState:
     metadata: ProjectionBase
     _state: IngestionState
 
+    def __post_init__(self) -> None:
+        # Freeze a defensive canonical copy so the state projected by the
+        # engine cannot drift away from the identity recorded in metadata.
+        state_copy = IngestionState.from_dict(self._state.to_dict())
+        actual_digest = state_digest(state_copy)
+        if self.metadata.state_digest != actual_digest:
+            raise ValueError("projection base state digest mismatch")
+        object.__setattr__(self, "_state", state_copy)
+
     @property
     def state(self) -> IngestionState:
         return IngestionState.from_dict(self._state.to_dict())

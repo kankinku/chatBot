@@ -125,6 +125,15 @@ class ProjectionStore:
             or trace.get("regime_spec_id") != payload.get("regime_spec_id")
         ):
             raise ValueError("projection trace metadata mismatch")
+        evidence_score_versions = sorted(
+            {
+                relation.get("evidence_score", {}).get("version")
+                for relation in payload.get("relations", [])
+                if relation.get("evidence_score") is not None
+            }
+        )
+        if trace.get("evidence_score_versions") != evidence_score_versions:
+            raise ValueError("projection evidence score versions mismatch")
         core = {
             "projection_id": payload.get("projection_id"),
             "engine_version": payload.get("engine_version"),
@@ -135,6 +144,7 @@ class ProjectionStore:
             "impacts": payload.get("impacts"),
             "node_summaries": payload.get("node_summaries"),
             "sensitivity": payload.get("sensitivity"),
+            "evidence_score_versions": evidence_score_versions,
             "dependencies": trace.get("dependencies"),
             "warnings": trace.get("warnings"),
         }
