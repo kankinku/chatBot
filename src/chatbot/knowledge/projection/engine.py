@@ -479,6 +479,12 @@ class ScenarioProjectionEngine:
                 raise ValueError(
                     f"shock references unknown entity: {shock.target_entity_id}"
                 )
+            if len(impacts) >= scenario.max_paths:
+                warnings.append(
+                    "shock propagation skipped because max_paths was reached: "
+                    f"{shock.shock_id}"
+                )
+                continue
             emitted_before = len(impacts)
             queue = deque(
                 [

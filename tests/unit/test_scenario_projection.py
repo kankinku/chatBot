@@ -461,6 +461,131 @@ def test_shock_sign_and_path_impact_use_projected_graph_weights():
     )
 
 
+def test_negative_shock_preserves_path_modifier_provenance():
+    ab_selector = RelationSelector(
+        head_id="A",
+        tail_id="B",
+        relation_type="Affect",
+    )
+    bc_selector = RelationSelector(
+        head_id="B",
+        tail_id="C",
+        relation_type="Affect",
+    )
+    scale = RelationScaleAssumption(ab_selector, 0.5)
+    rule = RegimeRule(bc_selector, 0.5)
+    shock = ScenarioShock("A", "-", 0.8)
+
+    projection = ScenarioProjectionEngine().project(
+        _base(),
+        ScenarioSpec(
+            assumptions=(scale,),
+            shocks=(shock,),
+            max_depth=2,
+            max_paths=50,
+        ),
+        RegimeSpec(rules=(rule,)),
+    )
+    ab = _relation(projection, "A", "B")
+    bc = _relation(projection, "B", "C")
+    one_hop = next(
+        item
+        for item in projection.impacts
+        if item.path_entities == ("A", "B")
+    )
+    two_hop = next(
+        item
+        for item in projection.impacts
+        if item.path_entities == ("A", "B", "C")
+    )
+
+    assert one_hop.direction == "-"
+    assert one_hop.impact_value == pytest.approx(
+        0.8 * ab.projected_weight
+    )
+    assert one_hop.applied_assumption_ids == (scale.assumption_id,)
+    assert one_hop.applied_rule_ids == ()
+
+    assert two_hop.direction == "+"
+    assert two_hop.impact_value == pytest.approx(
+        0.8 * ab.projected_weight * bc.projected_weight
+    )
+    assert two_hop.applied_assumption_ids == (scale.assumption_id,)
+    assert two_hop.applied_rule_ids == (rule.rule_id,)
+
+
+def test_global_max_paths_reports_truncated_later_shock():
+    shocks = (
+        ScenarioShock("A", "+", 1.0),
+        ScenarioShock("B", "+", 1.0),
+    )
+    projection = ScenarioProjectionEngine().project(
+        _base(),
+        ScenarioSpec(
+            shocks=shocks,
+            max_depth=3,
+            max_paths=1,
+        ),
+    )
+
+    assert len(projection.impacts) == 1
+    assert any(
+        warning.startswith(
+            "shock propagation skipped because max_paths was reached:"
+        )
+        for warning in projection.trace.warnings
+    )
+    assert not any(
+        warning.startswith("shock produced no propagating path:")
+        and shocks[1].shock_id in warning
+        for warning in projection.trace.warnings
+    )
+
+
+def test_node_summary_tracks_strongest_positive_and_negative_paths():
+    projection = ScenarioProjectionEngine().project(
+        _base(),
+        ScenarioSpec(
+            shocks=(
+                ScenarioShock("A", "+", 1.0),
+                ScenarioShock("B", "+", 1.0),
+            ),
+            max_depth=2,
+            max_paths=100,
+        ),
+    )
+    c_impacts = [
+        item
+        for item in projection.impacts
+        if item.target_entity_id == "C"
+    ]
+    summary = next(
+        item
+        for item in projection.node_summaries
+        if item.entity_id == "C"
+    )
+
+    positive = max(
+        (
+            item.impact_value
+            for item in c_impacts
+            if item.direction == "+"
+        ),
+        default=0.0,
+    )
+    negative = max(
+        (
+            item.impact_value
+            for item in c_impacts
+            if item.direction == "-"
+        ),
+        default=0.0,
+    )
+    assert summary.strongest_positive == positive
+    assert summary.strongest_negative == negative
+    assert summary.net_score == pytest.approx(positive - negative)
+
+
 def test_neutral_edge_does_not_propagate_until_sign_override():
     shock = ScenarioShock("A", "+", 1.0)
     base = _base()
