@@ -61,10 +61,9 @@ class ProjectedRelationProvider:
                 relation_type=relation.relation_type,
                 sign=relation.projected_sign,
                 domain_conf=relation.projected_weight,
-                evidence_count=(
-                    relation.evidence_score.support_assertion_count
-                    if relation.evidence_score is not None
-                    else 0
-                ),
+                # projected_weight already contains the canonical evidence
+                # score. Passing the original evidence count would make the
+                # existing EdgeWeightFusion apply its evidence bonus again.
+                evidence_count=0,
             )
         return result

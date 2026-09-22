@@ -30,6 +30,7 @@ from chatbot.knowledge.projection import (
     ScenarioSpec,
     SensitivityThreshold,
 )
+from chatbot.knowledge.reasoning.edge_fusion import EdgeWeightFusion
 from chatbot.knowledge.reasoning.graph_retrieval import GraphRetrieval
 from chatbot.knowledge.reasoning.models import ParsedQuery
 from chatbot.knowledge.replay import KnowledgeReplayService, KnowledgeReplayStore
@@ -664,3 +665,29 @@ def test_projection_store_rejects_semantic_identity_tampering(tmp_path: Path):
 
     with pytest.raises(ValueError, match="semantic identity mismatch"):
         store.load(projection.projection_id)
+
+
+def test_projected_relation_provider_does_not_double_count_evidence_bonus():
+    projection = ScenarioProjectionEngine().project(_base(), ScenarioSpec())
+    expected = _relation(projection, "A", "C")
+    retrieval = GraphRetrieval(
+        domain=ProjectedRelationProvider(projection),
+        max_path_length=2,
+        max_paths=10,
+    )
+    result = retrieval.retrieve(
+        ParsedQuery(
+            original_query="A to C",
+            query_entities=["A", "C"],
+            entity_names={"A": "A", "C": "C"},
+            head_entity="A",
+            tail_entity="C",
+        )
+    )
+    direct = next(path for path in result.direct_paths if path.nodes == ["A", "C"])
+    fused = EdgeWeightFusion().fuse_path(direct)
+
+    assert fused.fused_edges[0].evidence_count == 0
+    assert fused.fused_edges[0].final_weight == pytest.approx(
+        expected.projected_weight
+    )
