@@ -128,7 +128,10 @@ selective embedding/vector refresh
 Phase 10은 Knowledge Core의 evidence/provenance truth를 변경하지 않는다.
 vector index는 retrieval 가속용 파생 표현일 뿐이다.
 
+## 현재 확장 상태
+
+Phase 11에서 immutable IngestionState/EvidenceLedger snapshot chain과 commit-time as-of replay를 추가했다. historical Chroma/live relation row는 보존하지 않고 evidence state에서 파생하도록 경계를 유지한다. 세부 구조는 docs/architecture/as-of-replay.md를 참고한다.
+
 ## 다음 후보
 
-1. as-of snapshot / replay
-2. scenario / regime projection
+1. scenario / regime projection

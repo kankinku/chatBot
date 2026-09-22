@@ -120,7 +120,7 @@ LLM 경로를 사용하려면:
 
 개별 source extraction/validation 실패는 기존 projection을 유지하고 FAILED로 보고한다. 다른 source는 계속 처리한다.
 
-relation transaction 실패 시 새 ingestion state를 저장하지 않는다. state 저장 실패가 relation commit 뒤 발생하면 이전 ledger를 이용한 compensating reconciliation을 수행한다.
+relation transaction 실패 시 새 ingestion state를 저장하지 않는다. state 저장 실패가 relation commit 뒤 발생하면 이전 ledger를 이용한 compensating reconciliation을 수행한다. Phase 11 replay recording을 사용하는 경우 current state 저장 뒤 snapshot 기록까지 commit boundary에 포함한다. snapshot 기록 실패 시 이전 relation과 이전 IngestionState를 함께 복구한다.
 
 ## 다음 단계
 
@@ -130,7 +130,8 @@ Phase 9에서 raw-file byte inventory를 추가해 변경되지 않은 PDF/TXT/M
 
 Phase 10에서 deterministic chunk ID, content hash, embedder stamp를 기반으로 retrieval vector index selective refresh를 추가했다. source text가 바뀐 chunk만 embedding하고, list reorder나 metadata 변경은 vector를 재사용한다. 세부 구조는 docs/architecture/selective-vector-refresh.md를 참고한다.
 
+Phase 11에서 성공적으로 커밋된 IngestionState/EvidenceLedger 전체를 immutable snapshot chain으로 기록한다. `as_of`는 document event time이 아니라 knowledge commit time이며, 과거 state를 live repository 변경 없이 read-only로 다시 연다. 세부 구조는 docs/architecture/as-of-replay.md를 참고한다.
+
 다음 후보:
 
-1. as-of snapshot/replay
-2. scenario/regime projection
+1. scenario/regime projection

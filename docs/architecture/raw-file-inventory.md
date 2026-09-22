@@ -153,7 +153,10 @@ source root 밖을 가리키는 symlink는 거부한다. 동일 실제 파일이
 
 Phase 10에서 raw-file/text selective refresh 이후의 retrieval vector index도 selective refresh로 연결했다. deterministic chunk ID와 content hash를 사용하므로 원본 파일 일부 변경이 전체 corpus re-embedding으로 이어지지 않는다. 세부 구조는 docs/architecture/selective-vector-refresh.md를 참고한다.
 
+## 현재 확장 상태
+
+Phase 11에서 성공적으로 커밋된 IngestionState/EvidenceLedger를 immutable chain으로 보존하는 as-of replay를 추가했다. commit-time 기준 point-in-time 상태를 read-only로 복원하며, live relation/vector state는 historical authority에 포함하지 않는다. 세부 구조는 docs/architecture/as-of-replay.md를 참고한다.
+
 ## 다음 단계
 
-1. as-of snapshot / replay
-2. scenario / regime projection
+1. scenario / regime projection

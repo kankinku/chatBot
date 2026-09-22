@@ -503,3 +503,130 @@ def test_prune_scope_preserves_sources_owned_by_other_ingestion_modes(
         "file:managed.txt",
         "connector:external-source",
     }
+
+
+def test_ingestion_replay_records_bootstrap_and_skips_unchanged(tmp_path: Path):
+    from chatbot.knowledge.replay import KnowledgeReplayStore
+
+    repo = InMemoryGraphRepository()
+    adapter = DomainKGAdapter(
+        repository=repo,
+        tx_manager=KGTransactionManager(repo),
+        read_only=False,
+    )
+    replay_store = KnowledgeReplayStore(
+        tmp_path / "knowledge-workspace/replay"
+    )
+    manager = SelectiveIngestionManager(
+        project_root=PROJECT_ROOT,
+        pipeline=_FakeEvidencePipeline(),
+        reconciler=EvidenceRelationReconciler(adapter),
+        state_store=IngestionStateStore(
+            tmp_path / "knowledge-workspace/ingestion-state.json"
+        ),
+        replay_store=replay_store,
+    )
+    document = _doc(
+        "file://one.txt",
+        "deployment increased error rate",
+    )
+
+    first = manager.sync([document])
+    second = manager.sync([document])
+
+    assert first.snapshot_recorded is True
+    assert first.snapshot_id is not None
+    assert replay_store.latest().origin == "bootstrap"
+    assert second.snapshot_recorded is False
+    assert second.snapshot_id == first.snapshot_id
+    assert len(replay_store.list()) == 1
+
+
+def test_processor_stamp_reprocess_records_new_replay_snapshot(
+    tmp_path: Path,
+    monkeypatch,
+):
+    from chatbot.knowledge.replay import KnowledgeReplayStore
+
+    repo = InMemoryGraphRepository()
+    adapter = DomainKGAdapter(
+        repository=repo,
+        tx_manager=KGTransactionManager(repo),
+        read_only=False,
+    )
+    replay_store = KnowledgeReplayStore(
+        tmp_path / "knowledge-workspace/replay"
+    )
+    manager = SelectiveIngestionManager(
+        project_root=PROJECT_ROOT,
+        pipeline=_FakeEvidencePipeline(),
+        reconciler=EvidenceRelationReconciler(adapter),
+        state_store=IngestionStateStore(
+            tmp_path / "knowledge-workspace/ingestion-state.json"
+        ),
+        replay_store=replay_store,
+    )
+    document = _doc(
+        "file://one.txt",
+        "deployment increased error rate",
+    )
+
+    monkeypatch.setattr(
+        manager_module,
+        "processor_stamp",
+        lambda root: "a" * 64,
+    )
+    first = manager.sync([document])
+
+    monkeypatch.setattr(
+        manager_module,
+        "processor_stamp",
+        lambda root: "b" * 64,
+    )
+    second = manager.sync([document])
+
+    assert first.snapshot_recorded is True
+    assert second.snapshot_recorded is True
+    assert second.snapshot_id != first.snapshot_id
+    assert len(replay_store.list()) == 2
+
+
+class _FailingReplayStore:
+    def latest(self):
+        return None
+
+    def record(self, *args, **kwargs):
+        raise OSError("synthetic replay persistence failure")
+
+
+def test_replay_snapshot_failure_restores_state_and_relations(tmp_path: Path):
+    repo = InMemoryGraphRepository()
+    adapter = DomainKGAdapter(
+        repository=repo,
+        tx_manager=KGTransactionManager(repo),
+        read_only=False,
+    )
+    state_store = IngestionStateStore(
+        tmp_path / "knowledge-workspace/ingestion-state.json"
+    )
+    manager = SelectiveIngestionManager(
+        project_root=PROJECT_ROOT,
+        pipeline=_FakeEvidencePipeline(),
+        reconciler=EvidenceRelationReconciler(adapter),
+        state_store=state_store,
+        replay_store=_FailingReplayStore(),
+    )
+
+    with pytest.raises(OSError, match="synthetic replay persistence failure"):
+        manager.sync(
+            [_doc("file://one.txt", "deployment increased error rate")]
+        )
+
+    restored = state_store.load()
+    assert restored.records == {}
+    assert restored.ledger.sources() == []
+    assert adapter.get_relation(
+        "event:deployment",
+        "indicator:error-rate",
+        "Cause",
+    ) is None

@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import hashlib
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable
 
 from chatbot.knowledge.evidence import EvidenceProvenancePipeline
+from chatbot.knowledge.replay.models import SnapshotChangeSummary
+from chatbot.knowledge.replay.store import KnowledgeReplayStore
 
 from .fingerprint import default_project_root, processor_stamp
 from .models import (
@@ -34,6 +37,7 @@ class SelectiveIngestionManager:
         pipeline: EvidenceProvenancePipeline | None = None,
         reconciler: EvidenceRelationReconciler | None = None,
         state_store: IngestionStateStore | None = None,
+        replay_store: KnowledgeReplayStore | None = None,
         use_llm: bool = False,
     ):
         self.project_root = (
@@ -51,6 +55,7 @@ class SelectiveIngestionManager:
             / "knowledge-workspace"
             / "ingestion-state.json"
         )
+        self.replay_store = replay_store
 
     def sync(
         self,
@@ -187,26 +192,72 @@ class SelectiveIngestionManager:
 
         state.validate()
 
+        state_persisted = False
         try:
             report.relation_results = self.reconciler.reconcile(
                 state.ledger,
                 affected_specs,
             )
             self.state_store.save(state)
+            state_persisted = True
+
+            if self.replay_store is not None:
+                previous_snapshot = self.replay_store.latest()
+                snapshot = self.replay_store.record(
+                    state,
+                    committed_at=datetime.now(timezone.utc),
+                    change_summary=self._snapshot_change_summary(report),
+                    origin=(
+                        "bootstrap"
+                        if previous_snapshot is None
+                        else "ingestion_commit"
+                    ),
+                )
+                report.snapshot_id = snapshot.snapshot_id
+                report.snapshot_recorded = (
+                    previous_snapshot is None
+                    or previous_snapshot.snapshot_id != snapshot.snapshot_id
+                )
         except Exception as primary_error:
-            # Relation reconciliation is transactional. If persistence fails
-            # after a successful relation commit, replay the previous state
-            # through the same deterministic reconciler as compensation.
+            # Relation reconciliation is transactional. If current-state
+            # persistence or immutable snapshot recording fails, restore the
+            # previous derived relation state. If the current state was
+            # already saved, restore the previous IngestionState as well.
+            compensation_errors = []
             try:
                 self.reconciler.reconcile(
                     backup.ledger,
                     affected_specs,
                 )
-            except Exception as compensation_error:
+            except Exception as exc:
+                compensation_errors.append(exc)
+
+            if state_persisted:
+                try:
+                    self.state_store.save(backup)
+                except Exception as exc:
+                    compensation_errors.append(exc)
+
+            if compensation_errors:
                 raise RuntimeError(
-                    "selective ingestion failed and compensating "
-                    f"reconciliation also failed: {primary_error}"
-                ) from compensation_error
+                    "selective ingestion failed and compensating recovery "
+                    f"also failed: {primary_error}"
+                ) from compensation_errors[0]
             raise
 
         return report
+
+    @staticmethod
+    def _snapshot_change_summary(
+        report: SelectiveIngestionReport,
+    ) -> SnapshotChangeSummary:
+        counts: dict[str, int] = {}
+        sources = []
+        for result in report.source_results:
+            action = result.action.value
+            counts[action] = counts.get(action, 0) + 1
+            sources.append(result.source_uri)
+        return SnapshotChangeSummary(
+            action_counts=counts,
+            source_uris=tuple(sources),
+        )

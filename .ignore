@@ -5,4 +5,5 @@ knowledge-workspace/graph.json
 knowledge-workspace/manifest.json
 knowledge-workspace/file-inventory.json
 knowledge-workspace/ingestion-state.json
+knowledge-workspace/replay/
 knowledge-workspace/extracted-text/
