@@ -9,14 +9,17 @@ from pathlib import Path
 
 import pytest
 
+from chatbot.knowledge.domain.dynamic_update import DynamicDomainUpdate
+from chatbot.knowledge.domain.kg_adapter import DomainKGAdapter
+from chatbot.knowledge.domain.models import DynamicRelation
 from chatbot.knowledge.evidence import EvidenceLedger, EvidenceProjection
 from chatbot.knowledge.ingestion import IngestionRecord, IngestionState, IngestionStateStore
 from chatbot.knowledge.projection import (
+    DynamicRelationProvider,
     InjectRelationAssumption,
     ProjectedRelationProvider,
     ProjectionBase,
     ProjectionBaseResolver,
-    ProjectionBaseState,
     ProjectionBaseState,
     ProjectionService,
     ProjectionStore,
@@ -34,6 +37,8 @@ from chatbot.knowledge.projection import (
 from chatbot.knowledge.reasoning.edge_fusion import EdgeWeightFusion
 from chatbot.knowledge.reasoning.graph_retrieval import GraphRetrieval
 from chatbot.knowledge.reasoning.models import ParsedQuery
+from chatbot.knowledge.reasoning.pipeline import ReasoningPipeline
+from chatbot.knowledge.storage.inmemory_repository import InMemoryGraphRepository
 from chatbot.knowledge.replay import KnowledgeReplayService, KnowledgeReplayStore
 from chatbot.knowledge.replay.models import state_digest
 from chatbot.knowledge.workspace.hashing import hash_value
@@ -755,6 +760,30 @@ def test_current_state_normalizes_to_latest_snapshot_when_digest_matches(tmp_pat
     assert current.metadata.snapshot_id == snapshot.snapshot_id
 
 
+def test_current_state_remains_transient_when_latest_snapshot_differs(
+    tmp_path: Path,
+):
+    replay_store = KnowledgeReplayStore(tmp_path / "replay")
+    replay_store.record(
+        _state((("A", "B", "Affect", "+", 0.9),)),
+        committed_at=datetime(2026, 9, 22, 1, 0, tzinfo=UTC),
+        origin="bootstrap",
+    )
+    current_state = _state((("A", "B", "Affect", "-", 0.9),))
+    current_store = IngestionStateStore(tmp_path / "state.json")
+    current_store.save(current_state)
+    resolver = ProjectionBaseResolver(
+        replay_service=KnowledgeReplayService(replay_store),
+        current_state_store=current_store,
+    )
+
+    current = resolver.current()
+
+    assert current.metadata.origin == "current_state"
+    assert current.metadata.snapshot_id is None
+    assert current.metadata.state_digest == state_digest(current_state)
+
+
 def test_projection_store_is_idempotent_and_detects_corruption(tmp_path: Path):
     state = _state()
     replay_store = KnowledgeReplayStore(tmp_path / "replay")
@@ -791,6 +820,107 @@ def test_transient_current_projection_cannot_be_persisted(tmp_path: Path):
         ProjectionStore(tmp_path / "projections").save(projection)
 
 
+def test_projected_provider_excludes_disabled_relations_from_reasoning():
+    projection = ScenarioProjectionEngine().project(
+        _base(),
+        ScenarioSpec(
+            assumptions=(
+                RelationDisableAssumption(
+                    RelationSelector(
+                        head_id="A",
+                        tail_id="C",
+                        relation_type="Affect",
+                    )
+                ),
+            )
+        ),
+    )
+    provider = ProjectedRelationProvider(projection)
+    keys = {
+        (item.head_id, item.tail_id, item.relation_type)
+        for item in provider.get_all_relations().values()
+    }
+
+    assert ("A", "C", "Affect") not in keys
+
+    result = GraphRetrieval(
+        domain=provider,
+        max_path_length=3,
+        max_paths=10,
+    ).retrieve(
+        ParsedQuery(
+            original_query="A to C",
+            query_entities=["A", "C"],
+            entity_names={"A": "A", "B": "B", "C": "C"},
+            head_entity="A",
+            tail_entity="C",
+        )
+    )
+    assert not any(path.nodes == ["A", "C"] for path in result.direct_paths)
+    assert any(
+        path.nodes == ["A", "B", "C"]
+        for path in result.indirect_paths
+    )
+
+
+def test_live_relation_provider_path_remains_read_only():
+    repository = InMemoryGraphRepository()
+    adapter = DomainKGAdapter(repository=repository, read_only=False)
+    relation = DynamicRelation(
+        relation_id="LIVE_A_B",
+        head_id="A",
+        head_name="A",
+        tail_id="B",
+        tail_name="B",
+        relation_type="Affect",
+        sign="+",
+        domain_conf=0.6,
+        evidence_count=3,
+    )
+    adapter.upsert_relation(relation)
+    domain = DynamicDomainUpdate(kg_adapter=adapter)
+    provider = DynamicRelationProvider(domain)
+    before = json.dumps(
+        repository.get_all_relations(),
+        ensure_ascii=False,
+        sort_keys=True,
+        default=str,
+    )
+
+    result = GraphRetrieval(
+        domain=provider,
+        max_path_length=2,
+        max_paths=10,
+    ).retrieve(
+        ParsedQuery(
+            original_query="A to B",
+            query_entities=["A", "B"],
+            entity_names={"A": "A", "B": "B"},
+            head_entity="A",
+            tail_entity="B",
+        )
+    )
+    after = json.dumps(
+        repository.get_all_relations(),
+        ensure_ascii=False,
+        sort_keys=True,
+        default=str,
+    )
+
+    assert any(path.nodes == ["A", "B"] for path in result.direct_paths)
+    assert after == before
+
+
+def test_reasoning_pipeline_accepts_projected_relation_provider():
+    provider = ProjectedRelationProvider(
+        ScenarioProjectionEngine().project(_base(), ScenarioSpec())
+    )
+    pipeline = ReasoningPipeline(domain=provider)
+
+    assert pipeline.domain is provider
+    assert pipeline.graph_retrieval.domain is provider
+
+
 def test_projected_relation_provider_integrates_with_graph_retrieval():
     projection = ScenarioProjectionEngine().project(_base(), ScenarioSpec())
     retrieval = GraphRetrieval(
@@ -814,11 +944,16 @@ def test_projected_relation_provider_integrates_with_graph_retrieval():
 
 
 def test_projection_package_has_no_vector_retrieval_dependency():
-    from chatbot.knowledge.projection import engine as projection_engine
+    import chatbot.knowledge.projection as projection_package
 
-    source = Path(projection_engine.__file__).read_text(encoding="utf-8")
+    root = Path(projection_package.__file__).parent
+    source = "\n".join(
+        path.read_text(encoding="utf-8")
+        for path in sorted(root.glob("*.py"))
+    )
     assert "chromadb" not in source
     assert "VectorRetriever" not in source
+    assert "vector_retriever" not in source
 
 
 def test_projection_store_rejects_semantic_identity_tampering(tmp_path: Path):
