@@ -52,7 +52,11 @@ class ProjectedRelationProvider:
     def get_all_relations(self) -> dict[str, ReasoningRelation]:
         result: dict[str, ReasoningRelation] = {}
         for relation in self.projection.relations:
-            if not relation.active:
+            if (
+                not relation.active
+                or relation.projected_weight <= 0.0
+                or relation.projected_sign not in {"+", "-"}
+            ):
                 continue
             result[relation.relation_id] = ReasoningRelation(
                 relation_id=relation.relation_id,

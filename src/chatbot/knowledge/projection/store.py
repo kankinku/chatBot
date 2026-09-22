@@ -108,6 +108,7 @@ class ProjectionStore:
                     "state_digest": base.get("state_digest"),
                     "snapshot_id": base.get("snapshot_id"),
                     "origin": base.get("origin"),
+                    "committed_at": base.get("committed_at"),
                 },
                 "scenario_spec_id": payload.get("scenario_spec_id"),
                 "regime_spec_id": payload.get("regime_spec_id"),

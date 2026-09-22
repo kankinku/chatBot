@@ -255,6 +255,81 @@ def test_base_or_engine_change_changes_projection_identity():
     assert first.projection_id != versioned.projection_id
 
 
+def test_replay_base_commit_time_is_normalized_and_bound_to_identity():
+    state = IngestionState()
+    digest = state_digest(state)
+    utc_base = ProjectionBaseState(
+        metadata=ProjectionBase(
+            state_digest=digest,
+            origin="replay_snapshot",
+            snapshot_id="ksnap_demo",
+            committed_at=datetime(2026, 1, 1, 0, 0, tzinfo=timezone.utc),
+        ),
+        _state=state,
+    )
+    same_instant = ProjectionBaseState(
+        metadata=ProjectionBase(
+            state_digest=digest,
+            origin="replay_snapshot",
+            snapshot_id="ksnap_demo",
+            committed_at=datetime(
+                2026,
+                1,
+                1,
+                9,
+                0,
+                tzinfo=timezone(timedelta(hours=9)),
+            ),
+        ),
+        _state=state,
+    )
+    next_day = ProjectionBaseState(
+        metadata=ProjectionBase(
+            state_digest=digest,
+            origin="replay_snapshot",
+            snapshot_id="ksnap_demo",
+            committed_at=datetime(2026, 1, 2, 0, 0, tzinfo=timezone.utc),
+        ),
+        _state=state,
+    )
+
+    first = ScenarioProjectionEngine().project(utc_base, ScenarioSpec())
+    equivalent = ScenarioProjectionEngine().project(
+        same_instant,
+        ScenarioSpec(),
+    )
+    changed = ScenarioProjectionEngine().project(next_day, ScenarioSpec())
+
+    assert first.projection_id == equivalent.projection_id
+    assert first.output_digest == equivalent.output_digest
+    assert first.base.committed_at == equivalent.base.committed_at
+    assert first.projection_id != changed.projection_id
+    assert first.output_digest != changed.output_digest
+
+
+def test_projection_base_origin_metadata_is_fail_closed():
+    digest = state_digest(IngestionState())
+
+    with pytest.raises(ValueError, match="timezone-aware committed_at"):
+        ProjectionBase(
+            state_digest=digest,
+            origin="replay_snapshot",
+            snapshot_id="ksnap_demo",
+        )
+    with pytest.raises(ValueError, match="must not carry snapshot_id"):
+        ProjectionBase(
+            state_digest=digest,
+            origin="current_state",
+            snapshot_id="ksnap_demo",
+        )
+    with pytest.raises(ValueError, match="must not carry committed_at"):
+        ProjectionBase(
+            state_digest=digest,
+            origin="current_state",
+            committed_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
+        )
+
+
 def test_regime_and_scenario_modify_projected_weight_not_evidence_score():
     base = _base()
     selector = RelationSelector(head_id="A", tail_id="B", relation_type="Affect")
@@ -861,6 +936,80 @@ def test_projected_provider_excludes_disabled_relations_from_reasoning():
         path.nodes == ["A", "B", "C"]
         for path in result.indirect_paths
     )
+
+
+def test_projected_provider_excludes_zero_weight_and_non_directional_relations():
+    zero_weight = ScenarioProjectionEngine().project(
+        _base(),
+        ScenarioSpec(
+            assumptions=(
+                RelationScaleAssumption(
+                    RelationSelector(
+                        head_id="A",
+                        tail_id="C",
+                        relation_type="Affect",
+                    ),
+                    0.0,
+                ),
+            )
+        ),
+    )
+    zero_provider = ProjectedRelationProvider(zero_weight)
+    zero_keys = {
+        (item.head_id, item.tail_id, item.relation_type)
+        for item in zero_provider.get_all_relations().values()
+    }
+    assert ("A", "C", "Affect") not in zero_keys
+
+    zero_result = GraphRetrieval(
+        domain=zero_provider,
+        max_path_length=3,
+        max_paths=10,
+    ).retrieve(
+        ParsedQuery(
+            original_query="A to C",
+            query_entities=["A", "C"],
+            entity_names={"A": "A", "B": "B", "C": "C"},
+            head_entity="A",
+            tail_entity="C",
+        )
+    )
+    assert not any(
+        path.nodes == ["A", "C"]
+        for path in zero_result.direct_paths
+    )
+
+    baseline = ProjectedRelationProvider(
+        ScenarioProjectionEngine().project(_base(), ScenarioSpec())
+    )
+    baseline_keys = {
+        (item.head_id, item.tail_id, item.relation_type)
+        for item in baseline.get_all_relations().values()
+    }
+    assert ("A", "D", "Affect") not in baseline_keys
+
+    overridden = ProjectedRelationProvider(
+        ScenarioProjectionEngine().project(
+            _base(),
+            ScenarioSpec(
+                assumptions=(
+                    RelationSignOverrideAssumption(
+                        RelationSelector(
+                            head_id="A",
+                            tail_id="D",
+                            relation_type="Affect",
+                        ),
+                        "+",
+                    ),
+                )
+            ),
+        )
+    )
+    overridden_keys = {
+        (item.head_id, item.tail_id, item.relation_type)
+        for item in overridden.get_all_relations().values()
+    }
+    assert ("A", "D", "Affect") in overridden_keys
 
 
 def test_live_relation_provider_path_remains_read_only():

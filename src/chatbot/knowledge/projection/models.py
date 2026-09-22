@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Literal
 
 from chatbot.knowledge.evidence import EvidenceScoreSummary
@@ -535,25 +535,55 @@ class ProjectionBase:
     def __post_init__(self) -> None:
         if self.origin not in {"replay_snapshot", "current_state"}:
             raise ValueError("unsupported projection base origin")
-        if self.origin == "replay_snapshot" and self.snapshot_id is None:
-            raise ValueError("replay projection base requires snapshot_id")
+        if len(self.state_digest) != 64:
+            raise ValueError("projection base state_digest must be SHA-256")
+        try:
+            int(self.state_digest, 16)
+        except ValueError as exc:
+            raise ValueError(
+                "projection base state_digest must be SHA-256"
+            ) from exc
+
+        if self.origin == "replay_snapshot":
+            if self.snapshot_id is None:
+                raise ValueError("replay projection base requires snapshot_id")
+            if (
+                self.committed_at is None
+                or self.committed_at.tzinfo is None
+                or self.committed_at.utcoffset() is None
+            ):
+                raise ValueError(
+                    "replay projection base requires timezone-aware committed_at"
+                )
+            object.__setattr__(
+                self,
+                "committed_at",
+                self.committed_at.astimezone(timezone.utc),
+            )
+        else:
+            if self.snapshot_id is not None:
+                raise ValueError(
+                    "current projection base must not carry snapshot_id"
+                )
+            if self.committed_at is not None:
+                raise ValueError(
+                    "current projection base must not carry committed_at"
+                )
 
     def identity_dict(self) -> dict[str, Any]:
         return {
             "state_digest": self.state_digest,
             "snapshot_id": self.snapshot_id,
             "origin": self.origin,
-        }
-
-    def to_dict(self) -> dict[str, Any]:
-        return {
-            **self.identity_dict(),
             "committed_at": (
-                self.committed_at.isoformat()
+                self.committed_at.isoformat().replace("+00:00", "Z")
                 if self.committed_at is not None
                 else None
             ),
         }
+
+    def to_dict(self) -> dict[str, Any]:
+        return self.identity_dict()
 
 
 def score_summary_to_dict(

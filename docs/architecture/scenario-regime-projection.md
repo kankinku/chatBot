@@ -140,6 +140,12 @@ projection_id =
   )>
 ```
 
+snapshot-backed base identity에는 `state_digest`, `snapshot_id`, `origin`,
+그리고 timezone-aware UTC로 정규화된 `committed_at`이 포함된다. 따라서 동일
+projection ID 아래 서로 다른 historical metadata가 저장되는 것을 허용하지
+않는다. transient current base는 `snapshot_id=None`, `committed_at=None`을
+강제한다.
+
 label, description, runtime timing은 semantic identity에 포함하지 않는다.
 
 base state, scenario, regime, engine version이 같으면 projection ID와 output digest도
@@ -236,6 +242,11 @@ Phase 12는:
 - `ProjectedRelationProvider`
 
 를 제공한다.
+
+`ProjectedRelationProvider`는 active이면서 `projected_weight > 0`이고
+projected sign이 `+` 또는 `-`인 relation만 reasoning graph에 노출한다.
+따라서 multiplier로 applicability가 0이 된 relation이나 neutral/unknown sign은
+legacy path fusion에서 양의 경로로 재해석되지 않는다.
 
 Projected relation을 Neo4j나 live DomainKGAdapter에 upsert하지 않는다.
 
