@@ -111,6 +111,6 @@ Phase 10에서 retrieval vector index를 derived manifest와 deterministic chunk
 
 Phase 11에서 성공적으로 커밋된 IngestionState/EvidenceLedger를 immutable chain으로 보존하는 as-of replay를 추가했다. commit-time 기준 point-in-time 상태를 read-only로 복원하며, live relation/vector state는 historical authority에 포함하지 않는다. 세부 구조는 docs/architecture/as-of-replay.md를 참고한다.
 
-## 다음 단계
+## Scenario / regime projection 경계
 
-1. scenario / regime projection
+Phase 12 projection은 `EvidenceScoreSummary`를 현실 근거의 base score로 고정한다. Scenario/regime 가정은 evidence score를 수정하지 않고 별도의 multiplier와 `projected_weight`를 계산한다. 따라서 "근거 강도"와 "가정 하 적용성"이 분리된다. 세부 구조는 `docs/architecture/scenario-regime-projection.md`를 참고한다.

@@ -8,6 +8,7 @@ from .models import (
 )
 from .pipeline import EvidenceProvenancePipeline
 from .projector import EvidenceProjector
+from .relation_view import EvidenceBackedRelation, RelationEvidenceViewBuilder
 from .scoring import (
     SCORE_VERSION,
     EvidenceScoreAggregator,
@@ -20,6 +21,8 @@ __all__ = [
     "EvidenceProcessResult",
     "EvidenceProjection",
     "EvidenceProjector",
+    "EvidenceBackedRelation",
+    "RelationEvidenceViewBuilder",
     "EvidenceProvenancePipeline",
     "EvidenceScoreAggregator",
     "EvidenceScorePolicy",

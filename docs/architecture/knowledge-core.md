@@ -81,6 +81,10 @@ v12의 대형 시스템을 그대로 되살리지 않는다. 다음 메커니즘
 - Incremental + idempotent ingestion
 - Dependency invalidation / blast radius
 - Replay / evaluation
-- Scenario / regime
+- Scenario / regime projection (canonical projection package로 재구현)
 
 원본 reference는 `docs/history/retired-snapshot-inventory.md`와 archive refs에 보존되어 있다.
+
+## Projection boundary
+
+Phase 12의 `src/chatbot/knowledge/projection/`은 canonical/replay evidence state 위에서 hypothetical scenario와 explicit regime applicability를 계산하는 read-only derived layer다. Projection은 live DynamicRelation/Neo4j, replay history, Chroma/vector index를 수정하지 않는다.

@@ -14,6 +14,7 @@ from chatbot.knowledge.reasoning.trace_contracts import ReasoningTrace, PathTrac
 from chatbot.knowledge.extraction.ner_student import NERStudent
 from chatbot.knowledge.extraction.entity_resolver import EntityResolver
 from chatbot.knowledge.domain.dynamic_update import DynamicDomainUpdate
+from chatbot.knowledge.projection.relation_provider import RelationProvider
 from chatbot.knowledge.llm.ollama_client import OllamaClient
 
 logger = logging.getLogger(__name__)
@@ -24,7 +25,7 @@ class ReasoningPipeline:
 
     def __init__(
         self,
-        domain: Optional[DynamicDomainUpdate] = None,
+        domain: Optional[DynamicDomainUpdate | RelationProvider] = None,
         llm_client: Optional[OllamaClient] = None,
         ner: Optional[NERStudent] = None,
         resolver: Optional[EntityResolver] = None,
