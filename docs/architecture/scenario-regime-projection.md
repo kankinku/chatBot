@@ -283,8 +283,29 @@ python3 scripts/knowledge_project.py project \
   --as-of 2026-09-22T00:00:00+00:00 \
   --persist
 
+python3 scripts/knowledge_project.py project \
+  --scenario scenario.json \
+  --current
+
 python3 scripts/knowledge_project.py show --projection proj_...
 python3 scripts/knowledge_project.py verify --projection proj_...
+```
+
+`--persist`는 reproducible snapshot-backed projection에만 허용된다. `--current`
+실행도 현재 state digest가 latest replay snapshot과 동일해 snapshot identity로
+정규화된 경우에만 저장할 수 있다. replay와 다른 transient current state는
+projection 결과를 출력할 수 있지만 cache에 영구 저장하지 않는다.
+
+최소 scenario JSON:
+
+```json
+{
+  "assumptions": [],
+  "shocks": [],
+  "sensitivity_thresholds": [],
+  "max_depth": 4,
+  "max_paths": 100
+}
 ```
 
 초기 interchange format은 JSON만 사용한다.
